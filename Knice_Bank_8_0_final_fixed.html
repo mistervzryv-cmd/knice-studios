@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Knice Bank 8.1</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f4f7fb;color:#182230}
+button,input,select{font:inherit}button{border:0;border-radius:12px;padding:11px 15px;background:#2457ff;color:#fff;font-weight:700;cursor:pointer}button:hover{filter:brightness(.94)}button.gray{background:#eef2f7;color:#273244}button.red{background:#e5484d}
+input,select{width:100%;padding:11px;border:1px solid #d9dee8;border-radius:11px;background:#fff;margin:5px 0 10px}
+.login{min-height:100vh;display:grid;place-items:center;padding:20px}.loginbox{width:min(390px,100%);background:white;padding:32px;border-radius:26px;box-shadow:0 15px 50px #dce3ee;text-align:center}
+.app{display:none}.top{background:#2457ff;color:white;padding:20px}.topin,main{max-width:1120px;margin:auto}.topin{display:flex;justify-content:space-between;align-items:center;gap:15px}
+main{padding:20px 16px 95px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.card{background:#fff;border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:0 4px 18px #e1e6ef}.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#f7f9fc;padding:14px;border-radius:14px}.big{font-size:32px;font-weight:800}.muted{color:#6b7280}.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.actions{display:flex;gap:8px;flex-wrap:wrap}.section{display:none}.section.active{display:block}.nav{position:fixed;z-index:5;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;justify-content:center}.nav button{background:transparent;color:#667085;border-radius:0;padding:12px 17px}.nav button.active{color:#2457ff}.price{font-size:27px;font-weight:800}.up{color:#169b50}.down{color:#dc3d4b}.badge{padding:5px 8px;background:#eef2ff;color:#2457ff;border-radius:8px;font-size:12px;font-weight:700}.history{max-height:320px;overflow:auto}.history div{padding:10px 0;border-bottom:1px solid #edf0f3}.news{padding:14px;border-radius:14px;background:#f7f9fc}.bar{height:9px;border-radius:99px;background:#e8ecf2;overflow:hidden}.bar i{display:block;height:100%;background:#2457ff}.asset{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid #edf0f3}.achievement{padding:12px;border-radius:14px;background:#f7f9fc;margin:8px 0}.cardnum{font-size:23px;letter-spacing:2px;font-weight:800;margin:22px 0}
+canvas{width:100%;height:300px;background:#fbfcff;border-radius:14px}
+
+:root{
+ --bg:#f4f7fb;--surface:#fff;--surface2:#f7f9fc;--text:#182230;
+ --muted:#6b7280;--line:#e3e8f0;--primary:#2457ff;--shadow:#e1e6ef;
+}
+body.dark{
+ --bg:#0b1020;--surface:#151b2d;--surface2:#1d2538;--text:#edf2ff;
+ --muted:#9aa6bd;--line:#2c3650;--primary:#6d8cff;--shadow:#050812;
+}
+body{background:var(--bg);color:var(--text)}
+.loginbox,.card{background:var(--surface);box-shadow:0 4px 18px var(--shadow)}
+input,select{background:var(--surface);color:var(--text);border-color:var(--line)}
+.stat,.news{background:var(--surface2)}
+.history div,.asset{border-color:var(--line)}
+.nav{background:var(--surface);border-color:var(--line)}
+.muted{color:var(--muted)}
+button.gray{background:var(--surface2);color:var(--text)}
+canvas{background:var(--surface2)}
+.theme-toggle{min-width:48px}
+
+@media(max-width:760px){.grid,.statgrid{grid-template-columns:1fr}.nav button{font-size:11px;padding:11px 8px}.topin{align-items:flex-start}}
+</style>
+
+<style id="mobile-nav-real-fix">
+@media (max-width:760px){
+  body{padding-bottom:72px!important}
+  .nav{
+    left:0!important;
+    right:0!important;
+    width:100vw!important;
+    max-width:100vw!important;
+    box-sizing:border-box!important;
+    justify-content:flex-start!important;
+    align-items:stretch!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    flex-wrap:nowrap!important;
+    -webkit-overflow-scrolling:touch!important;
+    scrollbar-width:none!important;
+    padding:0 4px!important;
+  }
+  .nav::-webkit-scrollbar{display:none!important}
+  .nav button{
+    flex:0 0 66px!important;
+    width:66px!important;
+    min-width:66px!important;
+    max-width:66px!important;
+    box-sizing:border-box!important;
+    padding:9px 2px!important;
+    margin:0!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    font-size:10px!important;
+    line-height:1.25!important;
+    touch-action:manipulation!important;
+  }
+}
+</style>
+
+</head>
+<body>
+
+<div id="login" class="login">
+ <div class="loginbox">
+  <div style="font-size:46px">🏦</div><h1>Knice Bank 8.1</h1>
+  <p class="muted">Экономическая песочница</p>
+  <input id="user" value="Тифа" placeholder="Логин">
+  <input id="pass" type="password" placeholder="Пароль">
+  <button style="width:100%" onclick="login()">Войти</button>
+  <p class="muted" style="font-size:12px">Демо: Тифа / eglot123</p>
+ </div>
+</div>
+
+<div id="app" class="app">
+<header class="top"><div class="topin">
+ <div><h1 style="margin:0">🏦 Knice Bank</h1><div>Добро пожаловать, <b>Тифа</b></div></div>
+ <div class="actions"><button class="gray theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button><button class="gray" onclick="location.reload()">Выйти</button></div>
+</div></header>
+
+<main>
+<section id="home" class="section active">
+ <div class="grid">
+  <div class="card"><div class="muted">Общий капитал</div><div class="big" id="wealth"></div><div class="muted">Еглот</div></div>
+  <div class="card"><div class="muted">Изменение за сессию</div><div class="big" id="sessionChange"></div><div class="muted">Уровень <span id="level"></span></div></div>
+ </div>
+ <div class="card">
+  <h2>💳 Knice Black</h2><div class="stat"><div class="muted">Владелец</div><b>ТИФА</b><div class="cardnum" id="card"></div><div class="row"><span>11/30</span><span>VISA • KNICE</span></div></div>
+ </div>
+ <div class="card"><h2>💰 Активы</h2><div class="statgrid">
+  <div class="stat">💰 Еглот<br><b id="e"></b></div><div class="stat">🇦🇿 Манат<br><b id="m"></b></div><div class="stat">🟦 Кнайс<br><b id="k"></b></div><div class="stat">🟥 Кнайгер<br><b id="g"></b></div><div class="stat">⭐ Вчедей<br><b id="v"></b></div><div class="stat">🍓 Хамам<br><b id="w"></b></div>
+ </div></div>
+ <div class="card"><h2>📰 Последняя новость</h2><div id="homeNews" class="news"></div></div>
+ <div class="card"><h2>📜 Последние операции</h2><div id="homeHistory"></div></div>
+</section>
+
+<section id="exchange" class="section">
+ <div class="card"><div class="row"><h2>📊 Knice Exchange</h2><span class="badge">LIVE</span></div><canvas id="chart" width="1000" height="340"></canvas></div>
+ <div class="card">
+  <h2>⚖️ Механика рынка</h2>
+  <div class="statgrid">
+   <div class="stat">Спрос Кнайс<br><b id="dK">0</b></div>
+   <div class="stat">Предложение Кнайс<br><b id="sK">0</b></div>
+   <div class="stat">Объём Кнайс<br><b id="volK">0</b></div>
+   <div class="stat">Спрос Кнайгер<br><b id="dG">0</b></div>
+   <div class="stat">Предложение Кнайгер<br><b id="sG">0</b></div>
+   <div class="stat">Объём Кнайгер<br><b id="volG">0</b></div>
+  </div>
+  <p class="muted">Цена теперь зависит от спроса, предложения, новостей, макроэкономики и активности ботов.</p>
+ </div>
+ <div class="grid">
+  <div class="card"><h2>🟦 Кнайс</h2><div id="kp" class="price"></div><div id="kc"></div><p>У тебя: <b id="ka"></b></p><input id="kqty" type="number" min="1" value="1"><div class="actions"><button onclick="trade('k',1)">Купить</button><button class="gray" onclick="trade('k',-1)">Продать</button></div></div>
+  <div class="card"><h2>🟥 Кнайгер</h2><div id="gp" class="price"></div><div id="gc"></div><p>У тебя: <b id="ga"></b></p><input id="gqty" type="number" min="1" value="1"><div class="actions"><button onclick="trade('g',1)">Купить</button><button class="gray" onclick="trade('g',-1)">Продать</button></div></div>
+ </div>
+ <div class="card"><h2>📰 Новости рынка</h2><div id="news"></div></div>
+</section>
+
+<section id="banking" class="section">
+ <div class="grid">
+  <div class="card"><h2>💱 Обмен</h2><p>10 Еглот = 1 Манат</p><input id="ex" type="number" min="10" placeholder="Еглоты"><button onclick="exchangeMoney()">Обменять</button></div>
+  <div class="card"><h2>🍓 Малиновый хамам</h2><p>Кошелёк: <b id="ww"></b> Еглот</p><button onclick="deposit()">Положить 100</button> <button class="gray" onclick="withdraw()">Снять 100</button></div>
+ </div>
+ <div class="card"><h2>💸 Перевод</h2><p class="muted">Игровой перевод. Получатель считается NPC/другим игроком.</p><input id="to" placeholder="Имя получателя"><input id="ta" type="number" min="1" placeholder="Еглот"><button onclick="transfer()">Отправить</button></div>
+ <div class="card"><h2>🏦 Вклад</h2><p>Ставка: 5% за игровой цикл.</p><input id="deposit" type="number" min="100" placeholder="Сумма"><button onclick="bankDeposit()">Открыть вклад</button><p>На вкладе: <b id="bd"></b> Еглот</p></div>
+</section>
+
+<section id="economy" class="section">
+ <div class="grid">
+  <div class="card"><h2>🏛 ЦБЕ</h2><p class="muted">ЦБЕ теперь реагирует на инфляцию: при высокой инфляции ставка повышается.</p><div class="statgrid"><div class="stat">Ставка<br><b id="rate"></b></div><div class="stat">Инфляция<br><b id="infl"></b></div><div class="stat">Индекс рынка<br><b id="index"></b></div></div><p id="cbnews" class="news"></p></div>
+  <div class="card"><h2>🤖 Боты-трейдеры</h2><p>🐂 Бык: <b id="bull"></b></p><div class="bar"><i id="bullbar"></i></div><p>🐻 Медведь: <b id="bear"></b></p><div class="bar"><i id="bearbar"></i></div></div>
+ </div>
+ <div class="card"><h2>💼 Работа</h2><p>Выбери профессию. Чем выше уровень — тем больше зарплата.</p><select id="job"><option value="worker">Рабочий — 50–150</option><option value="coder">Программист — 100–250</option><option value="banker">Банкир — 150–350</option><option value="trader">Трейдер — 100–450</option></select><button onclick="work()">Получить зарплату</button></div>
+ <div class="card"><h2>📈 Инвестиции</h2><p>Доход: 25% в Вчедеях.</p><input id="iv" type="number" min="1" placeholder="Еглоты"><button onclick="invest()">Инвестировать</button></div>
+</section>
+
+
+<section id="business" class="section">
+ <div class="grid">
+  <div class="card">
+   <h2>🏢 Бизнес</h2>
+   <p class="muted">Покупай предприятия, получай прибыль каждый игровой цикл.</p>
+   <div class="asset"><span>🛒 Магазин</span><b>200 000 ₲</b><button onclick="buyBusiness('Магазин',200000,12000)">Купить</button></div>
+   <div class="asset"><span>💻 IT-компания</span><b>800 000 ₲</b><button onclick="buyBusiness('IT-компания',800000,50000)">Купить</button></div>
+   <div class="asset"><span>🏭 Фабрика</span><b>2 000 000 ₲</b><button onclick="buyBusiness('Фабрика',2000000,140000)">Купить</button></div>
+   <div class="asset"><span>🏦 Финансовая компания</span><b>5 000 000 ₲</b><button onclick="buyBusiness('Финансовая компания',5000000,400000)">Купить</button></div>
+  </div>
+  <div class="card">
+   <h2>🏠 Недвижимость</h2>
+   <div class="asset"><span>🏠 Квартира</span><b>300 000 ₲</b><button onclick="buyProperty('Квартира',300000,10000)">Купить</button></div>
+   <div class="asset"><span>🏡 Дом</span><b>700 000 ₲</b><button onclick="buyProperty('Дом',700000,25000)">Купить</button></div>
+   <div class="asset"><span>🏢 Офис</span><b>1 500 000 ₲</b><button onclick="buyProperty('Офис',1500000,60000)">Купить</button></div>
+  </div>
+ </div>
+ <div class="card">
+  <h2>📊 Твои предприятия</h2>
+  <div id="businesses"></div>
+ </div>
+</section>
+
+<section id="shop" class="section">
+ <div class="card"><h2>🛒 Магазин</h2>
+  <div class="asset"><span>📱 Телефон</span><b>30 000 ₲</b><button onclick="buyItem('Телефон',30000)">Купить</button></div>
+  <div class="asset"><span>💻 Компьютер</span><b>80 000 ₲</b><button onclick="buyItem('Компьютер',80000)">Купить</button></div>
+  <div class="asset"><span>🚗 Машина</span><b>250 000 ₲</b><button onclick="buyItem('Машина',250000)">Купить</button></div>
+  <div class="asset"><span>🏠 Дом</span><b>500 000 ₲</b><button onclick="buyItem('Дом',500000)">Купить</button></div>
+  <div class="asset"><span>🏢 Офис</span><b>2 000 000 ₲</b><button onclick="buyItem('Офис',2000000)">Купить</button></div>
+ </div>
+ <div class="card"><h2>🎒 Имущество</h2><div id="inventory"></div></div>
+</section>
+
+
+<section id="goals" class="section">
+ <div class="grid">
+  <div class="card">
+   <h2>🎯 Финансовые цели</h2>
+   <p class="muted">Создай цель и копи Еглоты.</p>
+   <input id="goalName" placeholder="Например: Купить дом">
+   <input id="goalTarget" type="number" min="1" placeholder="Сумма цели">
+   <button onclick="createGoal()">Создать цель</button>
+  </div>
+  <div class="card">
+   <h2>📌 Текущая цель</h2>
+   <div id="goalBox" class="news"></div>
+  </div>
+ </div>
+ <div class="card">
+  <h2>📅 Ежедневный бонус</h2>
+  <p id="dailyText">Проверь, доступен ли бонус.</p>
+  <button onclick="dailyBonus()">Получить 500 Еглот</button>
+ </div>
+</section>
+
+<section id="casino" class="section">
+ <div class="card">
+  <h2>🎲 Рыночный прогноз</h2>
+  <p class="muted">Мини-игра без реальных денег: угадай, вырастет ли Кнайс на следующем тике.</p>
+  <div class="actions">
+   <button onclick="predict(1)">📈 Рост</button>
+   <button class="gray" onclick="predict(-1)">📉 Падение</button>
+  </div>
+  <p id="prediction"></p>
+ </div>
+ <div class="card">
+  <h2>🏅 Репутация</h2>
+  <div class="statgrid">
+   <div class="stat">Репутация<br><b id="reputation">0</b></div>
+   <div class="stat">Сделок<br><b id="trades">0</b></div>
+   <div class="stat">Лучший результат<br><b id="bestTrade">0 ₲</b></div>
+  </div>
+ </div>
+</section>
+
+
+
+
+<section id="economy2" class="section"><div class="grid">
+<div class="card"><h2>🏛️ Экономика 2.0</h2><div class="statgrid">
+<div class="stat">ВВП<br><b id="gdpStat">1 000 000 000 ₲</b></div>
+<div class="stat">Безработица<br><b id="unempStat">5%</b></div>
+<div class="stat">Денежная масса<br><b id="moneyStat">500 000 000 ₲</b></div>
+<div class="stat">Бюджет<br><b id="budgetStat">50 000 000 ₲</b></div></div>
+<div class="asset"><span>💰 Налог</span><b id="taxStat">5%</b></div></div>
+<div class="card"><h2>🏛️ ЦБЕ</h2>
+<button onclick="centralBankAction('raise')">📈 Повысить ставку</button>
+<button onclick="centralBankAction('cut')">📉 Снизить ставку</button>
+<button onclick="centralBankAction('money')">💵 Увеличить денежную массу</button></div></div></section>
+<section id="exchange2" class="section"><div class="card"><h2>💹 Биржа 2.0</h2>
+<select id="orderAsset" onchange="renderOrderBook()"><option value="k">Кнайс</option><option value="g">Кнайгер</option></select>
+<div class="grid"><div><h3>🔴 Продажа</h3><div id="asks"></div></div><div><h3>🟢 Покупка</h3><div id="bids"></div></div></div>
+<input id="orderQty" type="number" min="1" placeholder="Количество"><input id="orderPrice" type="number" min="1" placeholder="Цена">
+<select id="orderSide"><option value="buy">Купить</option><option value="sell">Продать</option></select>
+<button onclick="placeLimitOrder()">Разместить лимитный ордер</button><div id="myOrders"></div></div></section>
+<section id="bank2" class="section"><div class="grid">
+<div class="card"><h2>💳 Knice Card</h2><p>Виртуальная банковская карта.</p><div id="cardBalance"></div><button onclick="createCard()">Выпустить карту</button></div>
+<div class="card"><h2>🛡️ Страхование</h2><p>Страхование инвестиционного портфеля за 2%.</p><button onclick="buyInsurance()">Застраховать портфель</button></div></div></section>
+<section id="candles" class="section"><div class="card"><h2>🕯️ Свечной график</h2>
+<select id="candleAsset" onchange="renderCandles()"><option value="k">Кнайс</option><option value="g">Кнайгер</option></select>
+<canvas id="candleChart" width="900" height="380" style="width:100%;margin-top:14px"></canvas></div></section>
+<section id="terminal" class="section">
+ <div class="card">
+  <div class="row">
+   <div>
+    <h2>📊 Торговый терминал</h2>
+    <p class="muted">Статистика, портфель, сделки и ценовые уведомления.</p>
+   </div>
+   <select id="terminalAsset" onchange="renderTerminal()">
+    <option value="k">Кнайс</option>
+    <option value="g">Кнайгер</option>
+   </select>
+  </div>
+  <div class="statgrid">
+   <div class="stat">Цена<br><b id="termPrice">0 ₲</b></div>
+   <div class="stat">Максимум<br><b id="termMax">0 ₲</b></div>
+   <div class="stat">Минимум<br><b id="termMin">0 ₲</b></div>
+   <div class="stat">Средняя<br><b id="termAvg">0 ₲</b></div>
+   <div class="stat">Изменение<br><b id="termChange">0%</b></div>
+   <div class="stat">Объём<br><b id="termVolume">0</b></div>
+  </div>
+  <canvas id="terminalChart" width="900" height="360" style="width:100%;margin-top:18px;border-radius:14px"></canvas>
+ </div>
+
+ <div class="grid">
+  <div class="card">
+   <h2>💼 Мой портфель</h2>
+   <div id="portfolioBox"></div>
+  </div>
+  <div class="card">
+   <h2>🔔 Ценовое уведомление</h2>
+   <select id="alertAsset">
+    <option value="k">Кнайс</option>
+    <option value="g">Кнайгер</option>
+   </select>
+   <select id="alertType">
+    <option value="below">Цена ниже</option>
+    <option value="above">Цена выше</option>
+   </select>
+   <input id="alertPrice" type="number" min="1" placeholder="Цена в Еглотах">
+   <button onclick="addPriceAlert()">Создать уведомление</button>
+   <div id="alertsBox" style="margin-top:10px"></div>
+  </div>
+ </div>
+
+ <div class="card">
+  <h2>🧾 История сделок</h2>
+  <select id="tradeFilter" onchange="renderTradeHistory()">
+   <option value="all">Все сделки</option>
+   <option value="buy">Покупки</option>
+   <option value="sell">Продажи</option>
+  </select>
+  <div id="tradeHistoryBox" style="margin-top:10px"></div>
+ </div>
+
+ <div class="card">
+  <h2>🏆 Достижения трейдера</h2>
+  <div id="traderAchievements"></div>
+ </div>
+</section>
+
+<section id="history" class="section">
+ <div class="card">
+  <div class="row">
+   <div>
+    <h2>📈 История рынка</h2>
+    <p class="muted">Смотри, как менялись Кнайс и Кнайгер за выбранный период.</p>
+   </div>
+   <select id="historyRange" onchange="renderMarketHistory()">
+    <option value="day">Последний день</option>
+    <option value="week">Последняя неделя</option>
+    <option value="month">Последний месяц</option>
+    <option value="year">Последний год</option>
+    <option value="all">Всё время</option>
+   </select>
+  </div>
+  <div class="statgrid">
+   <div class="stat">Кнайс сейчас<br><b id="histK">0 ₲</b></div>
+   <div class="stat">Кнайгер сейчас<br><b id="histG">0 ₲</b></div>
+   <div class="stat">Изменение Кнайса<br><b id="histKChange">0%</b></div>
+   <div class="stat">Изменение Кнайгера<br><b id="histGChange">0%</b></div>
+  </div>
+  <canvas id="historyChart" width="900" height="330" style="width:100%;margin-top:18px;border-radius:14px"></canvas>
+ </div>
+ <div class="card">
+  <h2>🗓️ Архив рынка</h2>
+  <p class="muted">Каждая запись содержит цену, индекс, инфляцию и ставку ЦБЕ.</p>
+  <div id="historyTable"></div>
+ </div>
+</section>
+
+<section id="ranking" class="section">
+ <div class="card">
+  <div class="row"><h2>🏆 Рейтинг игроков</h2><span class="badge">СИМУЛЯЦИЯ</span></div>
+  <p class="muted">Небольшой локальный рейтинг для экономической игры.</p>
+  <div id="leaderboard"></div>
+ </div>
+ <div class="card">
+  <h2>📰 Knice News</h2>
+  <div class="news">Тифа сегодня активно торгует на рынке Кнайса.</div>
+  <div class="news" style="margin-top:8px">Расул открыл новый бизнес и увеличил капитал.</div>
+  <div class="news" style="margin-top:8px">Эльдар разместил деньги во вкладе.</div>
+  <div class="news" style="margin-top:8px">Али наблюдает за Кнайгером и ждёт удобной цены.</div>
+  <div class="news" style="margin-top:8px">Туран сделал крупную ставку на рост Кнайса.</div>
+  <div class="news" style="margin-top:8px">Магран присоединился к рынку и изучает Кнайгер.</div>
+ </div>
+</section>
+
+<section id="profile" class="section">
+ <div class="card"><h2>👤 Профиль</h2><div class="statgrid"><div class="stat">Пользователь<br><b>Тифа</b></div><div class="stat">Уровень<br><b id="pl"></b></div><div class="stat">Заработано<br><b id="earned"></b></div></div></div>
+ <div class="card"><h2>🏆 Достижения</h2><div id="ach"></div></div>
+ <div class="card"><h2>📜 История</h2><div id="profileHistory" class="history"></div></div>
+ <button class="red" onclick="resetAll()">Сбросить прогресс</button>
+</section>
+</main>
+
+<nav class="nav">
+ <button id="n-home" class="active" onclick="show('home')">🏠<br>Главная</button>
+ <button id="n-exchange" onclick="show('exchange')">📈<br>Биржа</button>
+ <button id="n-banking" onclick="show('banking')">💳<br>Банк</button>
+ <button id="n-economy" onclick="show('economy')">🏛<br>Экономика</button>
+ <button id="n-shop" onclick="show('shop')">🛒<br>Магазин</button>
+ <button id="n-goals" onclick="show('goals')">🎯<br>Цели</button>
+ <button id="n-business" onclick="show('business')">🏢<br>Бизнес</button>
+ <button id="n-casino" onclick="show('casino')">🎲<br>Игры</button>
+ <button id="n-economy2" onclick="show('economy2')">🏛️<br>Экономика</button>
+<button id="n-exchange2" onclick="show('exchange2')">💹<br>Биржа</button>
+<button id="n-bank2" onclick="show('bank2')">💳<br>Карта</button>
+<button id="n-candles" onclick="show('candles')">🕯️<br>Свечи</button>
+<button id="n-terminal" onclick="show('terminal')">📊<br>Терминал</button>
+ <button id="n-history" onclick="show('history')">📈<br>История</button>
+ <button id="n-ranking" onclick="show('ranking')">🏆<br>Рейтинг</button>
+ <button id="n-profile" onclick="show('profile')">👤<br>Профиль</button>
+</nav>
+</div>
+
+<script>
+const DEF={eglot:100000,manat:0,knice:100,kniger:30,vchedey:0,wallet:0,knicePrice:500,knigerPrice:1200,prevK:500,prevG:1200,rate:6.5,inflation:3.2,marketIndex:100,deposit:0,earned:0,sessionStart:100000,history:[],news:"Рынок открылся спокойно.",chartK:[],chartG:[],inventory:[],card:"4276 5831 2047 7319",goal:null,lastBonus:"",reputation:0,trades:0,bestTrade:0,prediction:null,alerts:[],traderAchievements:[],tradeHistory:[],businesses:[],properties:[],demandK:0,demandG:0,supplyK:0,supplyG:0,volumeK:0,volumeG:0,marketHistory:[],lastTick:Date.now()};
+let d=JSON.parse(localStorage.getItem("KniceBank4")||"null")||structuredClone(DEF);
+const news=[
+["🟢", "Крупный фонд покупает Кнайс.",1.08,1.02],
+["🔴", "У Кнайгера обнаружена техническая проблема.",.98,.76],
+["🟢", "ЦБЕ снизил ставку — рынок оживился.",1.05,1.07],
+["🔴", "Инвесторы начали фиксировать прибыль.",.94,.92],
+["🟢", "Новые игроки пришли на рынок.",1.04,1.05],
+["⚠️", "Рынок стал очень волатильным.",.97,1.08],
+["💎", "Кнайс получил статус перспективного актива.",1.10,1.03]
+];
+function save(){localStorage.setItem("KniceBank4",JSON.stringify(d))}
+function fmt(x){return Number(x).toLocaleString("ru-RU",{maximumFractionDigits:2})}
+function log(x){d.history.unshift(new Date().toLocaleTimeString()+" — "+x);if(d.history.length>60)d.history.pop()}
+function login(){if(document.getElementById("user").value.trim()==="Тифа"&&document.getElementById("pass").value==="eglot123"){document.getElementById("login").style.display="none";document.getElementById("app").style.display="block";update()}else alert("Неверный логин или пароль.")}
+function show(id){document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));document.getElementById("n-"+id).classList.add("active")}
+function wealth(){return d.eglot+d.manat*10+d.knice*d.knicePrice+d.kniger*d.knigerPrice+d.vchedey*2+d.wallet+d.deposit}
+function update(){
+ const w=wealth(), lvl=1+Math.floor(d.earned/5000);
+ [["wealth",fmt(w)],["e",fmt(d.eglot)],["m",fmt(d.manat)],["k",fmt(d.knice)],["g",fmt(d.kniger)],["v",fmt(d.vchedey)],["w",fmt(d.wallet)],["ww",fmt(d.wallet)],["bd",fmt(d.deposit)],["earned",fmt(d.earned)],["level",lvl],["pl",lvl],["card",d.card],["ka",fmt(d.knice)],["ga",fmt(d.kniger)],["kp",fmt(d.knicePrice)+" ₲"],["gp",fmt(d.knigerPrice)+" ₲"],["rate",d.rate.toFixed(2)+"%"],["infl",d.inflation.toFixed(2)+"%"],["index",d.marketIndex.toFixed(1)],["bull",Math.round(d.bull||50)+"%"],["bear",Math.round(d.bear||50)+"%"],["dK",fmt(d.demandK||0)],["sK",fmt(d.supplyK||0)],["volK",fmt(d.volumeK||0)],["dG",fmt(d.demandG||0)],["sG",fmt(d.supplyG||0)],["volG",fmt(d.volumeG||0)]].forEach(a=>{const e=document.getElementById(a[0]);if(e)e.textContent=a[1]});
+ const diff=w-d.sessionStart;const sc=document.getElementById("sessionChange");sc.textContent=(diff>=0?"+":"")+fmt(diff)+" ₲";sc.className=diff>=0?"big up":"big down";
+ change("kc",d.knicePrice-d.prevK);change("gc",d.knigerPrice-d.prevG);
+ document.getElementById("news").textContent=d.news;document.getElementById("homeNews").textContent=d.news;document.getElementById("cbnews").textContent="Решение ЦБЕ: ставка "+d.rate.toFixed(2)+"%. Инфляция "+d.inflation.toFixed(2)+"%.";
+ renderHistory();renderAch();renderInventory();renderGoal();if(typeof renderOrderBook==="function")renderOrderBook();if(typeof renderMacro==="function")renderMacro();if(typeof renderCandles==="function")renderCandles();draw();
+ const rep=document.getElementById("reputation"),tr=document.getElementById("trades"),bt=document.getElementById("bestTrade");
+ if(rep)rep.textContent=d.reputation||0;if(tr)tr.textContent=d.trades||0;if(bt)bt.textContent=fmt(d.bestTrade||0)+" ₲";
+ updateDaily();save()
+}
+function change(id,v){const e=document.getElementById(id);if(!e)return;e.className=v>=0?"up":"down";e.textContent=(v>=0?"▲ +":"▼ ")+fmt(v)+" ₲"}
+function work(){
+ const job=document.getElementById("job").value, ranges={worker:[50,150],coder:[100,250],banker:[150,350],trader:[100,450]},r=ranges[job],x=Math.floor(Math.random()*(r[1]-r[0]+1))+r[0];
+ d.eglot+=x;d.earned+=x;log("💼 Зарплата: +"+x+" Еглот");update()
+}
+function invest(){let x=Math.floor(+document.getElementById("iv").value);if(!x||x<=0||x>d.eglot)return alert("Некорректная сумма.");d.eglot-=x;let p=Math.floor(x*.25);d.vchedey+=p;log("📈 Инвестиция: -"+x+" Еглот, +"+p+" Вчедей");update()}
+function exchangeMoney(){let x=Math.floor(+document.getElementById("ex").value);if(!x||x<10||x>d.eglot)return alert("Введите сумму от 10 Еглот.");let m=Math.floor(x/10);d.eglot-=m*10;d.manat+=m;log("💱 "+m*10+" Еглот → "+m+" Манат");update()}
+function deposit(){if(d.eglot<100)return alert("Недостаточно.");d.eglot-=100;d.wallet+=100;log("🍓 В хамам: 100 Еглот");update()}
+function withdraw(){if(d.wallet<100)return alert("В кошельке недостаточно.");d.wallet-=100;d.eglot+=100;log("🍓 Из хамама: 100 Еглот");update()}
+function transfer(){let n=document.getElementById("to").value.trim(),x=Math.floor(+document.getElementById("ta").value);if(!n||!x||x>d.eglot)return alert("Проверьте получателя и сумму.");d.eglot-=x;log("💸 "+x+" Еглот → "+n);update()}
+function bankDeposit(){let x=Math.floor(+document.getElementById("deposit").value);if(!x||x<100||x>d.eglot)return alert("Минимум 100 Еглот.");d.eglot-=x;d.deposit+=x;log("🏦 Вклад открыт: "+x+" Еглот");update()}
+function trade(t,dir){
+ let q=Math.floor(+(document.getElementById(t==="k"?"kqty":"gqty").value));
+ let price=t==="k"?d.knicePrice:d.knigerPrice;
+ let key=t==="k"?"knice":"kniger",name=t==="k"?"Кнайс":"Кнайгер";
+ if(!q||q<=0)return alert("Введите количество.");
+ if(dir>0){
+  if(q*price>d.eglot)return alert("Недостаточно Еглотов.");
+  d.eglot-=q*price;d[key]+=q;
+  if(t==="k"){d.demandK+=q;d.volumeK+=q}else{d.demandG+=q;d.volumeG+=q}
+  d.trades=(d.trades||0)+1;d.reputation=(d.reputation||0)+1;
+  d.tradeHistory=d.tradeHistory||[];d.tradeHistory.push({t:Date.now(),asset:name,side:"buy",qty:q,price,total:q*price});
+  log("🛒 Куплено "+q+" "+name+" за "+fmt(q*price)+" Еглот");
+ }else{
+  if(q>d[key])return alert("Недостаточно монет.");
+  d[key]-=q;d.eglot+=q*price;
+  if(t==="k"){d.supplyK+=q;d.volumeK+=q}else{d.supplyG+=q;d.volumeG+=q}
+  d.trades=(d.trades||0)+1;d.reputation=(d.reputation||0)+1;
+  d.bestTrade=Math.max(d.bestTrade||0,q*price);
+  d.tradeHistory=d.tradeHistory||[];d.tradeHistory.push({t:Date.now(),asset:name,side:"sell",qty:q,price,total:q*price});
+  log("💰 Продано "+q+" "+name+" за "+fmt(q*price)+" Еглот");
+ }
+ checkTraderAchievements();update()
+}
+
+function terminalRows(){
+ const range=document.getElementById("historyRange")?.value||"day";
+ return getHistoryRows(range);
+}
+function renderTerminal(){
+ const asset=document.getElementById("terminalAsset")?.value||"k";
+ const key=asset==="k"?"k":"g";
+ const price=asset==="k"?d.knicePrice:d.knigerPrice;
+ const rows=(d.marketHistory||[]).slice(-500);
+ const vals=rows.map(x=>x[key]).filter(Number.isFinite);
+ const max=vals.length?Math.max(...vals):price,min=vals.length?Math.min(...vals):price;
+ const avg=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:price;
+ const first=vals[0]||price,change=(price/first-1)*100;
+ const vol=asset==="k"?(d.volumeK||0):(d.volumeG||0);
+ document.getElementById("termPrice").textContent=fmt(price)+" ₲";
+ document.getElementById("termMax").textContent=fmt(max)+" ₲";
+ document.getElementById("termMin").textContent=fmt(min)+" ₲";
+ document.getElementById("termAvg").textContent=fmt(avg)+" ₲";
+ document.getElementById("termChange").textContent=(change>=0?"+":"")+change.toFixed(2)+"%";
+ document.getElementById("termVolume").textContent=fmt(vol);
+
+ const c=document.getElementById("terminalChart");
+ if(c){
+  const W=c.clientWidth||900,H=360,dpr=devicePixelRatio||1;
+  c.width=W*dpr;c.height=H*dpr;const ctx=c.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  if(vals.length>1){
+   const lo=min-(max-min)*.08||min-1,hi=max+(max-min)*.08||max+1;
+   ctx.beginPath();
+   vals.forEach((v,i)=>{
+    const x=30+i*(W-50)/(vals.length-1),y=H-35-(v-lo)/(hi-lo)*(H-65);
+    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+   });
+   ctx.strokeStyle=asset==="k"?"#315cff":"#d43b73";ctx.lineWidth=3;ctx.stroke();
+  }
+ }
+ renderPortfolio();renderAlerts();renderTradeHistory();renderTraderAchievements();
+}
+function renderPortfolio(){
+ const e=document.getElementById("portfolioBox");if(!e)return;
+ const k=d.knice*d.knicePrice,g=d.kniger*d.knigerPrice;
+ const total=k+g;
+ e.innerHTML=`<div class="asset"><span>🟦 Кнайс · ${fmt(d.knice)}</span><b>${fmt(k)} ₲</b></div>
+ <div class="asset"><span>🟥 Кнайгер · ${fmt(d.kniger)}</span><b>${fmt(g)} ₲</b></div>
+ <div class="asset"><span>💰 Еглоты</span><b>${fmt(d.eglot)} ₲</b></div>
+ <div class="asset"><span><b>Общий портфель</b></span><b>${fmt(total)} ₲</b></div>`;
+}
+function addPriceAlert(){
+ const asset=document.getElementById("alertAsset").value,type=document.getElementById("alertType").value;
+ const price=+document.getElementById("alertPrice").value;
+ if(!price||price<=0)return alert("Введите корректную цену.");
+ d.alerts=d.alerts||[];d.alerts.push({asset,type,price,created:Date.now(),active:true});
+ log("🔔 Создано ценовое уведомление");renderAlerts();save();
+}
+function renderAlerts(){
+ const e=document.getElementById("alertsBox");if(!e)return;
+ const a=d.alerts||[];
+ e.innerHTML=a.length?a.map((x,i)=>`<div class="asset"><span>${x.asset==="k"?"Кнайс":"Кнайгер"}: ${x.type==="below"?"ниже":"выше"} ${fmt(x.price)} ₲</span><button class="gray" onclick="removeAlert(${i})">Удалить</button></div>`).join(""):"<span class='muted'>Уведомлений нет.</span>";
+}
+function removeAlert(i){d.alerts.splice(i,1);renderAlerts();save()}
+function checkAlerts(){
+ (d.alerts||[]).forEach(a=>{
+  if(!a.active)return;
+  const p=a.asset==="k"?d.knicePrice:d.knigerPrice;
+  const hit=a.type==="below"?p<=a.price:p>=a.price;
+  if(hit){a.active=false;log("🔔 Цена "+(a.asset==="k"?"Кнайса":"Кнайгера")+" достигла "+fmt(p)+" ₲");alert("🔔 Уведомление: "+(a.asset==="k"?"Кнайс":"Кнайгер")+" — "+fmt(p)+" ₲");}
+ });
+}
+function renderTradeHistory(){
+ const e=document.getElementById("tradeHistoryBox");if(!e)return;
+ const f=document.getElementById("tradeFilter")?.value||"all";
+ const arr=(d.tradeHistory||[]).filter(x=>f==="all"||x.side===f).slice(-30).reverse();
+ e.innerHTML=arr.length?arr.map(x=>`<div class="asset"><span>${new Date(x.t).toLocaleString()} · ${x.side==="buy"?"🟢 Покупка":"🔴 Продажа"} ${x.asset}</span><b>${x.qty} × ${fmt(x.price)} ₲</b></div>`).join(""):"<span class='muted'>Сделок пока нет.</span>";
+}
+function checkTraderAchievements(){
+ d.traderAchievements=d.traderAchievements||[];
+ const checks=[
+  ["first","Первый трейд","Совершить первую сделку",(d.trades||0)>=1],
+  ["trader25","Опытный трейдер","Совершить 25 сделок",(d.trades||0)>=25],
+  ["rep100","Уважаемый трейдер","Получить 100 репутации",(d.reputation||0)>=100],
+  ["million","Криптомагнат","Иметь активов на 1 000 000 ₲",(d.knice*d.knicePrice+d.kniger*d.knigerPrice)>=1000000]
+ ];
+ checks.forEach(x=>{if(x[3]&&!d.traderAchievements.includes(x[0])){d.traderAchievements.push(x[0]);log("🏆 Получено достижение: "+x[1]);}});
+}
+function renderTraderAchievements(){
+ const e=document.getElementById("traderAchievements");if(!e)return;
+ const all=[["first","Первый трейд"],["trader25","Опытный трейдер"],["rep100","Уважаемый трейдер"],["million","Криптомагнат"]];
+ e.innerHTML=all.map(x=>`<div class="asset"><span>${d.traderAchievements.includes(x[0])?"🏆":"🔒"} ${x[1]}</span><b>${d.traderAchievements.includes(x[0])?"Получено":"Не получено"}</b></div>`).join("");
+}
+
+
+function assetPrice(a){return a==="g"?d.knigerPrice:d.knicePrice}
+function assetName(a){return a==="g"?"Кнайгер":"Кнайс"}
+function placeLimitOrder(){
+ const a=document.getElementById("orderAsset").value,side=document.getElementById("orderSide").value,q=Math.floor(+document.getElementById("orderQty").value),p=+document.getElementById("orderPrice").value;
+ if(!q||q<1||!p||p<1)return alert("Заполните количество и цену.");
+ if(side==="buy"&&q*p>d.eglot)return alert("Недостаточно Еглотов.");
+ if(side==="sell"&&q>d[a==="g"?"kniger":"knice"])return alert("Недостаточно актива.");
+ d.orders.push({id:Date.now()+Math.random(),asset:a,side,qty:q,price:p});
+ log("📋 Лимитный ордер размещён");renderOrderBook();save()
+}
+function cancelOrder(id){d.orders=d.orders.filter(o=>o.id!==id);renderOrderBook();save()}
+function matchOrders(){
+ (d.orders||[]).slice().forEach(o=>{let p=assetPrice(o.asset),hit=o.side==="buy"?p<=o.price:p>=o.price;if(!hit)return;
+ let key=o.asset==="g"?"kniger":"knice",total=o.qty*p;
+ if(o.side==="buy"){if(total>d.eglot)return;d.eglot-=total;d[key]+=o.qty;if(o.asset==="g"){d.demandG+=o.qty;d.volumeG+=o.qty}else{d.demandK+=o.qty;d.volumeK+=o.qty}}
+ else{if(o.qty>d[key])return;d[key]-=o.qty;d.eglot+=total;if(o.asset==="g"){d.supplyG+=o.qty;d.volumeG+=o.qty}else{d.supplyK+=o.qty;d.volumeK+=o.qty}}
+ d.tradeHistory.push({t:Date.now(),asset:assetName(o.asset),side:o.side,qty:o.qty,price:p,total});d.orders=d.orders.filter(x=>x.id!==o.id);
+ });}
+function renderOrderBook(){
+ const e=document.getElementById("myOrders"),a=document.getElementById("orderAsset")?.value||"k";if(!e)return;
+ const arr=(d.orders||[]).filter(o=>o.asset===a);
+ const rows=arr.map(o=>`<div class="asset"><span>${o.side==="buy"?"🟢":"🔴"} ${o.qty} ${assetName(a)} × ${fmt(o.price)} ₲</span><button class="gray" onclick="cancelOrder(${o.id})">Отмена</button></div>`).join("");
+ e.innerHTML=rows||"<span class='muted'>Открытых ордеров нет.</span>";
+ document.getElementById("asks").innerHTML=arr.filter(o=>o.side==="sell").map(o=>`<div class="asset">${o.qty} · ${fmt(o.price)} ₲</div>`).join("")||"<span class='muted'>Нет заявок</span>";
+ document.getElementById("bids").innerHTML=arr.filter(o=>o.side==="buy").map(o=>`<div class="asset">${o.qty} · ${fmt(o.price)} ₲</div>`).join("")||"<span class='muted'>Нет заявок</span>";
+}
+function centralBankAction(x){if(x==="raise")d.rate=Math.min(15,d.rate+.5);if(x==="cut")d.rate=Math.max(1,d.rate-.5);if(x==="money")d.moneySupply+=10000000;log("🏛️ ЦБЕ изменил политику");update()}
+function createCard(){if(d.cards.length)return alert("Knice Card уже выпущена.");if(d.eglot<1000)return alert("Нужно 1 000 Еглот.");d.eglot-=1000;d.cards.push(Date.now());log("💳 Выпущена Knice Card");update()}
+function buyInsurance(){let v=d.knice*d.knicePrice+d.kniger*d.knigerPrice,c=v*.02;if(!v)return alert("Нет инвестиций.");if(d.eglot<c)return alert("Недостаточно Еглотов.");d.eglot-=c;d.insurance=[Date.now()];log("🛡️ Портфель застрахован");update()}
+function renderMacro(){let f=(i,v)=>{let e=document.getElementById(i);if(e)e.textContent=v};f("gdpStat",fmt(d.gdp)+" ₲");f("unempStat",d.unemployment.toFixed(2)+"%");f("moneyStat",fmt(d.moneySupply)+" ₲");f("budgetStat",fmt(d.governmentBudget)+" ₲");f("taxStat",d.incomeTax.toFixed(1)+"%");let c=document.getElementById("cardBalance");if(c)c.textContent="Баланс: "+fmt(d.eglot)+" ₲"}
+function renderCandles(){
+ const a=document.getElementById("candleAsset")?.value||"k",h=(d.marketHistory||[]).slice(-60),c=document.getElementById("candleChart");if(!c||h.length<2)return;
+ const W=c.clientWidth||900,H=380,D=devicePixelRatio||1;c.width=W*D;c.height=H*D;let x=c.getContext("2d");x.setTransform(D,0,0,D,0,0);x.clearRect(0,0,W,H);
+ let vals=h.map(z=>z[a]).filter(Number.isFinite),lo=Math.min(...vals),hi=Math.max(...vals),pad=(hi-lo)*.1||1;
+ vals.forEach((v,i)=>{let px=25+i*(W-50)/(vals.length-1),py=H-30-(v-lo+pad)/(hi-lo+2*pad)*(H-55);x.fillStyle="#315cff";x.fillRect(px-2,py-2,4,4)})
+}
+
+function buyBusiness(name,price,income){
+ if(d.eglot<price)return alert("Недостаточно Еглотов.");
+ d.eglot-=price;d.businesses=d.businesses||[];d.businesses.push({name,price,income});
+ d.earned+=Math.floor(price/20);log("🏢 Куплен бизнес: "+name+" за "+fmt(price)+" Еглот");update();
+}
+function buyProperty(name,price,rent){
+ if(d.eglot<price)return alert("Недостаточно Еглотов.");
+ d.eglot-=price;d.properties=d.properties||[];d.properties.push({name,price,rent});
+ d.earned+=Math.floor(price/25);log("🏠 Куплена недвижимость: "+name+" за "+fmt(price)+" Еглот");update();
+}
+function renderBusinesses(){
+ const e=document.getElementById("businesses");if(!e)return;
+ const bs=d.businesses||[],ps=d.properties||[];
+ if(!bs.length&&!ps.length){e.innerHTML="<span class='muted'>Пока нет бизнеса или недвижимости.</span>";return}
+ e.innerHTML=bs.map(b=>`<div class="asset"><span>🏢 ${b.name}</span><b>+${fmt(b.income)} ₲/цикл</b></div>`).join("")
+ +(ps.map(p=>`<div class="asset"><span>🏠 ${p.name}</span><b>+${fmt(p.rent)} ₲/цикл</b></div>`).join(""));
+}
+function businessIncome(){
+ let total=(d.businesses||[]).reduce((a,b)=>a+b.income,0)+(d.properties||[]).reduce((a,p)=>a+p.rent,0);
+ if(total>0){d.eglot+=total;d.earned+=total;log("🏢 Доход от бизнеса и недвижимости: +"+fmt(total)+" Еглот");update()}
+}
+function renderLeaderboard(){
+ const e=document.getElementById("leaderboard");if(!e)return;
+ const players=[
+  ["Тифа",wealth()],
+  ["Расул",Math.round(650000+Math.sin(Date.now()/900000)*70000)],
+  ["Туран",Math.round(420000+Math.cos(Date.now()/1000000)*55000)],
+  ["Эльдар",Math.round(300000+Math.sin(Date.now()/1200000)*40000)],
+  ["Али",Math.round(190000+Math.cos(Date.now()/800000)*30000)],
+  ["Магран",Math.round(150000+Math.sin(Date.now()/700000)*25000)]
+ ].sort((a,b)=>b[1]-a[1]);
+ e.innerHTML=players.map((p,i)=>`<div class="asset"><span><b>#${i+1}</b> ${p[0]}</span><b>${fmt(p[1])} ₲</b></div>`).join("");
+}
+
+
+function getHistoryRows(range){
+ const h=d.marketHistory||[];
+ const now=Date.now();
+ const limits={day:86400000,week:604800000,month:2592000000,year:31536000000,all:Infinity};
+ const limit=limits[range]??Infinity;
+ return h.filter(x=>now-x.t<=limit);
+}
+function renderMarketHistory(){
+ const range=document.getElementById("historyRange")?.value||"day";
+ const rows=getHistoryRows(range);
+ const kc=document.getElementById("histK"),gc=document.getElementById("histG");
+ if(kc)kc.textContent=fmt(d.knicePrice)+" ₲";
+ if(gc)gc.textContent=fmt(d.knigerPrice)+" ₲";
+ const first=rows[0];
+ const kchg=first?((d.knicePrice/first.k-1)*100):0;
+ const gchg=first?((d.knigerPrice/first.g-1)*100):0;
+ const ke=document.getElementById("histKChange"),ge=document.getElementById("histGChange");
+ if(ke)ke.textContent=(kchg>=0?"+":"")+kchg.toFixed(2)+"%";
+ if(ge)ge.textContent=(gchg>=0?"+":"")+gchg.toFixed(2)+"%";
+
+ const c=document.getElementById("historyChart");
+ if(c){
+  const ctx=c.getContext("2d"),w=c.width=c.clientWidth*devicePixelRatio,h=c.height=330*devicePixelRatio;
+  ctx.scale(devicePixelRatio,devicePixelRatio);
+  const W=c.clientWidth,H=330;ctx.clearRect(0,0,W,H);
+  if(rows.length>1){
+   const vals=rows.flatMap(x=>[x.k,x.g]),min=Math.min(...vals),max=Math.max(...vals),pad=(max-min)*.12||1;
+   const lo=min-pad,hi=max+pad;
+   function line(key){
+    ctx.beginPath();
+    rows.forEach((x,i)=>{
+     const px=30+i*(W-50)/(rows.length-1),py=H-30-(x[key]-lo)/(hi-lo)*(H-55);
+     i?ctx.lineTo(px,py):ctx.moveTo(px,py);
+    });
+    ctx.strokeStyle=key==="k"?"#315cff":"#d43b73";ctx.lineWidth=3;ctx.stroke();
+   }
+   line("k");line("g");
+   ctx.fillStyle=getComputedStyle(document.body).getPropertyValue("--muted")||"#6b7280";
+   ctx.font="12px sans-serif";ctx.fillText("Кнайс",35,18);ctx.fillText("Кнайгер",95,18);
+  }else{
+   ctx.fillStyle=getComputedStyle(document.body).getPropertyValue("--muted")||"#6b7280";
+   ctx.font="14px sans-serif";ctx.fillText("Недостаточно исторических данных для выбранного периода.",25,45);
+  }
+ }
+ const table=document.getElementById("historyTable");
+ if(table){
+  const recent=rows.slice(-12).reverse();
+  table.innerHTML=recent.length?recent.map(x=>`<div class="asset"><span>${new Date(x.t).toLocaleString()}</span><b>Кнайс ${fmt(x.k)} ₲ · Кнайгер ${fmt(x.g)} ₲</b></div>`).join(""):"<span class='muted'>История за этот период пока пуста.</span>";
+ }
+}
+
+function buyItem(name,price){if(d.eglot<price)return alert("Недостаточно Еглотов.");d.eglot-=price;d.inventory.push(name);d.earned+=Math.floor(price/10);log("🛒 Куплено: "+name+" за "+fmt(price)+" Еглот");update()}
+function renderInventory(){document.getElementById("inventory").innerHTML=d.inventory.length?d.inventory.map((x,i)=>`<div class="asset"><span>${x}</span><span class="badge">Куплено</span></div>`).join(""):"<span class='muted'>Имущества пока нет.</span>"}
+function renderHistory(){const h=d.history.map(x=>"<div>"+x+"</div>").join("")||"<span class='muted'>Операций пока нет.</span>";const ph=document.getElementById("profileHistory");if(ph)ph.innerHTML=h;const hh=document.getElementById("homeHistory");if(hh)hh.innerHTML=d.history.slice(0,8).map(x=>"<div>"+x+"</div>").join("")||h}
+function renderAch(){let a=[];if(d.earned>=100)a.push("💰 Первые деньги");if(d.earned>=5000)a.push("💎 5 000 заработано");if(d.knice>=200)a.push("🟦 Коллекционер Кнайса");if(d.kniger>=50)a.push("🟥 Коллекционер Кнайгера");if(d.inventory.length>=3)a.push("🛒 Шопоголик");if(wealth()>=1000000)a.push("👑 Миллионер");document.getElementById("ach").innerHTML=a.length?a.map(x=>`<div class="achievement">${x}</div>`).join(""):"<div class='muted'>Пока нет достижений.</div>"}
+function marketTick(){
+ matchOrders();d.gdp=Math.max(100000000,d.gdp*(1+(3.5-d.inflation)*.0008-(d.unemployment-5)*.0005));d.unemployment=Math.max(1,Math.min(20,d.unemployment+(d.marketIndex>110?-.05:.05)+(Math.random()-.5)*.1));
+ d.prevK=d.knicePrice;d.prevG=d.knigerPrice;
+ d.marketHistory=d.marketHistory||[];
+
+ // 1) News creates a fundamental shock.
+ const ev=news[Math.floor(Math.random()*news.length)];
+ d.news=ev[0]+" "+ev[1];
+
+ // 2) Bot sentiment creates organic demand/supply.
+ d.bull=Math.max(10,Math.min(90,(d.bull||50)+(Math.random()-.5)*16));
+ d.bear=100-d.bull;
+
+ const botKBuy=Math.max(0,Math.round(5+(d.bull-50)/5+Math.random()*8));
+ const botKSell=Math.max(0,Math.round(5+(d.bear-50)/5+Math.random()*8));
+ const botGBuy=Math.max(0,Math.round(4+(d.bull-50)/6+Math.random()*7));
+ const botGSell=Math.max(0,Math.round(4+(d.bear-50)/6+Math.random()*7));
+
+ // 3) Macro economy: high rates hurt speculative assets; inflation adds pressure.
+ const macro=1-(d.rate-6.5)*0.012-(d.inflation-3.2)*0.004;
+
+ // 4) Market shock from the news, now combined with fundamentals.
+ const newsK=ev[2],newsG=ev[3];
+
+ // 5) Demand/supply imbalance determines the price movement.
+ const imbalanceK=(botKBuy+Math.max(0,d.demandK*0.18))-(botKSell+Math.max(0,d.supplyK*0.18));
+ const imbalanceG=(botGBuy+Math.max(0,d.demandG*0.18))-(botGSell+Math.max(0,d.supplyG*0.18));
+
+ const demandEffectK=1+Math.max(-0.12,Math.min(0.12,imbalanceK/100));
+ const demandEffectG=1+Math.max(-0.14,Math.min(0.14,imbalanceG/90));
+
+ // Mean reversion prevents runaway prices.
+ const meanK=500,meanG=1200;
+ const reversionK=1+(meanK/d.knicePrice-1)*0.006;
+ const reversionG=1+(meanG/d.knigerPrice-1)*0.006;
+
+ d.knicePrice=Math.max(1,+(d.knicePrice*newsK*macro*demandEffectK*reversionK).toFixed(2));
+ d.knigerPrice=Math.max(1,+(d.knigerPrice*newsG*macro*demandEffectG*reversionG).toFixed(2));
+ d.marketHistory.push({t:Date.now(),k:d.knicePrice,g:d.knigerPrice,index:d.marketIndex,inflation:d.inflation,rate:d.rate});
+ checkAlerts();checkTraderAchievements();
+ if(d.marketHistory.length>12000)d.marketHistory.shift();
+
+ d.marketIndex=Math.max(20,Math.min(250,d.marketIndex+(d.knicePrice>d.prevK?1:-1)*1.5+(Math.random()-.5)*2));
+ d.inflation=Math.max(.2,Math.min(20,d.inflation+(Math.random()-.5)*.16));
+
+ // Central bank reacts to inflation.
+ if(d.inflation>6)d.rate=Math.min(15,d.rate+.08);
+ else if(d.inflation<2)d.rate=Math.max(1,d.rate-.05);
+ else d.rate=Math.max(1,Math.min(15,d.rate+(Math.random()-.5)*.04));
+
+ // Reset player pressure gradually; bot pressure remains active.
+ d.demandK*=.55; d.supplyK*=.55; d.demandG*=.55; d.supplyG*=.55;
+
+ d.chartK.push(d.knicePrice);d.chartG.push(d.knigerPrice);
+ if(d.chartK.length>50)d.chartK.shift();
+ if(d.chartG.length>50)d.chartG.shift();
+
+ if(d.prediction){
+   const currentPredictionPrice=d.predictionAsset==="g"?d.knigerPrice:d.knicePrice;const actual=currentPredictionPrice>=d.prediction.price?1:-1;
+   const ok=actual===d.prediction.direction;
+   d.reputation=(d.reputation||0)+(ok?5:-2);
+   const pe=document.getElementById("prediction");
+   if(pe)pe.textContent=ok?"✅ Прогноз верный! Репутация +5.":"❌ Прогноз неверный. Репутация -2.";
+   d.prediction=null;
+ }
+ update()
+}
+function draw(){
+ const c=document.getElementById("chart"),ctx=c.getContext("2d"),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);
+ ctx.strokeStyle=getComputedStyle(document.body).getPropertyValue("--line")||"#e7ebf2";ctx.lineWidth=1;for(let i=1;i<7;i++){let y=i*h/7;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+ line(d.chartK,"#2457ff");line(d.chartG,"#ef4444");
+ function line(a,col){if(a.length<2)return;let lo=Math.min(...a),hi=Math.max(...a),rg=hi-lo||1;ctx.strokeStyle=col;ctx.lineWidth=3;ctx.beginPath();a.forEach((v,i)=>{let x=10+i*(w-20)/(a.length-1),y=h-15-(v-lo)/rg*(h-30);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke()}
+}
+
+function toggleTheme(){
+ document.body.classList.toggle("dark");
+ const dark=document.body.classList.contains("dark");
+ localStorage.setItem("KniceTheme",dark?"dark":"light");
+ document.getElementById("themeBtn").textContent=dark?"☀️":"🌙";
+ draw();
+}
+function loadTheme(){
+ const dark=localStorage.getItem("KniceTheme")==="dark";
+ document.body.classList.toggle("dark",dark);
+ const b=document.getElementById("themeBtn");if(b)b.textContent=dark?"☀️":"🌙";
+}
+function createGoal(){
+ const name=document.getElementById("goalName").value.trim();
+ const target=Math.floor(+document.getElementById("goalTarget").value);
+ if(!name||!target||target<=0)return alert("Введите название и сумму цели.");
+ d.goal={name,target,created:Date.now()};
+ log("🎯 Создана цель: "+name+" — "+fmt(target)+" Еглот");
+ update();
+}
+function renderGoal(){
+ const e=document.getElementById("goalBox");if(!e)return;
+ if(!d.goal){e.innerHTML="<span class='muted'>Цель ещё не создана.</span>";return}
+ const pct=Math.min(100,Math.round(wealth()/d.goal.target*100));
+ e.innerHTML="<b>"+d.goal.name+"</b><p>"+fmt(wealth())+" / "+fmt(d.goal.target)+" Еглот</p><div class='bar'><i style='width:"+pct+"%'></i></div><p class='muted'>"+pct+"%</p>";
+}
+function updateDaily(){
+ const e=document.getElementById("dailyText");if(!e)return;
+ const today=new Date().toISOString().slice(0,10);
+ if(d.lastBonus===today){e.textContent="🎁 Сегодняшний бонус уже получен.";return}
+ e.textContent="🎁 Сегодня доступно 500 Еглот.";
+}
+function dailyBonus(){
+ const today=new Date().toISOString().slice(0,10);
+ if(d.lastBonus===today)return alert("Ты уже получил сегодняшний бонус.");
+ d.lastBonus=today;d.eglot+=500;d.earned+=500;log("🎁 Ежедневный бонус: +500 Еглот");update();
+}
+function predict(direction){
+ if(d.prediction)return alert("Сначала дождись следующего изменения рынка.");
+ d.predictionAsset=document.getElementById("predictionAsset")?.value||"k";
+ d.prediction={direction,price:d.predictionAsset==="g"?d.knigerPrice:d.knicePrice};
+ document.getElementById("prediction").textContent="Прогноз принят. Жди следующего обновления рынка.";
+}
+
+function resetAll(){if(confirm("Удалить весь прогресс?")){localStorage.removeItem("KniceBank4");location.reload()}}
+loadTheme();
+d.marketHistory=d.marketHistory||[];if(!d.marketHistory.length)d.marketHistory.push({t:Date.now(),k:d.knicePrice,g:d.knigerPrice,index:d.marketIndex,inflation:d.inflation,rate:d.rate});d.chartK=d.chartK||[d.knicePrice];d.chartG=d.chartG||[d.knigerPrice];
+d.bull=d.bull||50;d.bear=d.bear||50;
+d.demandK=d.demandK||0;d.demandG=d.demandG||0;d.supplyK=d.supplyK||0;d.supplyG=d.supplyG||0;
+d.volumeK=d.volumeK||0;d.volumeG=d.volumeG||0;d.marketHistory=d.marketHistory||[];d.businesses=d.businesses||[];d.properties=d.properties||[];d.marketHistory=d.marketHistory||[];d.alerts=d.alerts||[];d.tradeHistory=d.tradeHistory||[];d.traderAchievements=d.traderAchievements||[];d.orders=d.orders||[];d.cards=d.cards||[];d.insurance=d.insurance||[];d.gdp=d.gdp||1000000000;d.unemployment=d.unemployment||5;d.moneySupply=d.moneySupply||500000000;d.governmentBudget=d.governmentBudget||50000000;d.incomeTax=d.incomeTax||5;
+setInterval(marketTick,5000);setInterval(()=>{businessIncome();if(d.deposit>0){let p=Math.floor(d.deposit*.05);d.deposit+=p;log("🏦 Вклад принёс "+p+" Еглот");update()}},60000);
+</script>
+</body>
+</html>

@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Frontline 1944 Mobile</title>
+  <style>
+    * { box-sizing: border-box; -webkit-touch-callout: none; }
+    body {
+      margin: 0; padding: 0; background: #080b09; overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      user-select: none; -webkit-user-select: none; touch-action: none;
+    }
+    #gameCanvas { display: block; width: 100vw; height: 100vh; }
+
+    #menu-overlay {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: radial-gradient(circle, #162019 0%, #060807 90%);
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      z-index: 200; color: #e0ece3; padding: 15px; text-align: center;
+    }
+    .menu-title { font-size: 32px; font-weight: 900; letter-spacing: 3px; margin: 0 0 4px 0; }
+    .menu-sub { font-size: 12px; color: #7b9684; margin-bottom: 15px; }
+    .class-selection { display: flex; gap: 10px; margin-bottom: 15px; }
+    .class-card {
+      background: rgba(255,255,255,0.03); border: 2px solid #283a2d; border-radius: 6px;
+      padding: 10px 6px; width: 100px; cursor: pointer; text-align: center;
+    }
+    .class-card.active { border-color: #44bd32; background: rgba(68, 189, 50, 0.15); }
+    .class-name { font-weight: bold; font-size: 11px; margin-bottom: 4px; color: #fff; }
+    .class-desc { font-size: 9px; color: #8fa895; line-height: 1.2; }
+
+    .diff-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .diff-btn {
+      background: rgba(255,255,255,0.05); border: 1px solid #3d4f40; color: #a4b0be;
+      padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: bold;
+    }
+    .diff-btn.active-diff { border-color: #44bd32; background: rgba(68,189,50,0.2); color: #fff; }
+    .btn-action {
+      background: #2e7d32; color: #fff; border: none; padding: 12px 40px;
+      font-size: 15px; font-weight: bold; border-radius: 6px;
+    }
+
+    #hud {
+      position: absolute; top: 10px; left: 10px;
+      background: rgba(14, 20, 16, 0.9); padding: 8px 12px;
+      border: 1px solid #3d4f40; border-radius: 6px; color: #e0e8e2;
+      z-index: 10; display: none; font-size: 10px;
+    }
+    #minimap { border: 1px solid #4a6350; border-radius: 3px; background: #111713; display: block; margin-bottom: 6px; }
+    .bar-bg { width: 140px; height: 5px; background: #232d26; border-radius: 2px; overflow: hidden; margin: 2px 0 4px 0; }
+    #hp-bar-fill { height: 100%; width: 100%; background: #4cd137; }
+
+    #capture-hud {
+      display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+      background: rgba(14, 20, 16, 0.9); border: 1px solid #3d4f40; border-radius: 6px;
+      padding: 6px 15px; text-align: center; color: #fff; z-index: 12; font-size: 11px;
+    }
+    #capture-bar-bg { width: 140px; height: 6px; background: #222; border-radius: 3px; overflow: hidden; margin-top: 3px; }
+    #capture-bar-fill { height: 100%; width: 50%; background: #f5cd79; }
+
+    /* Тач Стики */
+    .stick-zone {
+      position: absolute; bottom: 20px; width: 120px; height: 120px;
+      background: rgba(255, 255, 255, 0.04); border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 50%; z-index: 20; display: none;
+    }
+    #left-stick-zone { left: 20px; }
+    #right-stick-zone { right: 120px; }
+    .stick-thumb {
+      position: absolute; width: 50px; height: 50px; border-radius: 50%;
+      background: rgba(76, 209, 55, 0.4); border: 2px solid #4cd137;
+      top: 35px; left: 35px; pointer-events: none;
+    }
+    #right-stick-thumb { background: rgba(235, 68, 90, 0.4); border-color: #eb445a; }
+
+    /* Экранные Кнопки Справа */
+    #action-pad {
+      position: absolute; bottom: 20px; right: 15px; display: none;
+      flex-direction: column; gap: 8px; z-index: 25;
+    }
+    .touch-btn {
+      width: 44px; height: 44px; border-radius: 50%; background: rgba(14, 20, 16, 0.85);
+      border: 1.5px solid #3d4f40; color: #fff; font-weight: bold; font-size: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .touch-btn:active { background: #4cd137; color: #000; }
+
+    #respawn-screen, #gameover-screen {
+      display: none; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      flex-direction: column; justify-content: center; align-items: center;
+      color: #fff; z-index: 150; background: rgba(10, 15, 12, 0.95); text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div id="menu-overlay">
+  <h1 class="menu-title">FRONTLINE 1944</h1>
+  <div class="menu-sub">МОБИЛЬНОЕ ИЗДАНИЕ ТВД</div>
+
+  <div class="class-selection">
+    <div class="class-card active" onclick="selectClass('assault', this)">
+      <div class="class-name">ШТУРМ</div>
+      <div class="class-desc">Скорость, гранаты.</div>
+    </div>
+    <div class="class-card" onclick="selectClass('sniper', this)">
+      <div class="class-name">СНАЙПЕР</div>
+      <div class="class-desc">Дальний урон.</div>
+    </div>
+    <div class="class-card" onclick="selectClass('gunner', this)">
+      <div class="class-name">ПУЛЕМЕТ</div>
+      <div class="class-desc">Броня, плотный огонь.</div>
+    </div>
+  </div>
+
+  <div class="diff-row">
+    <button type="button" class="diff-btn" onclick="setDifficulty('easy', this)">ЛЕГКО</button>
+    <button type="button" class="diff-btn active-diff" onclick="setDifficulty('normal', this)">НОРМА</button>
+    <button type="button" class="diff-btn" onclick="setDifficulty('hard', this)">ХАРД</button>
+  </div>
+
+  <button class="btn-action" onclick="startGame()">В БОЙ</button>
+</div>
+
+<div id="hud">
+  <canvas id="minimap" width="140" height="80"></canvas>
+  <div>HP: <span id="hp-val">100</span>%</div>
+  <div class="bar-bg"><div id="hp-bar-fill"></div></div>
+  <div>ФРАГИ: <b id="kills-val" style="color: #e84118;">0</b> | БАЗЫ: <span id="blue-bases-count">2</span>/5</div>
+</div>
+
+<div id="capture-hud">
+  <div id="capture-title">База</div>
+  <div id="capture-bar-bg"><div id="capture-bar-fill"></div></div>
+</div>
+
+<!-- Мобильные Тач-Стики -->
+<div id="left-stick-zone" class="stick-zone"><div id="left-stick-thumb" class="stick-thumb"></div></div>
+<div id="right-stick-zone" class="stick-zone"><div id="right-stick-thumb" class="stick-thumb"></div></div>
+
+<div id="action-pad">
+  <div class="touch-btn" onclick="throwGrenade()">G</div>
+  <div class="touch-btn" onclick="toggleTank()">E</div>
+  <div class="touch-btn" onclick="callArtillery()">B</div>
+  <div class="touch-btn" onclick="commandWhistle()">F</div>
+</div>
+
+<div id="respawn-screen">
+  <h2>ВЫ ПАЛИ В БОЮ</h2>
+  <div id="respawn-timer" style="color:#f5cd79;">Возрождение: 3 сек...</div>
+</div>
+
+<div id="gameover-screen">
+  <h2 id="end-status">ПОБЕДА!</h2>
+  <div id="end-details" style="margin-bottom:20px; font-size: 13px; color:#aaa;"></div>
+  <button class="btn-action" onclick="returnToMenu()">В МЕНЮ</button>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+// --- АУДИО СИНТЕЗАТОР ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  if (type === 'shot') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(35, now + 0.08);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 0.08);
+  } else if (type === 'cannon') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(25, now + 0.25);
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 0.25);
+  } else if (type === 'explosion') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(90, now);
+    osc.frequency.exponentialRampToValueAtTime(20, now + 0.35);
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 0.35);
+  }
+}
+
+// --- КОНФИГУРАЦИЯ ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const mCanvas = document.getElementById('minimap');
+const mCtx = mCanvas.getContext('2d');
+
+let screenW = canvas.width = window.innerWidth;
+let screenH = canvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+  screenW = canvas.width = window.innerWidth;
+  screenH = canvas.height = window.innerHeight;
+});
+
+const WORLD_W = 3600;
+const WORLD_H = 2000;
+const camera = { x: 0, y: 0 };
+
+let playerStats = { kills: 0, caps: 0 };
+let currentDifficulty = 'normal';
+const diffCfg = {
+  easy: { spread: 0.35, fireRateMult: 1.4, reaction: 350 },
+  normal: { spread: 0.20, fireRateMult: 1.0, reaction: 420 },
+  hard: { spread: 0.08, fireRateMult: 0.8, reaction: 500 }
+};
+
+function setDifficulty(lvl, el) {
+  currentDifficulty = lvl;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active-diff'));
+  el.classList.add('active-diff');
+}
+
+let selectedClass = 'assault';
+function selectClass(c, el) {
+  selectedClass = c;
+  document.querySelectorAll('.class-card').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// --- ТАЧ УПРАВЛЕНИЕ (СТИКИ) ---
+const leftStick = { active: false, id: null, x: 0, y: 0, vx: 0, vy: 0 };
+const rightStick = { active: false, id: null, x: 0, y: 0, angle: 0, firing: false };
+
+const lZone = document.getElementById('left-stick-zone');
+const lThumb = document.getElementById('left-stick-thumb');
+const rZone = document.getElementById('right-stick-zone');
+const rThumb = document.getElementById('right-stick-thumb');
+
+window.addEventListener('touchstart', e => {
+  for (let t of e.changedTouches) {
+    const lRect = lZone.getBoundingClientRect();
+    const rRect = rZone.getBoundingClientRect();
+
+    if (!leftStick.active && t.clientX >= lRect.left && t.clientX <= lRect.right && t.clientY >= lRect.top && t.clientY <= lRect.bottom) {
+      leftStick.active = true; leftStick.id = t.identifier;
+      handleLeftStick(t.clientX, t.clientY, lRect);
+    } else if (!rightStick.active && t.clientX >= rRect.left && t.clientX <= rRect.right && t.clientY >= rRect.top && t.clientY <= rRect.bottom) {
+      rightStick.active = true; rightStick.id = t.identifier;
+      handleRightStick(t.clientX, t.clientY, rRect);
+    }
+  }
+}, { passive: false });
+
+window.addEventListener('touchmove', e => {
+  for (let t of e.changedTouches) {
+    if (leftStick.active && t.identifier === leftStick.id) {
+      handleLeftStick(t.clientX, t.clientY, lZone.getBoundingClientRect());
+    } else if (rightStick.active && t.identifier === rightStick.id) {
+      handleRightStick(t.clientX, t.clientY, rZone.getBoundingClientRect());
+    }
+  }
+}, { passive: false });
+
+window.addEventListener('touchend', e => {
+  for (let t of e.changedTouches) {
+    if (t.identifier === leftStick.id) {
+      leftStick.active = false; leftStick.vx = 0; leftStick.vy = 0;
+      lThumb.style.transform = `translate(0px, 0px)`;
+    } else if (t.identifier === rightStick.id) {
+      rightStick.active = false; rightStick.firing = false;
+      rThumb.style.transform = `translate(0px, 0px)`;
+    }
+  }
+});
+
+function handleLeftStick(cx, cy, rect) {
+  const midX = rect.left + rect.width / 2;
+  const midY = rect.top + rect.height / 2;
+  let dx = cx - midX; let dy = cy - midY;
+  const dist = Math.hypot(dx, dy);
+  const maxR = 40;
+  if (dist > maxR) { dx = (dx / dist) * maxR; dy = (dy / dist) * maxR; }
+  leftStick.vx = dx / maxR; leftStick.vy = dy / maxR;
+  lThumb.style.transform = `translate(${dx}px, ${dy}px)`;
+}
+
+function handleRightStick(cx, cy, rect) {
+  const midX = rect.left + rect.width / 2;
+  const midY = rect.top + rect.height / 2;
+  let dx = cx - midX; let dy = cy - midY;
+  const dist = Math.hypot(dx, dy);
+  const maxR = 40;
+  if (dist > 10) {
+    rightStick.angle = Math.atan2(dy, dx);
+    rightStick.firing = true;
+  }
+  if (dist > maxR) { dx = (dx / dist) * maxR; dy = (dy / dist) * maxR; }
+  rThumb.style.transform = `translate(${dx}px, ${dy}px)`;
+}
+
+// --- БАЗЫ И ТЕРРИТОРИИ ---
+const bases = [
+  { id: 1, name: "База Альянса", x: 500, y: 500, owner: 1, capProgress: 1.0, radius: 150 },
+  { id: 2, name: "Окопы у Ручья", x: 800, y: 1500, owner: 1, capProgress: 1.0, radius: 150 },
+  { id: 3, name: "Высота 104", x: 1800, y: 1000, owner: 0, capProgress: 0.0, radius: 180 },
+  { id: 4, name: "Восточная Роща", x: 2800, y: 600, owner: 2, capProgress: -1.0, radius: 150 },
+  { id: 5, name: "Штаб Врага", x: 3100, y: 1500, owner: 2, capProgress: -1.0, radius: 170 }
+];
+
+const trees = [];
+for (let i = 0; i < 160; i++) {
+  const tx = 300 + Math.random() * (WORLD_W - 600);
+  const ty = Math.random() * WORLD_H;
+  if (!bases.some(b => Math.hypot(b.x - tx, b.y - ty) < b.radius + 50)) {
+    trees.push({ x: tx, y: ty, r: 16, foliageR: 26, alive: true });
+  }
+}
+
+// --- ТАНКИ ---
+class Tank {
+  constructor(x, y, team) {
+    this.x = x; this.y = y; this.team = team;
+    this.hp = 500; this.maxHp = 500;
+    this.hullAngle = team === 1 ? 0 : Math.PI;
+    this.turretAngle = this.hullAngle;
+    this.driver = null; this.radius = 22; this.speed = 1.9;
+    this.lastShot = 0;
+  }
+  update(now) {
+    if (this.driver && this.driver.isPlayer) {
+      if (leftStick.active) {
+        this.hullAngle = Math.atan2(leftStick.vy, leftStick.vx);
+        this.x = Math.max(30, Math.min(WORLD_W - 30, this.x + leftStick.vx * this.speed));
+        this.y = Math.max(30, Math.min(WORLD_H - 30, this.y + leftStick.vy * this.speed));
+      }
+      if (rightStick.firing) {
+        this.turretAngle = rightStick.angle;
+        if (now - this.lastShot > 1400) {
+          shootCannon(this.x, this.y, this.turretAngle, this.team, true);
+          this.lastShot = now;
+        }
+      }
+    } else {
+      // ИИ танка
+      let target = units.find(u => u.team !== this.team && u.hp > 0 && Math.hypot(u.x - this.x, u.y - this.y) < 500);
+      if (target) {
+        this.turretAngle = Math.atan2(target.y - this.y, target.x - this.x);
+        if (now - this.lastShot > 1600) {
+          shootCannon(this.x, this.y, this.turretAngle, this.team, false);
+          this.lastShot = now;
+        }
+      }
+    }
+  }
+  draw() {
+    ctx.save(); ctx.translate(this.x, this.y);
+    ctx.save(); ctx.rotate(this.hullAngle);
+    ctx.fillStyle = this.team === 1 ? '#27496d' : '#8b2635';
+    ctx.fillRect(-20, -14, 40, 28);
+    ctx.restore();
+    ctx.save(); ctx.rotate(this.turretAngle);
+    ctx.fillStyle = '#111'; ctx.fillRect(0, -3, 26, 6);
+    ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI * 2);
+    ctx.fillStyle = this.team === 1 ? '#3880ff' : '#eb445a'; ctx.fill();
+    ctx.restore(); ctx.restore();
+  }
+}
+
+const tanks = [new Tank(bases[0].x + 30, bases[0].y + 30, 1), new Tank(bases[4].x - 30, bases[4].y - 30, 2)];
+
+// --- БОЙЦЫ ---
+class Unit {
+  constructor(x, y, team, isPlayer = false, classType = 'assault') {
+    this.x = x; this.y = y; this.radius = 9;
+    this.team = team; this.isPlayer = isPlayer; this.classType = classType;
+    this.hp = classType === 'gunner' ? 130 : (classType === 'sniper' ? 80 : 100);
+    this.maxHp = this.hp;
+    this.speed = isPlayer ? 3.3 : 1.7;
+    this.fireRate = classType === 'sniper' ? 950 : (classType === 'gunner' ? 130 : 190);
+    this.damage = classType === 'sniper' ? 100 : (classType === 'gunner' ? 24 : 34);
+    this.angle = 0; this.lastShot = 0; this.inTank = null;
+  }
+  update(now) {
+    if (this.inTank) {
+      this.x = this.inTank.x; this.y = this.inTank.y;
+      this.hp = Math.round((this.inTank.hp / this.inTank.maxHp) * 100);
+      return;
+    }
+    if (this.isPlayer) {
+      if (leftStick.active) this.move(leftStick.vx * this.speed, leftStick.vy * this.speed);
+      if (rightStick.firing) {
+        this.angle = rightStick.angle;
+        if (now - this.lastShot > this.fireRate) {
+          shoot(this.x, this.y, this.angle, this.team, this.damage, true);
+          this.lastShot = now;
+        }
+      }
+    } else {
+      this.ai(now);
+    }
+  }
+  move(vx, vy) {
+    let nx = this.x + vx; let ny = this.y + vy;
+    for (let t of trees) {
+      if (!t.alive) continue;
+      const minD = t.r + this.radius;
+      if (Math.hypot(t.x - nx, t.y - this.y) < minD) nx = this.x;
+      if (Math.hypot(t.x - this.x, t.y - ny) < minD) ny = this.y;
+    }
+    this.x = Math.max(20, Math.min(WORLD_W - 20, nx));
+    this.y = Math.max(20, Math.min(WORLD_H - 20, ny));
+  }
+  ai(now) {
+    const cfg = diffCfg[currentDifficulty];
+    let target = units.find(u => u.team !== this.team && u.hp > 0 && Math.hypot(u.x - this.x, u.y - this.y) < cfg.reaction);
+    if (target) {
+      this.angle = Math.atan2(target.y - this.y, target.x - this.x);
+      if (now - this.lastShot > this.fireRate * cfg.fireRateMult) {
+        shoot(this.x, this.y, this.angle + (Math.random() - 0.5) * cfg.spread, this.team, this.damage, false);
+        this.lastShot = now;
+      }
+    } else {
+      const tb = bases.find(b => b.owner !== this.team) || bases[2];
+      const a = Math.atan2(tb.y - this.y, tb.x - this.x);
+      this.angle = a;
+      this.move(Math.cos(a) * this.speed * 0.6, Math.sin(a) * this.speed * 0.6);
+    }
+  }
+  draw() {
+    if (this.inTank) return;
+    ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
+    ctx.fillStyle = '#111'; ctx.fillRect(4, -2, 12, 4);
+    ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.team === 1 ? (this.isPlayer ? '#2ecc71' : '#3880ff') : '#eb445a';
+    ctx.fill(); ctx.restore();
+  }
+}
+
+let bullets = [];
+let cannonShells = [];
+let explosions = [];
+
+function shoot(x, y, angle, team, dmg, isPlayer) {
+  bullets.push({ x, y, vx: Math.cos(angle) * 12, vy: Math.sin(angle) * 12, team, dmg, life: 50, isPlayer });
+  if (isPlayer) playSound('shot');
+}
+
+function shootCannon(x, y, angle, team, isPlayer) {
+  cannonShells.push({ x, y, vx: Math.cos(angle) * 16, vy: Math.sin(angle) * 16, team, life: 55, isPlayer });
+  playSound('cannon');
+}
+
+function throwGrenade() {
+  if (!player || player.hp <= 0 || player.inTank) return;
+  explosions.push({ x: player.x + Math.cos(player.angle) * 120, y: player.y + Math.sin(player.angle) * 120, r: 10, maxR: 70, a: 1.0 });
+  playSound('explosion');
+  units.forEach(u => {
+    if (Math.hypot(u.x - (player.x + Math.cos(player.angle) * 120), u.y - (player.y + Math.sin(player.angle) * 120)) < 80) u.hp -= 140;
+  });
+}
+
+function toggleTank() {
+  if (!player || player.hp <= 0) return;
+  if (player.inTank) {
+    player.inTank.driver = null; player.x = player.inTank.x + 30; player.inTank = null;
+  } else {
+    const t = tanks.find(tk => tk.hp > 0 && Math.hypot(tk.x - player.x, tk.y - player.y) < 50 && tk.team === player.team);
+    if (t) { t.driver = player; player.inTank = t; }
+  }
+}
+
+function callArtillery() {
+  playSound('cannon');
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      const ex = player.x + Math.cos(player.angle) * (150 + i * 40);
+      const ey = player.y + Math.sin(player.angle) * (150 + i * 40);
+      explosions.push({ x: ex, y: ey, r: 15, maxR: 90, a: 1.0 });
+      playSound('explosion');
+      units.forEach(u => { if (Math.hypot(u.x - ex, u.y - ey) < 90) u.hp -= 150; });
+    }, 400 + i * 250);
+  }
+}
+
+function commandWhistle() {
+  units.forEach(u => {
+    if (u.team === 1 && !u.isPlayer && Math.hypot(u.x - player.x, u.y - player.y) < 350) {
+      u.following = true;
+    }
+  });
+}
+
+// --- УПРАВЛЕНИЕ МАТЧЕМ ---
+let units = [];
+let player = null;
+let gameRunning = false;
+
+function startGame() {
+  document.getElementById('menu-overlay').style.display = 'none';
+  document.getElementById('hud').style.display = 'block';
+  document.getElementById('left-stick-zone').style.display = 'block';
+  document.getElementById('right-stick-zone').style.display = 'block';
+  document.getElementById('action-pad').style.display = 'flex';
+  document.getElementById('gameover-screen').style.display = 'none';
+
+  units = [];
+  player = new Unit(bases[0].x, bases[0].y, 1, true, selectedClass);
+  units.push(player);
+
+  for (let i = 0; i < 15; i++) {
+    units.push(new Unit(bases[0].x + (Math.random() - 0.5) * 150, bases[0].y + (Math.random() - 0.5) * 150, 1));
+    units.push(new Unit(bases[4].x + (Math.random() - 0.5) * 150, bases[4].y + (Math.random() - 0.5) * 150, 2));
+  }
+  gameRunning = true;
+  requestAnimationFrame(loop);
+}
+
+function returnToMenu() {
+  gameRunning = false;
+  document.getElementById('gameover-screen').style.display = 'none';
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('left-stick-zone').style.display = 'none';
+  document.getElementById('right-stick-zone').style.display = 'none';
+  document.getElementById('action-pad').style.display = 'none';
+  document.getElementById('menu-overlay').style.display = 'flex';
+}
+
+function loop(now) {
+  if (!gameRunning) return;
+
+  // Апдейт бойцов
+  for (let i = units.length - 1; i >= 0; i--) {
+    const u = units[i];
+    if (u.hp <= 0) {
+      if (u.isPlayer) {
+        document.getElementById('respawn-screen').style.display = 'flex';
+        setTimeout(() => {
+          player.x = bases[0].x; player.y = bases[0].y; player.hp = player.maxHp;
+          document.getElementById('respawn-screen').style.display = 'none';
+        }, 3000);
+      } else {
+        if (u.team === 2) {
+          playerStats.kills++;
+          document.getElementById('kills-val').innerText = playerStats.kills;
+        }
+        units.splice(i, 1);
+      }
+      continue;
+    }
+    u.update(now);
+  }
+
+  tanks.forEach(t => t.update(now));
+
+  // Пули
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    const b = bullets[i];
+    b.x += b.vx; b.y += b.vy; b.life--;
+    let hit = false;
+    for (let u of units) {
+      if (u.team !== b.team && u.hp > 0 && !u.inTank && Math.hypot(u.x - b.x, u.y - b.y) < u.radius + 2) {
+        u.hp -= b.dmg; hit = true; break;
+      }
+    }
+    if (b.life <= 0 || hit) bullets.splice(i, 1);
+  }
+
+  // Фугасы
+  for (let i = cannonShells.length - 1; i >= 0; i--) {
+    const s = cannonShells[i];
+    s.x += s.vx; s.y += s.vy; s.life--;
+    if (s.life <= 0) {
+      explosions.push({ x: s.x, y: s.y, r: 10, maxR: 60, a: 1.0 });
+      playSound('explosion');
+      units.forEach(u => { if (Math.hypot(u.x - s.x, u.y - s.y) < 70) u.hp -= 120; });
+      cannonShells.splice(i, 1);
+    }
+  }
+
+  // Взрывы
+  for (let i = explosions.length - 1; i >= 0; i--) {
+    const exp = explosions[i];
+    exp.r += 3; exp.a -= 0.05;
+    if (exp.a <= 0) explosions.splice(i, 1);
+  }
+
+  // Захват баз
+  bases.forEach(b => {
+    let blue = units.filter(u => u.team === 1 && Math.hypot(u.x - b.x, u.y - b.y) < b.radius).length;
+    let red = units.filter(u => u.team === 2 && Math.hypot(u.x - b.x, u.y - b.y) < b.radius).length;
+    if (blue > red) b.capProgress = Math.min(1.0, b.capProgress + 0.004);
+    else if (red > blue) b.capProgress = Math.max(-1.0, b.capProgress - 0.004);
+    if (b.capProgress > 0.6) b.owner = 1;
+    else if (b.capProgress < -0.6) b.owner = 2;
+  });
+
+  // Камера
+  camera.x = Math.max(0, Math.min(WORLD_W - screenW, player.x - screenW / 2));
+  camera.y = Math.max(0, Math.min(WORLD_H - screenH, player.y - screenH / 2));
+
+  // --- РЕНДЕР ---
+  ctx.clearRect(0, 0, screenW, screenH);
+  ctx.save(); ctx.translate(-camera.x, -camera.y);
+
+  ctx.fillStyle = '#141c16'; ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+
+  bases.forEach(b => {
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+    ctx.fillStyle = b.owner === 1 ? 'rgba(56, 128, 255, 0.06)' : b.owner === 2 ? 'rgba(235, 68, 90, 0.06)' : 'rgba(255, 255, 255, 0.03)';
+    ctx.fill();
+    ctx.beginPath(); ctx.arc(b.x, b.y, 10, 0, Math.PI * 2);
+    ctx.fillStyle = b.owner === 1 ? '#3880ff' : b.owner === 2 ? '#eb445a' : '#f5cd79';
+    ctx.fill();
+  });
+
+  tanks.forEach(t => t.draw());
+  units.forEach(u => u.draw());
+
+  trees.forEach(t => {
+    ctx.beginPath(); ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
+    ctx.fillStyle = '#3e2723'; ctx.fill();
+    ctx.beginPath(); ctx.arc(t.x, t.y, t.foliageR, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(32, 68, 41, 0.8)'; ctx.fill();
+  });
+
+  ctx.fillStyle = '#f5cd79';
+  bullets.forEach(b => { ctx.fillRect(b.x - 2, b.y - 2, 4, 4); });
+
+  explosions.forEach(exp => {
+    ctx.beginPath(); ctx.arc(exp.x, exp.y, exp.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(243, 156, 18, ${exp.a})`; ctx.fill();
+  });
+
+  ctx.restore();
+
+  // Миникарта
+  mCtx.clearRect(0, 0, mCanvas.width, mCanvas.height);
+  const sx = mCanvas.width / WORLD_W; const sy = mCanvas.height / WORLD_H;
+  bases.forEach(b => {
+    mCtx.fillStyle = b.owner === 1 ? '#3880ff' : b.owner === 2 ? '#eb445a' : '#f5cd79';
+    mCtx.fillRect(b.x * sx - 3, b.y * sy - 3, 6, 6);
+  });
+  units.forEach(u => {
+    mCtx.fillStyle = u.isPlayer ? '#2ecc71' : (u.team === 1 ? '#fff' : '#e74c3c');
+    mCtx.fillRect(u.x * sx, u.y * sy, 2, 2);
+  });
+
+  // UI
+  const hpP = Math.max(0, Math.round((player.hp / player.maxHp) * 100));
+  document.getElementById('hp-val').innerText = hpP;
+  document.getElementById('hp-bar-fill').style.width = hpP + '%';
+  document.getElementById('blue-bases-count').innerText = bases.filter(b => b.owner === 1).length;
+
+  // Победа / Поражение
+  if (bases.filter(b => b.owner === 1).length === 5) {
+    gameRunning = false;
+    document.getElementById('end-status').innerText = "ПОБЕДА!";
+    document.getElementById('end-details').innerText = `Фрагов: ${playerStats.kills}`;
+    document.getElementById('gameover-screen').style.display = 'flex';
+  } else if (bases.filter(b => b.owner === 2).length === 5) {
+    gameRunning = false;
+    document.getElementById('end-status').innerText = "ПОРАЖЕНИЕ";
+    document.getElementById('end-details').innerText = `Фрагов: ${playerStats.kills}`;
+    document.getElementById('gameover-screen').style.display = 'flex';
+  }
+
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>

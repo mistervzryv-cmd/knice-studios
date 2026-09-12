@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+<meta charset="UTF-8">
+<title>Knice Bank 2.0</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f3f6fb;
+    color:#222;
+}
+
+
+#login{
+    width:330px;
+    margin:120px auto;
+    background:white;
+    padding:30px;
+    border-radius:20px;
+    box-shadow:0 5px 20px #ccc;
+    text-align:center;
+}
+
+
+header{
+    background:#2457ff;
+    color:white;
+    padding:20px;
+    text-align:center;
+}
+
+
+.card{
+    background:white;
+    margin:20px;
+    padding:20px;
+    border-radius:18px;
+    box-shadow:0 4px 15px #ddd;
+}
+
+
+button{
+    background:#2457ff;
+    color:white;
+    border:0;
+    padding:12px 18px;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+
+button:hover{
+    background:#123bbd;
+}
+
+
+input{
+    padding:10px;
+    margin:5px;
+    border-radius:10px;
+    border:1px solid #bbb;
+}
+
+
+canvas{
+    width:100%;
+    max-width:500px;
+    background:#fafafa;
+    border-radius:10px;
+}
+
+
+.history{
+    background:#eee;
+    padding:10px;
+    border-radius:10px;
+}
+
+
+</style>
+
+</head>
+
+<body>
+
+
+<div id="login">
+
+
+<h1>🏦 Knice Bank</h1>
+
+
+<input id="username" placeholder="Логин">
+
+<br>
+
+<input id="password" type="password" placeholder="Пароль">
+
+<br>
+
+<button onclick="enterBank()">
+Войти
+</button>
+
+
+</div>
+
+
+
+
+<div id="bank" style="display:none;">
+
+
+<header>
+
+<h1>🏦 Knice Bank 2.0</h1>
+
+<p>
+Пользователь: <b>Тифа</b>
+</p>
+
+</header>
+
+
+
+
+<div class="card">
+
+<h2>💳 Баланс</h2>
+
+
+<p>💰 Еглот:
+<span id="eglot"></span>
+</p>
+
+
+<p>🇦🇿 Манаты:
+<span id="manat"></span>
+</p>
+
+
+<p>🟦 Кнайс:
+<span id="knice"></span>
+</p>
+
+
+<p>🟥 Кнайгер:
+<span id="kniger"></span>
+</p>
+
+
+<p>⭐ Вчедей:
+<span id="vchedey"></span>
+</p>
+
+
+<p>🍓 Малиновый хамам:
+<span id="wallet"></span>
+</p>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h2>💼 Работа</h2>
+
+<button onclick="work()">
+Получить Еглоты
+</button>
+
+
+</div>
+
+
+
+
+<div class="card">
+
+<h2>📈 Инвестиции</h2>
+
+
+<input id="investmentAmount" type="number" placeholder="Еглот">
+
+
+<button onclick="invest()">
+Инвестировать
+</button>
+
+
+</div>
+
+<div class="card">
+
+<h2>🍓 Малиновый хамам</h2>
+
+<p>
+Кошелёк для обмена Еглотов
+</p>
+
+<button onclick="sendToWallet()">
+Перевести 100 Еглот
+</button>
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h2>💱 Обмен валют</h2>
+
+<p>
+10 Еглот = 1 Манат
+</p>
+
+
+<input id="exchangeAmount" type="number" placeholder="Еглот">
+
+
+<button onclick="exchange()">
+Обменять
+</button>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h2>📊 Крипто рынок</h2>
+
+
+<h3>🟦 Кнайс</h3>
+
+<p>
+Цена:
+<span id="knicePrice"></span> Еглот
+</p>
+
+
+<button onclick="buyKnice()">
+Купить Кнайс
+</button>
+
+
+<button onclick="sellKnice()">
+Продать Кнайс
+</button>
+
+
+
+
+<h3>🟥 Кнайгер</h3>
+
+
+<p>
+Цена:
+<span id="knigerPrice"></span> Еглот
+</p>
+
+
+<button onclick="buyKniger()">
+Купить Кнайгер
+</button>
+
+
+<button onclick="sellKniger()">
+Продать Кнайгер
+</button>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h2>📈 График рынка</h2>
+
+
+<canvas id="chart" width="500" height="250"></canvas>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h2>📰 Новости</h2>
+
+
+<p id="news">
+Рынок открыт.
+</p>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h2>📜 История</h2>
+
+
+<div id="history" class="history">
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+<script>
+
+
+let data = {
+
+
+eglot:1000,
+
+manat:0,
+
+knice:10,
+
+kniger:5,
+
+vchedey:0,
+
+wallet:0,
+
+
+knicePrice:20,
+
+knigerPrice:50,
+
+
+history:[]
+
+};
+
+
+
+
+let chartData={
+
+knice:[],
+kniger:[]
+
+};
+
+
+
+let newsList=[
+
+"🚀 Кнайс получил новых инвесторов",
+
+"📉 Кнайгер потерял часть стоимости",
+
+"🏦 Банк Еглота изменил прогноз",
+
+"🌎 На рынок пришли новые игроки",
+
+"🔥 Крипторынок растёт",
+
+"⚠️ Волатильность увеличилась"
+
+];
+
+
+
+
+
+function save(){
+
+localStorage.setItem(
+"KniceBank2",
+JSON.stringify(data)
+);
+
+}
+
+
+
+
+
+function load(){
+
+let saveData =
+localStorage.getItem("KniceBank2");
+
+
+if(saveData){
+
+data=JSON.parse(saveData);
+
+}
+
+}
+
+
+
+
+
+function enterBank(){
+
+
+let u =
+document.getElementById("username").value;
+
+
+let p =
+document.getElementById("password").value;
+
+
+
+if(u==="Тифа" && p==="eglot123"){
+
+
+document.getElementById("login").style.display="none";
+
+
+document.getElementById("bank").style.display="block";
+
+
+update();
+
+
+}
+
+else{
+
+alert("Неверный логин");
+
+}
+
+
+}
+
+
+function update(){
+
+
+document.getElementById("eglot").innerHTML=data.eglot;
+
+document.getElementById("manat").innerHTML=data.manat;
+
+document.getElementById("knice").innerHTML=data.knice;
+
+document.getElementById("kniger").innerHTML=data.kniger;
+
+document.getElementById("vchedey").innerHTML=data.vchedey;
+
+document.getElementById("wallet").innerHTML=data.wallet;
+
+
+document.getElementById("knicePrice").innerHTML=data.knicePrice;
+
+document.getElementById("knigerPrice").innerHTML=data.knigerPrice;
+
+
+
+let text="";
+
+
+data.history.forEach(item=>{
+
+text+="<p>"+item+"</p>";
+
+});
+
+
+document.getElementById("history").innerHTML=text;
+
+
+save();
+
+
+}
+
+
+
+
+
+function addHistory(message){
+
+
+data.history.unshift(
+
+new Date().toLocaleTimeString()
++" - "+message
+
+);
+
+
+if(data.history.length>15){
+
+data.history.pop();
+
+}
+
+
+}
+
+
+
+
+
+
+function work(){
+
+
+let reward =
+Math.floor(Math.random()*151)+50;
+
+
+data.eglot+=reward;
+
+
+addHistory(
+"💼 Работа: +"+reward+" Еглот"
+);
+
+
+update();
+
+
+}
+
+
+
+
+
+
+function invest(){
+
+
+let amount =
+Number(
+document.getElementById("investmentAmount").value
+);
+
+
+
+if(amount<=0 || amount>data.eglot){
+
+
+alert("Недостаточно Еглотов");
+
+
+return;
+
+
+}
+
+
+
+data.eglot-=amount;
+
+
+
+let profit =
+Math.floor(amount*0.25);
+
+
+
+data.vchedey+=profit;
+
+
+
+addHistory(
+"📈 Инвестиция: -"+
+amount+
+" Еглот, +"+
+profit+
+" Вчедей"
+);
+
+
+
+update();
+
+
+}
+
+
+
+
+
+function sendToWallet(){
+
+
+if(data.eglot<100){
+
+alert("Недостаточно Еглотов");
+
+return;
+
+}
+
+
+
+data.eglot-=100;
+
+data.wallet+=100;
+
+
+
+addHistory(
+"🍓 Малиновый хамам: +100 Еглот"
+);
+
+
+update();
+
+
+}
+
+
+
+
+
+
+function exchange(){
+
+
+let amount =
+Number(
+document.getElementById("exchangeAmount").value
+);
+
+
+
+if(amount>data.eglot){
+
+alert("Недостаточно Еглотов");
+
+return;
+
+}
+
+
+
+let manat =
+Math.floor(amount/10);
+
+
+
+if(manat<1){
+
+alert("Минимум 10 Еглот");
+
+return;
+
+}
+
+
+
+data.eglot-=manat*10;
+
+
+data.manat+=manat;
+
+
+
+addHistory(
+"💱 Обмен: "+
+(manat*10)+
+" Еглот → "+
+manat+
+" Манат"
+);
+
+
+
+update();
+
+
+}
+
+
+
+
+
+
+function buyKnice(){
+
+
+if(data.eglot<data.knicePrice){
+
+alert("Недостаточно Еглотов");
+
+return;
+
+}
+
+
+
+data.eglot-=data.knicePrice;
+
+
+data.knice++;
+
+
+
+addHistory(
+"🟦 Куплен Кнайс"
+);
+
+
+update();
+
+
+}
+
+
+
+
+
+function sellKnice(){
+
+
+if(data.knice<=0){
+
+alert("Нет Кнайсов");
+
+return;
+
+}
+
+
+
+data.knice--;
+
+data.eglot+=data.knicePrice;
+
+
+
+addHistory(
+"🟦 Продан Кнайс"
+);
+
+
+update();
+
+
+}
+
+
+
+
+
+
+function buyKniger(){
+
+
+if(data.eglot<data.knigerPrice){
+
+alert("Недостаточно Еглотов");
+
+return;
+
+}
+
+
+
+data.eglot-=data.knigerPrice;
+
+
+data.kniger++;
+
+
+
+addHistory(
+"🟥 Куплен Кнайгер"
+);
+
+
+update();
+
+
+}
+
+
+
+
+
+
+function sellKniger(){
+
+
+if(data.kniger<=0){
+
+alert("Нет Кнайгеров");
+
+return;
+
+}
+
+
+
+data.kniger--;
+
+data.eglot+=data.knigerPrice;
+
+
+
+addHistory(
+"🟥 Продан Кнайгер"
+);
+
+
+update();
+
+
+}
+
+
+function drawChart(){
+
+
+let canvas =
+document.getElementById("chart");
+
+
+let ctx =
+canvas.getContext("2d");
+
+
+
+ctx.clearRect(
+0,
+0,
+canvas.width,
+canvas.height
+);
+
+
+
+ctx.beginPath();
+
+
+chartData.knice.forEach((value,index)=>{
+
+
+let x=index*25;
+
+let y=230-value*3;
+
+
+if(index===0){
+
+ctx.moveTo(x,y);
+
+}
+
+else{
+
+ctx.lineTo(x,y);
+
+}
+
+
+});
+
+
+ctx.stroke();
+
+
+
+
+
+ctx.beginPath();
+
+
+chartData.kniger.forEach((value,index)=>{
+
+
+let x=index*25;
+
+let y=230-value*3;
+
+
+if(index===0){
+
+ctx.moveTo(x,y);
+
+}
+
+else{
+
+ctx.lineTo(x,y);
+
+}
+
+
+});
+
+
+ctx.stroke();
+
+
+}
+
+
+
+
+
+
+
+function marketUpdate(){
+
+
+
+let changeKnice =
+Math.floor(Math.random()*7)-3;
+
+
+let changeKniger =
+Math.floor(Math.random()*11)-5;
+
+
+
+data.knicePrice+=changeKnice;
+
+
+data.knigerPrice+=changeKniger;
+
+
+
+
+if(data.knicePrice<1){
+
+data.knicePrice=1;
+
+}
+
+
+
+if(data.knigerPrice<1){
+
+data.knigerPrice=1;
+
+}
+
+
+
+
+
+chartData.knice.push(
+data.knicePrice
+);
+
+
+chartData.kniger.push(
+data.knigerPrice
+);
+
+
+
+
+
+if(chartData.knice.length>20){
+
+chartData.knice.shift();
+
+}
+
+
+
+if(chartData.kniger.length>20){
+
+chartData.kniger.shift();
+
+}
+
+
+
+
+let randomNews =
+newsList[
+Math.floor(Math.random()*newsList.length)
+];
+
+
+
+document.getElementById("news").innerHTML=
+randomNews;
+
+
+
+drawChart();
+
+
+update();
+
+
+}
+
+
+
+
+
+
+setInterval(
+
+marketUpdate,
+
+5000
+
+);
+
+
+
+
+
+load();
+
+
+</script>
+
+
+</body>
+
+</html>

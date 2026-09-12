@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Knice Bank</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#121212;
+    color:white;
+}
+
+header{
+    background:#7b1fa2;
+    padding:20px;
+    text-align:center;
+}
+
+.card{
+    background:#1f1f1f;
+    margin:20px;
+    padding:20px;
+    border-radius:15px;
+}
+
+button{
+    background:#8e24aa;
+    color:white;
+    border:none;
+    padding:10px 18px;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#ab47bc;
+}
+
+input{
+    padding:8px;
+    border-radius:8px;
+    border:none;
+    width:120px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>🏦 Knice Bank</h1>
+<p>Пользователь: <b>Тифа</b></p>
+</header>
+
+<div class="card">
+<h2>Баланс</h2>
+
+<p>💰 Еглот: <span id="eglot">1000</span></p>
+<p>🟦 Кнайс: <span id="knice">250</span></p>
+<p>🟥 Кнайгер: <span id="kniger">80</span></p>
+<p>⭐ Вчедей: <span id="vchedey">0</span></p>
+</div>
+
+<div class="card">
+<h2>📈 Инвестиции</h2>
+
+<p>Инвестировать Еглоты</p>
+
+<input type="number" id="invest" placeholder="Сумма">
+
+<button onclick="invest()">Инвестировать</button>
+
+</div>
+
+<div class="card">
+<h2>🍓 Малиновый хамам</h2>
+
+<p>Кошелёк для перевода Еглотов в Манаты.</p>
+
+<p>В кошельке: <span id="wallet">0</span> Еглот</p>
+
+<button onclick="transfer()">Перевести 100 Еглот</button>
+
+</div>
+
+<script>
+
+let eglot = 1000;
+let wallet = 0;
+let vchedey = 0;
+
+function update(){
+document.getElementById("eglot").innerText=eglot;
+document.getElementById("wallet").innerText=wallet;
+document.getElementById("vchedey").innerText=vchedey;
+}
+
+function invest(){
+
+let amount = Number(document.getElementById("invest").value);
+
+if(amount<=0 || amount>eglot){
+alert("Недостаточно Еглотов!");
+return;
+}
+
+eglot -= amount;
+
+let reward = Math.floor(amount*0.2);
+
+vchedey += reward;
+
+alert("Инвестиция успешна!\nПолучено "+reward+" Вчедея!");
+
+update();
+
+}
+
+function transfer(){
+
+if(eglot<100){
+alert("Недостаточно Еглотов!");
+return;
+}
+
+eglot-=100;
+wallet+=100;
+
+alert("100 Еглот переведено в Малиновый хамам.");
+
+update();
+
+}
+
+update();
+
+</script>
+
+</body>
+</html>
