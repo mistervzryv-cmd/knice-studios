@@ -52,54 +52,118 @@
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
       width: 100%;
-      max-width: 1050px;
+      max-width: 1100px;
     }
+
+    /* Карточки и сочный Hover */
     .card {
       background: #0f172a;
       border: 1px solid #1e293b;
-      border-radius: 18px;
-      padding: 24px;
+      border-radius: 20px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 16px;
-      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      gap: 14px;
+      transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
       position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.08), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
     }
     .card:hover {
-      transform: translateY(-4px);
+      transform: translateY(-8px) scale(1.015);
       border-color: #38bdf8;
-      box-shadow: 0 12px 30px rgba(56, 189, 248, 0.15);
+      box-shadow: 0 16px 36px -8px rgba(56, 189, 248, 0.25), 0 0 12px rgba(56, 189, 248, 0.2);
     }
-    .card-icon {
-      font-size: 2.6rem;
-      margin-bottom: 8px;
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    /* Блок превью-скриншотов */
+    .card-preview {
+      width: 100%;
+      height: 145px;
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      background: #020617;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s;
+    }
+    .card:hover .card-preview {
+      transform: scale(1.02);
+    }
+    .preview-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 2;
+    }
+    .preview-badge span {
+      width: 6px;
+      height: 6px;
+      background: #22c55e;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #22c55e;
+    }
+
+    .card-content {
+      padding: 4px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
     }
     .card-title {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       font-weight: 700;
       color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .card-desc {
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       color: #94a3b8;
       line-height: 1.45;
       flex: 1;
-      margin-top: 4px;
     }
     .card-tags {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+      padding: 0 6px 4px;
     }
     .tag {
       font-size: 0.7rem;
       font-weight: 700;
-      padding: 4px 8px;
+      padding: 4px 9px;
       background: #1e293b;
       border-radius: 6px;
       color: #38bdf8;
@@ -107,18 +171,19 @@
 
     .btn-dots {
       position: absolute;
-      top: 16px;
-      right: 16px;
-      background: #1e293b;
+      top: 24px;
+      right: 24px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(6px);
       border: 1px solid #334155;
       color: #94a3b8;
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: bold;
       cursor: pointer;
       transition: all 0.2s;
@@ -128,7 +193,7 @@
       background: #38bdf8;
       color: #060913;
       border-color: #38bdf8;
-      transform: scale(1.08);
+      transform: scale(1.1);
     }
 
     .modal-overlay {
@@ -277,9 +342,21 @@
     <!-- 1. Knice Bank -->
     <div class="card" onclick="launchBankLatest()">
       <div class="btn-dots" title="Все версии" onclick="event.stopPropagation(); openModal('bankModal')">•••</div>
-      <div>
-        <div class="card-icon">🏦</div>
-        <div class="card-title">Knice Bank 8.7.1</div>
+      <div class="card-preview">
+        <div class="preview-badge"><span></span>TERMINAL LIVE</div>
+        <svg viewBox="0 0 320 145" width="100%" height="100%">
+          <rect width="320" height="145" fill="#0b1329"/>
+          <line x1="20" y1="40" x2="300" y2="40" stroke="#1e293b" stroke-width="1"/>
+          <line x1="20" y1="80" x2="300" y2="80" stroke="#1e293b" stroke-width="1"/>
+          <line x1="20" y1="120" x2="300" y2="120" stroke="#1e293b" stroke-width="1"/>
+          <polyline points="20,110 50,105 80,115 120,70 160,85 200,45 240,65 280,30 300,38" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+          <polyline points="20,95 60,90 100,120 150,110 190,130 230,95 270,105 300,80" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="3,3"/>
+          <rect x="220" y="15" width="80" height="20" rx="4" fill="rgba(56,189,248,0.2)"/>
+          <text x="230" y="29" fill="#38bdf8" font-size="10" font-weight="bold">8.7.1 ACTIVE</text>
+        </svg>
+      </div>
+      <div class="card-content">
+        <div class="card-title">🏦 Knice Bank 8.7.1</div>
         <p class="card-desc">Финансовый симулятор: биржевые пузыри, плавающий форекс, VIP-хамам, венчурные стартапы и стакан ордеров.</p>
       </div>
       <div class="card-tags">
@@ -291,9 +368,27 @@
 
     <!-- 2. Frontline 1944 -->
     <div class="card" onclick="openModal('warModal')">
-      <div>
-        <div class="card-icon">🪖</div>
-        <div class="card-title">Frontline: Total War 1944</div>
+      <div class="card-preview">
+        <div class="preview-badge"><span></span>2D BATTLE</div>
+        <svg viewBox="0 0 320 145" width="100%" height="100%">
+          <rect width="320" height="145" fill="#1c1917"/>
+          <path d="M0,110 Q80,95 160,115 T320,105 L320,145 L0,145 Z" fill="#292524"/>
+          <!-- Танк и высоты -->
+          <rect x="50" y="96" width="38" height="12" rx="3" fill="#44403c"/>
+          <rect x="62" y="89" width="16" height="8" rx="2" fill="#57534e"/>
+          <line x1="78" y1="93" x2="98" y2="93" stroke="#57534e" stroke-width="3"/>
+          <!-- Снаряды и взрывы -->
+          <circle cx="210" cy="85" r="9" fill="#f97316" opacity="0.85"/>
+          <circle cx="210" cy="85" r="4" fill="#fef08a"/>
+          <circle cx="140" cy="65" r="2.5" fill="#facc15"/>
+          <line x1="98" y1="93" x2="135" y2="67" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,4"/>
+          <!-- Флаг высоты -->
+          <line x1="250" y1="75" x2="250" y2="105" stroke="#a8a29e" stroke-width="2"/>
+          <polygon points="250,75 270,82 250,90" fill="#dc2626"/>
+        </svg>
+      </div>
+      <div class="card-content">
+        <div class="card-title">🪖 Frontline 1944</div>
         <p class="card-desc">Военный 2D-экшен: битвы за 5 высот, танковые бои, огонь артиллерии, выбор классов и захват баз.</p>
       </div>
       <div class="card-tags">
@@ -305,10 +400,23 @@
 
     <!-- 3. Rasul World -->
     <div class="card" onclick="launchGame('rasulworld.html', 'Идеальный Мир 2026')">
-      <div>
-        <div class="card-icon">🗺️</div>
-        <div class="card-title">Идеальный Мир 2026</div>
-        <p class="card-desc">Пошаговая геополитическая стратегия на карте Leaflet. Формирование дивизий, альянсы, дипломатия и мировые войны.</p>
+      <div class="card-preview">
+        <div class="preview-badge"><span></span>GEOPOLITICS</div>
+        <svg viewBox="0 0 320 145" width="100%" height="100%">
+          <rect width="320" height="145" fill="#031b2e"/>
+          <!-- Карта регионов Leaflet -->
+          <path d="M40,30 L110,25 L140,55 L90,95 L30,65 Z" fill="#0f766e" stroke="#14b8a6" stroke-width="1.5"/>
+          <path d="M145,52 L220,35 L260,75 L205,115 L140,75 Z" fill="#1e3a8a" stroke="#3b82f6" stroke-width="1.5"/>
+          <path d="M92,98 L160,88 L180,135 L80,130 Z" fill="#701a75" stroke="#d946ef" stroke-width="1.5"/>
+          <!-- Дивизии -->
+          <circle cx="85" cy="55" r="5" fill="#facc15"/>
+          <circle cx="195" cy="70" r="5" fill="#38bdf8"/>
+          <line x1="90" y1="57" x2="190" y2="69" stroke="#facc15" stroke-width="1.5" stroke-dasharray="3,3"/>
+        </svg>
+      </div>
+      <div class="card-content">
+        <div class="card-title">🗺️ Идеальный Мир 2026</div>
+        <p class="card-desc">Пошаговая геополитическая стратегия на карте Leaflet. Дивизии, пакты, дипломатия и мировые конфликты.</p>
       </div>
       <div class="card-tags">
         <span class="tag">Стратегия</span>
@@ -319,9 +427,28 @@
 
     <!-- 4. Mega Evolution: Spore -->
     <div class="card" onclick="openModal('evolutionModal')">
-      <div>
-        <div class="card-icon">🧬</div>
-        <div class="card-title">Mega Evolution: Spore</div>
+      <div class="card-preview">
+        <div class="preview-badge"><span></span>MICRO-ORGANISM</div>
+        <svg viewBox="0 0 320 145" width="100%" height="100%">
+          <rect width="320" height="145" fill="#051915"/>
+          <!-- Клетки микромира -->
+          <circle cx="70" cy="40" r="10" fill="#10b981" opacity="0.3"/>
+          <circle cx="260" cy="110" r="14" fill="#06b6d4" opacity="0.3"/>
+          <!-- Процедурное существо Spore -->
+          <path d="M120,75 Q150,60 180,75 T220,72" fill="none" stroke="#34d399" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="120" cy="75" r="13" fill="#059669"/>
+          <circle cx="116" cy="72" r="3.5" fill="#fff"/>
+          <circle cx="115" cy="72" r="1.5" fill="#000"/>
+          <circle cx="150" cy="68" r="9" fill="#10b981"/>
+          <circle cx="180" cy="75" r="8" fill="#10b981"/>
+          <circle cx="205" cy="73" r="6" fill="#34d399"/>
+          <!-- Жгутики / щупальца -->
+          <path d="M115,88 Q110,105 125,115" fill="none" stroke="#6ee7b7" stroke-width="2"/>
+          <path d="M148,77 Q145,100 160,110" fill="none" stroke="#6ee7b7" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="card-content">
+        <div class="card-title">🧬 Mega Evolution: Spore</div>
         <p class="card-desc">Эволюционный симулятор микромира: процедурный скелет, органическая кожа, мутации и фазы титана.</p>
       </div>
       <div class="card-tags">
@@ -333,10 +460,33 @@
 
     <!-- 5. 3D Flight Simulator -->
     <div class="card" onclick="openModal('flightModal')">
-      <div>
-        <div class="card-icon">✈️</div>
-        <div class="card-title">3D Flight Simulator</div>
-        <p class="card-desc">Трехмерный авиасимулятор на базе Three.js. Процедурная генерация ландшафта, физика полета, сваливание (stall) и управление тягой.</p>
+      <div class="card-preview">
+        <div class="preview-badge"><span></span>THREE.JS 3D</div>
+        <svg viewBox="0 0 320 145" width="100%" height="100%">
+          <defs>
+            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#075985"/>
+              <stop offset="65%" stop-color="#38bdf8"/>
+              <stop offset="66%" stop-color="#15803d"/>
+              <stop offset="100%" stop-color="#14532d"/>
+            </linearGradient>
+          </defs>
+          <rect width="320" height="145" fill="url(#skyGrad)"/>
+          <!-- ВПП Горизонт -->
+          <polygon points="152,96 168,96 185,145 135,145" fill="#1f2937"/>
+          <line x1="160" y1="96" x2="160" y2="145" stroke="#f8fafc" stroke-width="1.5" stroke-dasharray="5,5"/>
+          <!-- Самолет сзади -->
+          <polygon points="160,70 156,88 164,88" fill="#dc2626"/>
+          <rect x="138" y="80" width="44" height="4" rx="2" fill="#e2e8f0"/>
+          <rect x="151" y="87" width="18" height="3" fill="#dc2626"/>
+          <!-- Прицел HUD -->
+          <circle cx="160" cy="78" r="16" fill="none" stroke="#22d3ee" stroke-width="1.2" stroke-dasharray="3,3"/>
+          <circle cx="160" cy="78" r="1.5" fill="#22d3ee"/>
+        </svg>
+      </div>
+      <div class="card-content">
+        <div class="card-title">✈️ 3D Flight Simulator</div>
+        <p class="card-desc">Трехмерный авиасимулятор на базе Three.js. Процедурный ландшафт, физика сваливания, аэродинамика и вид из кабины.</p>
       </div>
       <div class="card-tags">
         <span class="tag">3D Симулятор</span>
