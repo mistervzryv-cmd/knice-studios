@@ -330,6 +330,20 @@
         <span class="tag">Песочница</span>
       </div>
     </div>
+
+    <!-- 5. 3D Flight Simulator -->
+    <div class="card" onclick="launchGame('flightsim.html', '3D Flight Simulator')">
+      <div>
+        <div class="card-icon">✈️</div>
+        <div class="card-title">3D Flight Simulator</div>
+        <p class="card-desc">Трехмерный авиасимулятор на базе Three.js. Процедурная генерация ландшафта, физика полета, сваливание (stall) и управление тягой.</p>
+      </div>
+      <div class="card-tags">
+        <span class="tag">3D Симулятор</span>
+        <span class="tag">Three.js</span>
+        <span class="tag">Полеты</span>
+      </div>
+    </div>
   </div>
 
   <!-- Модалка: Полный архив Knice Bank -->
@@ -469,7 +483,6 @@
     let currentGameUrl = '';
 
     function launchBankLatest() {
-      // Поддержка обоих вариантов имени файла последней версии
       const target = 'Knice_Bank_8_7_1.html';
       chooseVersion(target, 'Knice Bank 8.7.1');
     }
