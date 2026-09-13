@@ -332,7 +332,7 @@
     </div>
 
     <!-- 5. 3D Flight Simulator -->
-    <div class="card" onclick="launchGame('flightsim.html', '3D Flight Simulator')">
+    <div class="card" onclick="openModal('flightModal')">
       <div>
         <div class="card-icon">✈️</div>
         <div class="card-title">3D Flight Simulator</div>
@@ -461,6 +461,23 @@
         </button>
       </div>
       <button class="btn-dialog-close" onclick="closeModal('evolutionModal')">Отмена</button>
+    </div>
+  </div>
+
+  <!-- Модалка: Выбор версии 3D Flight Simulator -->
+  <div class="modal-overlay" id="flightModal">
+    <div class="choice-dialog">
+      <h3>✈️ 3D Flight Simulator</h3>
+      <p>Выберите подходящую версию под ваше устройство:</p>
+      <div class="version-btns">
+        <button class="btn-version" onclick="chooseVersion('flightsim.html', 'Flight Simulator (ПК)')">
+          🖥️ Компьютерная версия (Клавиатура)
+        </button>
+        <button class="btn-version" onclick="chooseVersion('flightsimmobile.html', 'Flight Simulator (Карманная)')">
+          📱 Карманная версия (Сенсорное управление)
+        </button>
+      </div>
+      <button class="btn-dialog-close" onclick="closeModal('flightModal')">Отмена</button>
     </div>
   </div>
 
