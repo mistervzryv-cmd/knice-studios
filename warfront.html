@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Frontline: Total War 1944 (Gold Release)</title>
+  <title>Frontline: Total War 1944 (Tactical RTS Update)</title>
   <style>
     body {
       margin: 0;
@@ -203,7 +203,7 @@
 
 <div id="menu-overlay">
   <div class="menu-title">FRONTLINE 1944</div>
-  <div class="menu-sub">ТОТАЛЬНАЯ ВОЙНА ЗА 5 СТРАТЕГИЧЕСКИХ ВЫСОТ</div>
+  <div class="menu-sub">ТАКТИКА И АРТИЛЛЕРИЯ: RTS-ОБНОВЛЕНИЕ</div>
 
   <div class="class-selection">
     <div class="class-card active" onclick="selectClass('assault', this)">
@@ -275,7 +275,7 @@
 </div>
 
 <div id="controls-hint">
-  WASD — марш | Мышь — огонь | [E] — сесть в танк | [B] — бинокль | [G] — граната | [F] — свисток | [Esc/P] — пауза
+  WASD — марш | Мышь — огонь | ПКМ — выбор/приказ | [E] — танк | [B] — бинокль | [G] — граната | [F] — свисток
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -371,6 +371,17 @@ function playSound(type) {
     gain.connect(audioCtx.destination);
     osc.start(now);
     osc.stop(now + 0.6);
+  } else if (type === 'tinnitus') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(6000, now);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 4.0);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 4.0);
   }
 }
 
@@ -396,30 +407,23 @@ let artilleryCooldown = 0;
 let inBinoculars = false;
 let isPaused = false;
 let hitmarkerTimer = 0;
-let floatingTexts = []; // для всплывающих "+1 ФРАГ"
+let floatingTexts = []; 
 let damageIndicators = [];
 let respawnInterval = null;
+let playerConcussionAlpha = 0;
+
+// RTS-Управление
+let rmbDown = false;
+let rmbStartX = 0, rmbStartY = 0;
+let rmbCurrentX = 0, rmbCurrentY = 0;
+let selectedUnits = new Set();
+let orderPings = [];
 
 let currentDifficulty = 'normal';
 const difficultySettings = {
-  easy: {
-    spread: 0.36,
-    fireRateMult: 1.45,
-    reactionDist: 360,
-    tankAccuracy: 0.18
-  },
-  normal: {
-    spread: 0.20,
-    fireRateMult: 1.0,
-    reactionDist: 450,
-    tankAccuracy: 0.08
-  },
-  hard: {
-    spread: 0.07,
-    fireRateMult: 0.8,
-    reactionDist: 540,
-    tankAccuracy: 0.03
-  }
+  easy: { spread: 0.36, fireRateMult: 1.45, reactionDist: 360, tankAccuracy: 0.18 },
+  normal: { spread: 0.20, fireRateMult: 1.0, reactionDist: 450, tankAccuracy: 0.08 },
+  hard: { spread: 0.07, fireRateMult: 0.8, reactionDist: 540, tankAccuracy: 0.03 }
 };
 
 function setDifficulty(level, el) {
@@ -472,19 +476,50 @@ for (let i = 0; i < 280; i++) {
   }
 }
 
-const trenches = [
-  { x: 640, y: 530, w: 120, h: 40 },
-  { x: 890, y: 1630, w: 120, h: 40 },
-  { x: 2140, y: 1130, w: 120, h: 40 },
-  { x: 3190, y: 630, w: 120, h: 40 },
-  { x: 3590, y: 1680, w: 120, h: 40 }
-];
+let trenches = [];
+function initTrenches() {
+  trenches = [
+    { x: 640, y: 530, w: 120, h: 40 },
+    { x: 890, y: 1630, w: 120, h: 40 },
+    { x: 2140, y: 1130, w: 120, h: 40 },
+    { x: 3190, y: 630, w: 120, h: 40 },
+    { x: 3590, y: 1680, w: 120, h: 40 }
+  ];
+}
+initTrenches();
+
+// Логика разрушения окопов при взрывах
+function subtractRect(R, B) {
+  let res = [];
+  if (R.x >= B.x + B.w || R.x + R.w <= B.x || R.y >= B.y + B.h || R.y + R.h <= B.y) {
+    return [R];
+  }
+  if (R.y < B.y) res.push({x: R.x, y: R.y, w: R.w, h: B.y - R.y});
+  if (R.y + R.h > B.y + B.h) res.push({x: R.x, y: B.y + B.h, w: R.w, h: (R.y + R.h) - (B.y + B.h)});
+  let midY1 = Math.max(R.y, B.y);
+  let midY2 = Math.min(R.y + R.h, B.y + B.h);
+  if (midY1 < midY2) {
+    if (R.x < B.x) res.push({x: R.x, y: midY1, w: B.x - R.x, h: midY2 - midY1});
+    if (R.x + R.w > B.x + B.w) res.push({x: B.x + B.w, y: midY1, w: (R.x + R.w) - (B.x + B.w), h: midY2 - midY1});
+  }
+  return res.filter(r => r.w > 4 && r.h > 4); 
+}
+
+function destroyTrenchArea(x, y, radius) {
+  const B = { x: x - radius, y: y - radius, w: radius * 2, h: radius * 2 };
+  let newTrenches = [];
+  trenches.forEach(t => { newTrenches.push(...subtractRect(t, B)); });
+  trenches = newTrenches;
+}
 
 let craters = [];
 let smokes = [];
 let incomingMortars = [];
 let tanks = [];
+let particles = [];
+let flyingTurrets = [];
 
+// --- ТАНКИ И ЗОНАЛЬНАЯ БРОНЯ ---
 class Tank {
   constructor(x, y, team) {
     this.x = x;
@@ -499,31 +534,76 @@ class Tank {
     this.speed = 2.0;
     this.lastShot = 0;
     this.fireRate = 1300;
+    this.fireTimer = 0;
+    this.trackTimer = 0;
+    this.deadTimer = 0;
   }
 
   update(now) {
-    if (this.driver && this.driver.isPlayer) {
-      let vx = 0, vy = 0;
-      if (keys.w) vy -= 1;
-      if (keys.s) vy += 1;
-      if (keys.a) vx -= 1;
-      if (keys.d) vx += 1;
+    if (this.hp <= 0) return;
 
-      if (vx !== 0 || vy !== 0) {
-        const moveAngle = Math.atan2(vy, vx);
-        this.hullAngle = moveAngle;
-        const nx = this.x + Math.cos(moveAngle) * this.speed;
-        const ny = this.y + Math.sin(moveAngle) * this.speed;
-        this.x = Math.max(30, Math.min(WORLD_W - 30, nx));
-        this.y = Math.max(30, Math.min(WORLD_H - 30, ny));
+    if (this.fireTimer > 0) {
+      this.fireTimer--;
+      if (this.fireTimer % 10 === 0) {
+        this.hp -= 5;
+        if (this.hp <= 0) applyTankDamage(this, this.x, this.y, 999, 'fire');
+      }
+      particles.push({
+        x: this.x - Math.cos(this.hullAngle)*15 + (Math.random()-0.5)*10,
+        y: this.y - Math.sin(this.hullAngle)*15 + (Math.random()-0.5)*10,
+        vx: (Math.random()-0.5)*1, vy: -1 - Math.random(),
+        life: 30, maxLife: 30, type: 'fire'
+      });
+    }
 
-        trees.forEach(t => {
-          if (t.alive && Math.hypot(t.x - this.x, t.y - this.y) < t.r + this.radius) {
-            t.alive = false;
-            playSound('explosion');
-            craters.push({ x: t.x, y: t.y, r: 18 });
-          }
+    if (this.hp > 0 && this.hp < this.maxHp * 0.4) {
+      if (Math.random() < 0.3) {
+        particles.push({
+          x: this.x + (Math.random()-0.5)*10,
+          y: this.y + (Math.random()-0.5)*10,
+          vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5,
+          life: 50, maxLife: 50, type: 'smoke'
         });
+      }
+    }
+
+    let canMove = true;
+    if (this.trackTimer > 0) {
+      this.trackTimer--;
+      canMove = false;
+      if (Math.random() < 0.1) {
+         particles.push({
+          x: this.x + (Math.random()-0.5)*20, y: this.y + (Math.random()-0.5)*20,
+          vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2,
+          life: 10, maxLife: 10, type: 'spark'
+        });
+      }
+    }
+
+    if (this.driver && this.driver.isPlayer) {
+      if (canMove) {
+        let vx = 0, vy = 0;
+        if (keys.w) vy -= 1;
+        if (keys.s) vy += 1;
+        if (keys.a) vx -= 1;
+        if (keys.d) vx += 1;
+
+        if (vx !== 0 || vy !== 0) {
+          const moveAngle = Math.atan2(vy, vx);
+          this.hullAngle = moveAngle;
+          const nx = this.x + Math.cos(moveAngle) * this.speed;
+          const ny = this.y + Math.sin(moveAngle) * this.speed;
+          this.x = Math.max(30, Math.min(WORLD_W - 30, nx));
+          this.y = Math.max(30, Math.min(WORLD_H - 30, ny));
+
+          trees.forEach(t => {
+            if (t.alive && Math.hypot(t.x - this.x, t.y - this.y) < t.r + this.radius) {
+              t.alive = false;
+              playSound('explosion');
+              craters.push({ x: t.x, y: t.y, r: 18 });
+            }
+          });
+        }
       }
 
       const worldMouseX = mouse.x + camera.x;
@@ -533,14 +613,14 @@ class Tank {
       if (mouse.isDown && now - this.lastShot > this.fireRate && !inBinoculars) {
         shootCannon(this.x, this.y, this.turretAngle, this.team, true);
         this.lastShot = now;
-        camera.shake = 8;
+        camera.shake = Math.max(camera.shake, 8);
       }
     } else {
-      this.ai(now);
+      this.ai(now, canMove);
     }
   }
 
-  ai(now) {
+  ai(now, canMove) {
     let nearest = null;
     let minD = 650;
     const diffCfg = difficultySettings[currentDifficulty];
@@ -579,7 +659,7 @@ class Tank {
       targetY = targetBase.y;
     }
 
-    if (targetX !== undefined && targetY !== undefined) {
+    if (canMove && targetX !== undefined && targetY !== undefined) {
       const moveAngle = Math.atan2(targetY - this.y, targetX - this.x);
       this.hullAngle = moveAngle;
       const nx = this.x + Math.cos(moveAngle) * (this.speed * 0.7);
@@ -615,9 +695,18 @@ class Tank {
   draw() {
     ctx.save();
     ctx.translate(this.x, this.y);
-
-    ctx.save();
     ctx.rotate(this.hullAngle);
+
+    if (this.hp <= 0) {
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillRect(-22, -15, 44, 30);
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(-24, -18, 48, 6);
+      ctx.fillRect(-24, 12, 48, 6);
+      ctx.restore();
+      return;
+    }
+
     ctx.fillStyle = this.team === 1 ? '#27496d' : '#8b2635';
     ctx.fillRect(-22, -15, 44, 30);
     ctx.fillStyle = '#141414';
@@ -626,6 +715,7 @@ class Tank {
     ctx.restore();
 
     ctx.save();
+    ctx.translate(this.x, this.y);
     ctx.rotate(this.turretAngle);
     ctx.fillStyle = '#111';
     ctx.fillRect(0, -3, 30, 6);
@@ -637,8 +727,73 @@ class Tank {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
+  }
+}
 
-    ctx.restore();
+function applyTankDamage(tk, srcX, srcY, baseDmg, type) {
+  if (tk.hp <= 0) return;
+
+  let angleToHit = Math.atan2(srcY - tk.y, srcX - tk.x);
+  let relAngle = angleToHit - tk.hullAngle;
+  while (relAngle > Math.PI) relAngle -= Math.PI * 2;
+  while (relAngle < -Math.PI) relAngle += Math.PI * 2;
+  let absAngle = Math.abs(relAngle);
+
+  let finalDmg = baseDmg;
+  let hitZone = 'side';
+
+  if (absAngle < Math.PI / 4) hitZone = 'front';
+  else if (absAngle > 3 * Math.PI / 4) hitZone = 'rear';
+
+  if (hitZone === 'front') {
+    if (type === 'bullet' || type === 'shell') {
+      finalDmg = Math.floor(baseDmg * 0.1); 
+      playSound('hit');
+      for(let i=0; i<8; i++) {
+        particles.push({
+          x: tk.x + Math.cos(angleToHit)*tk.radius,
+          y: tk.y + Math.sin(angleToHit)*tk.radius,
+          vx: Math.cos(angleToHit + (Math.random()-0.5)) * (Math.random()*4+2),
+          vy: Math.sin(angleToHit + (Math.random()-0.5)) * (Math.random()*4+2),
+          life: 15, maxLife: 15, type: 'spark'
+        });
+      }
+    }
+  }
+  
+  if (hitZone === 'rear') {
+    finalDmg = Math.floor(baseDmg * 2.5);
+    if (Math.random() < 0.4 && type !== 'bullet') tk.fireTimer = 180;
+  }
+
+  if (hitZone === 'side' && (type === 'shell' || type === 'grenade' || type === 'mortar')) {
+    if (Math.random() < 0.6) tk.trackTimer = 300;
+  }
+
+  tk.hp -= finalDmg;
+
+  if (tk.hp <= 0) {
+    tk.hp = 0;
+    if (tk.driver && tk.driver.isPlayer) {
+       tk.driver.hp = 0;
+       triggerRespawn();
+    }
+    if (tk.driver && !tk.driver.isPlayer) tk.driver.hp = 0;
+    tk.driver = null;
+
+    playSound('explosion');
+    camera.shake = Math.max(camera.shake, 15);
+    explosions.push({ x: tk.x, y: tk.y, radius: 20, maxRadius: 130, alpha: 1.0 });
+    craters.push({ x: tk.x, y: tk.y, r: 28 });
+    destroyTrenchArea(tk.x, tk.y, 30);
+    
+    flyingTurrets.push({
+      x: tk.x, y: tk.y,
+      vx: (Math.random()-0.5)*8, vy: (Math.random()-0.5)*8,
+      z: 5, vz: 10,
+      angle: tk.turretAngle, va: (Math.random()-0.5)*0.4,
+      team: tk.team, life: 1000
+    });
   }
 }
 
@@ -659,6 +814,7 @@ function resetKeys() {
   keys.s = false;
   keys.d = false;
   mouse.isDown = false;
+  rmbDown = false;
 }
 
 function selectClass(type, el) {
@@ -690,18 +846,91 @@ window.addEventListener('keyup', e => {
   if (k === 'd' || k === 'в' || e.key === 'ArrowRight') keys.d = false;
 });
 
-window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-window.addEventListener('mousedown', e => {
-  if (isPaused) return;
-  if (e.button === 0) {
-    mouse.isDown = true;
-    if (inBinoculars) callArtillery('mortar');
-  } else if (e.button === 2) {
-    e.preventDefault();
-    if (inBinoculars) callArtillery('smoke');
+window.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  if (rmbDown) {
+    rmbCurrentX = e.clientX + camera.x;
+    rmbCurrentY = e.clientY + camera.y;
   }
 });
-window.addEventListener('mouseup', e => { if (e.button === 0) mouse.isDown = false; });
+
+window.addEventListener('mousedown', e => {
+  if (isPaused) return;
+  if (inBinoculars) {
+    if (e.button === 0) callArtillery('mortar');
+    else if (e.button === 2) callArtillery('smoke');
+    return;
+  }
+
+  if (e.button === 2) {
+    rmbDown = true;
+    rmbStartX = e.clientX + camera.x;
+    rmbStartY = e.clientY + camera.y;
+    rmbCurrentX = rmbStartX;
+    rmbCurrentY = rmbStartY;
+  } else if (e.button === 0) {
+    mouse.isDown = true;
+    selectedUnits.clear(); // Клик по пустой области (без зажатия ПКМ) сбрасывает выделение
+  }
+});
+
+window.addEventListener('mouseup', e => {
+  if (e.button === 0) mouse.isDown = false;
+  if (e.button === 2 && rmbDown) {
+    rmbDown = false;
+    const dx = rmbCurrentX - rmbStartX;
+    const dy = rmbCurrentY - rmbStartY;
+
+    if (Math.hypot(dx, dy) > 15) {
+      // Это было выделение рамкой
+      selectedUnits.clear();
+      const minX = Math.min(rmbStartX, rmbCurrentX);
+      const maxX = Math.max(rmbStartX, rmbCurrentX);
+      const minY = Math.min(rmbStartY, rmbCurrentY);
+      const maxY = Math.max(rmbStartY, rmbCurrentY);
+
+      units.forEach(u => {
+        if (u.team === 1 && !u.isPlayer && !u.inTank && u.hp > 0) {
+          if (u.x >= minX && u.x <= maxX && u.y >= minY && u.y <= maxY) {
+            selectedUnits.add(u);
+            u.followingPlayer = false;
+          }
+        }
+      });
+    } else {
+      // Это был одиночный клик ПКМ - отдача приказа
+      if (selectedUnits.size > 0) {
+        let targetEntity = null;
+        
+        tanks.forEach(tk => {
+          if (tk.team === 2 && tk.hp > 0 && Math.hypot(tk.x - rmbCurrentX, tk.y - rmbCurrentY) < tk.radius * 2) {
+            targetEntity = tk;
+          }
+        });
+
+        if (!targetEntity) {
+          units.forEach(u => {
+            if (u.team === 2 && u.hp > 0 && Math.hypot(u.x - rmbCurrentX, u.y - rmbCurrentY) < u.radius * 2) {
+              targetEntity = u;
+            }
+          });
+        }
+
+        const order = { x: rmbCurrentX, y: rmbCurrentY, target: targetEntity };
+        selectedUnits.forEach(u => {
+          u.rtsOrder = order;
+          u.aiState = 'run';
+          u.stateTimer = 0;
+        });
+
+        orderPings.push({ x: rmbCurrentX, y: rmbCurrentY, radius: 0, alpha: 1, isAttack: !!targetEntity });
+        playSound('whistle');
+      }
+    }
+  }
+});
+
 window.addEventListener('contextmenu', e => e.preventDefault());
 
 function togglePause() {
@@ -727,11 +956,11 @@ function callArtillery(type) {
   const targetY = mouse.y + camera.y;
 
   if (type === 'mortar') {
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 8; i++) {
       incomingMortars.push({
-        x: targetX + (Math.random() - 0.5) * 160,
-        y: targetY + (Math.random() - 0.5) * 160,
-        delay: 50 + i * 25,
+        x: targetX + (Math.random() - 0.5) * 280,
+        y: targetY + (Math.random() - 0.5) * 280,
+        delay: 40 + i * 30 + (Math.random() * 15),
         type: 'explosive'
       });
     }
@@ -780,7 +1009,14 @@ class Unit {
     this.inTank = null;
     this.tactic = 'normal';
     this.suppressionTimer = 0;
+    this.concussionTimer = 0;
     this.flankOffset = (Math.random() - 0.5) * 600;
+
+    // RTS и Тактический ИИ
+    this.aiState = 'run';
+    this.stateTimer = 0;
+    this.tacticalTarget = null;
+    this.rtsOrder = null;
 
     if (classType === 'sniper') {
       this.baseSpeed = isPlayer ? 3.3 : 1.5;
@@ -833,6 +1069,12 @@ class Unit {
 
     let speedMult = 1.0;
     if (this.stamina < 20) speedMult *= 0.6;
+    
+    if (this.concussionTimer > 0) {
+      this.concussionTimer--;
+      this.tactic = 'suppressed';
+      speedMult *= 0.4;
+    }
 
     if (this.isPlayer) {
       let dx = 0, dy = 0;
@@ -857,6 +1099,8 @@ class Unit {
         let spread = 0;
         if (this.stamina < 30) spread += (Math.random() - 0.5) * 0.15;
         if (this.tactic === 'suppressed') spread += (Math.random() - 0.5) * 0.25;
+        if (this.concussionTimer > 0) spread += (Math.random() - 0.5) * 0.50;
+        
         shoot(this.x, this.y, this.angle + spread, this.team, this.bulletDamage, this.bulletSpeed, true, this.classType === 'sniper');
         this.lastShot = now;
       }
@@ -908,94 +1152,153 @@ class Unit {
     this.y = Math.max(20, Math.min(WORLD_H - 20, ny));
   }
 
+  findNearestCover(cx, cy, radius) {
+    let bestCover = null;
+    let bestDist = radius;
+    const check = (x, y) => {
+        const d = Math.hypot(x - cx, y - cy);
+        if (d < bestDist && d > 10) { bestDist = d; bestCover = {x, y}; }
+    };
+    craters.forEach(c => check(c.x, c.y));
+    trenches.forEach(t => check(t.x + t.w/2, t.y + t.h/2));
+    return bestCover;
+  }
+
+  findNextCoverTowards(cx, cy, tx, ty, radius) {
+    let bestCover = null;
+    let bestScore = -Infinity;
+    const baseDist = Math.hypot(tx - cx, ty - cy);
+    if (baseDist < 100) return {x: tx, y: ty};
+
+    const check = (x, y) => {
+        const distToMe = Math.hypot(x - cx, y - cy);
+        if (distToMe > radius || distToMe < 30) return;
+        const distToTarget = Math.hypot(tx - x, ty - y);
+        if (distToTarget < baseDist) {
+            const score = -distToTarget;
+            if (score > bestScore) {
+                bestScore = score;
+                bestCover = {x, y};
+            }
+        }
+    };
+    craters.forEach(c => check(c.x, c.y));
+    trenches.forEach(t => check(t.x + t.w/2, t.y + t.h/2));
+    trees.forEach(t => { if (t.alive) check(t.x, t.y); });
+    return bestCover || {x: tx, y: ty};
+  }
+
   ai(now, speedMult) {
-    let nearest = null;
+    let nearestEnemy = null;
+    let minD = 650;
     const diffCfg = difficultySettings[currentDifficulty];
     let baseReaction = this.team === 2 ? diffCfg.reactionDist : 450;
-    let minD = this.classType === 'sniper' ? baseReaction * 1.4 : baseReaction;
-    let isTargetTank = false;
+    let reactDist = this.classType === 'sniper' ? baseReaction * 1.4 : baseReaction;
 
     tanks.forEach(tk => {
       if (tk.team !== this.team && tk.hp > 0) {
         const d = Math.hypot(tk.x - this.x, tk.y - this.y);
-        if (d < minD) {
-          minD = d;
-          nearest = tk;
-          isTargetTank = true;
-        }
+        if (d < minD) { minD = d; nearestEnemy = tk; }
       }
     });
 
     units.forEach(u => {
       if (u.team !== this.team && u.hp > 0 && !u.inTank) {
         const inSmoke = smokes.some(s => Math.hypot(s.x - u.x, s.y - u.y) < s.r || Math.hypot(s.x - this.x, s.y - this.y) < s.r);
-        if (inSmoke) return;
-
-        let d = Math.hypot(u.x - this.x, u.y - this.y);
-        if (d < minD) {
-          minD = d;
-          nearest = u;
-          isTargetTank = false;
+        if (!inSmoke) {
+          let d = Math.hypot(u.x - this.x, u.y - this.y);
+          if (this.rtsOrder && this.rtsOrder.target === u) d *= 0.1; 
+          if (d < minD) { minD = d; nearestEnemy = u; }
         }
       }
     });
 
-    if (nearest) {
-      this.angle = Math.atan2(nearest.y - this.y, nearest.x - this.x);
+    if (this.rtsOrder && this.rtsOrder.target && this.rtsOrder.target.hp <= 0) {
+        this.rtsOrder = null;
+    }
 
-      if (isTargetTank && minD < 220 && this.classType === 'assault' && Math.random() < 0.007) {
-        grenades.push({
-          x: this.x,
-          y: this.y,
-          tx: nearest.x,
-          ty: nearest.y,
-          timer: 60,
-          isPlayerShot: false
-        });
-      }
+    let goalX, goalY;
+    let isDefendOrder = false;
 
-      const effectiveFireRate = this.team === 2 ? this.fireRate * diffCfg.fireRateMult : this.fireRate;
-      let baseSpread = this.team === 2 ? diffCfg.spread : 0.2;
-      if (this.classType === 'sniper') baseSpread *= 0.3;
-      if (this.classType === 'gunner') baseSpread *= 1.3;
-
-      if (this.classType === 'sniper') {
-        if (minD < 320) {
-          const back = this.angle + Math.PI;
-          this.move(Math.cos(back) * this.baseSpeed * speedMult * 0.6, Math.sin(back) * this.baseSpeed * speedMult * 0.6);
-        }
-      } else if (this.classType === 'gunner') {
-        if (this.tactic !== 'entrenched' && minD < 130) {
-          const back = this.angle + Math.PI;
-          this.move(Math.cos(back) * this.baseSpeed * speedMult * 0.4, Math.sin(back) * this.baseSpeed * speedMult * 0.4);
-        }
-      } else {
-        if (minD < 130) {
-          const back = this.angle + Math.PI;
-          this.move(Math.cos(back) * this.baseSpeed * speedMult * 0.5, Math.sin(back) * this.baseSpeed * speedMult * 0.5);
+    if (this.rtsOrder) {
+        if (this.rtsOrder.target && this.rtsOrder.target.hp > 0) {
+            goalX = this.rtsOrder.target.x;
+            goalY = this.rtsOrder.target.y;
         } else {
-          const dirX = this.team === 1 ? 1 : -1;
-          this.move(dirX * this.baseSpeed * speedMult * 0.35, (Math.random() - 0.5) * 0.8);
+            goalX = this.rtsOrder.x;
+            goalY = this.rtsOrder.y;
+            isDefendOrder = true;
         }
-      }
-
-      if (now - this.lastShot > effectiveFireRate) {
-        const spreadMod = this.tactic === 'entrenched' ? baseSpread * 0.5 : baseSpread;
-        shoot(this.x, this.y, this.angle + (Math.random() - 0.5) * spreadMod, this.team, this.bulletDamage, this.bulletSpeed, false, this.classType === 'sniper');
-        this.lastShot = now;
-      }
     } else if (this.followingPlayer && player && player.hp > 0) {
-      const dToP = Math.hypot(player.x - this.x, player.y - this.y);
-      if (dToP > 80) {
-        this.angle = Math.atan2(player.y - this.y, player.x - this.x);
-        this.move(Math.cos(this.angle) * this.baseSpeed * speedMult, Math.sin(this.angle) * this.baseSpeed * speedMult);
-      }
+        goalX = player.x;
+        goalY = player.y;
     } else {
-      const targetBase = bases.find(b => b.owner !== this.team) || bases[2];
-      const targetY = Math.max(100, Math.min(WORLD_H - 100, targetBase.y + this.flankOffset));
-      const angle = Math.atan2(targetY - this.y, targetBase.x - this.x);
-      this.angle = angle;
-      this.move(Math.cos(angle) * this.baseSpeed * speedMult * 0.6, Math.sin(angle) * this.baseSpeed * speedMult * 0.6);
+        const targetBase = bases.find(b => b.owner !== this.team) || bases[2];
+        goalX = targetBase.x;
+        goalY = Math.max(100, Math.min(WORLD_H - 100, targetBase.y + this.flankOffset));
+    }
+
+    const distToGoal = Math.hypot(goalX - this.x, goalY - this.y);
+
+    if (isDefendOrder && distToGoal < 50) {
+        this.aiState = 'cover';
+        this.stateTimer = 100;
+        this.tacticalTarget = null;
+    }
+
+    if (this.suppressionTimer > 0 && this.tactic !== 'entrenched') {
+        this.aiState = 'run';
+        this.stateTimer = 60;
+        if (!this.tacticalTarget || Math.random() < 0.1) {
+            this.tacticalTarget = this.findNearestCover(this.x, this.y, 300) || {x: goalX, y: goalY};
+        }
+    } else {
+        this.stateTimer--;
+        if (this.stateTimer <= 0) {
+            if (this.aiState === 'run') {
+                this.aiState = 'cover';
+                this.stateTimer = 60 + Math.random() * 60; 
+            } else {
+                this.aiState = 'run';
+                this.stateTimer = 120 + Math.random() * 120;
+                this.tacticalTarget = this.findNextCoverTowards(this.x, this.y, goalX, goalY, 350);
+            }
+        }
+    }
+
+    if (this.aiState === 'run' && !(isDefendOrder && distToGoal < 50)) {
+        let tx = this.tacticalTarget ? this.tacticalTarget.x : goalX;
+        let ty = this.tacticalTarget ? this.tacticalTarget.y : goalY;
+        let moveAngle = Math.atan2(ty - this.y, tx - this.x);
+
+        if (nearestEnemy && this.classType === 'sniper' && minD < 320 && !this.rtsOrder) {
+            moveAngle = Math.atan2(this.y - nearestEnemy.y, this.x - nearestEnemy.x);
+        } else if (this.classType === 'gunner' && nearestEnemy && minD < 150 && this.tactic !== 'entrenched' && !this.rtsOrder) {
+            moveAngle = Math.atan2(this.y - nearestEnemy.y, this.x - nearestEnemy.x);
+        }
+
+        this.move(Math.cos(moveAngle) * this.baseSpeed * speedMult * 0.7, Math.sin(moveAngle) * this.baseSpeed * speedMult * 0.7);
+        if (!nearestEnemy) this.angle = moveAngle;
+    }
+
+    if (nearestEnemy) {
+        this.angle = Math.atan2(nearestEnemy.y - this.y, nearestEnemy.x - this.x);
+
+        if ((nearestEnemy instanceof Tank) && minD < 220 && this.classType === 'assault' && Math.random() < 0.007) {
+            grenades.push({ x: this.x, y: this.y, tx: nearestEnemy.x, ty: nearestEnemy.y, timer: 60, isPlayerShot: false });
+        }
+
+        const effectiveFireRate = this.team === 2 ? this.fireRate * diffCfg.fireRateMult : this.fireRate;
+        let baseSpread = this.team === 2 ? diffCfg.spread : 0.2;
+        if (this.classType === 'sniper') baseSpread *= 0.3;
+        if (this.classType === 'gunner') baseSpread *= 1.3;
+
+        if (now - this.lastShot > effectiveFireRate) {
+            let finalSpread = (this.tactic === 'entrenched' || this.aiState === 'cover') ? baseSpread * 0.5 : baseSpread;
+            if (this.concussionTimer > 0) finalSpread *= 3;
+            shoot(this.x, this.y, this.angle + (Math.random() - 0.5) * finalSpread, this.team, this.bulletDamage, this.bulletSpeed, false, this.classType === 'sniper');
+            this.lastShot = now;
+        }
     }
   }
 
@@ -1045,7 +1348,13 @@ class Unit {
       ctx.stroke();
     }
 
-    if (this.followingPlayer) {
+    if (selectedUnits.has(this)) {
+      ctx.beginPath();
+      ctx.arc(0, 0, this.radius + 7, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(46, 204, 113, 0.9)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (this.followingPlayer) {
       ctx.beginPath();
       ctx.arc(0, 0, this.radius + 6, 0, Math.PI * 2);
       ctx.strokeStyle = '#4cd137';
@@ -1120,6 +1429,8 @@ function commandWhistle() {
     if (u.team === 1 && !u.isPlayer && u.hp > 0 && !u.inTank) {
       if (Math.hypot(u.x - player.x, u.y - player.y) < 420) {
         u.followingPlayer = true;
+        u.rtsOrder = null;
+        selectedUnits.delete(u);
         count++;
       }
     }
@@ -1143,6 +1454,7 @@ function startGame() {
   document.getElementById('respawn-screen').style.display = 'none';
 
   initBases();
+  initTrenches();
   initTanks();
 
   playerStats = { kills: 0, caps: 0, deaths: 0 };
@@ -1150,17 +1462,12 @@ function startGame() {
   inBinoculars = false;
   isPaused = false;
   isRespawning = false;
+  playerConcussionAlpha = 0;
 
-  bullets = [];
-  cannonShells = [];
-  grenades = [];
-  explosions = [];
-  crates = [];
-  craters = [];
-  smokes = [];
-  incomingMortars = [];
-  floatingTexts = [];
-  damageIndicators = [];
+  bullets = []; cannonShells = []; grenades = []; explosions = [];
+  crates = []; craters = []; smokes = []; incomingMortars = [];
+  floatingTexts = []; damageIndicators = []; particles = [];
+  flyingTurrets = []; selectedUnits.clear(); orderPings = [];
   resetKeys();
 
   units = [];
@@ -1263,6 +1570,8 @@ function triggerRespawn() {
       player.hp = player.maxHp;
       player.stamina = 100;
       player.inTank = null;
+      player.concussionTimer = 0;
+      playerConcussionAlpha = 0;
       isRespawning = false;
     }
   }, 1000);
@@ -1294,7 +1603,8 @@ function loop(now) {
     const u = units[i];
     if (u.hp <= 0) {
       if (Math.random() < 0.35) crates.push({ x: u.x, y: u.y });
-
+      if (selectedUnits.has(u)) selectedUnits.delete(u);
+      
       if (u.isPlayer) triggerRespawn();
       else units.splice(i, 1);
       continue;
@@ -1304,6 +1614,21 @@ function loop(now) {
 
   tanks.forEach(t => {
     if (t.hp > 0) t.update(now);
+  });
+  
+  tanks.forEach(tk => {
+    if (tk.hp <= 0) {
+      tk.deadTimer = (tk.deadTimer || 0) + 1;
+      if (tk.deadTimer > 1200) { 
+        tk.hp = tk.maxHp;
+        tk.deadTimer = 0;
+        let homeBase = tk.team === 1 ? bases[0] : bases[4];
+        tk.x = homeBase.x + (Math.random()-0.5)*50;
+        tk.y = homeBase.y + (Math.random()-0.5)*50;
+        tk.hullAngle = tk.team === 1 ? 0 : Math.PI;
+        tk.turretAngle = tk.hullAngle;
+      }
+    }
   });
 
   for (let i = incomingMortars.length - 1; i >= 0; i--) {
@@ -1315,28 +1640,33 @@ function loop(now) {
         playSound('explosion');
         explosions.push({ x: m.x, y: m.y, radius: 15, maxRadius: 110, alpha: 1.0 });
         craters.push({ x: m.x, y: m.y, r: 24 });
-        camera.shake = 12;
+        camera.shake = Math.max(camera.shake, 16);
+        destroyTrenchArea(m.x, m.y, 25);
 
         trees.forEach(t => {
-          if (t.alive && Math.hypot(t.x - m.x, t.y - m.y) < 70) t.alive = false;
+          if (t.alive && Math.hypot(t.x - m.x, t.y - m.y) < 80) t.alive = false;
         });
 
         units.forEach(u => {
           const d = Math.hypot(u.x - m.x, u.y - m.y);
-          if (d < 120) {
-            u.hp -= Math.floor((1 - d / 120) * 200);
+          if (d < 130) {
+            u.hp -= Math.floor((1 - d / 130) * 200);
             if (u.team === 2 && u.hp <= 0) {
               playerStats.kills++;
               floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 });
               hitmarkerTimer = 8;
               playSound('hit');
             }
+            if (u.hp > 0) {
+              u.concussionTimer = 210;
+              if (u.isPlayer) { playSound('tinnitus'); playerConcussionAlpha = 1.0; }
+            }
           }
         });
 
         tanks.forEach(t => {
           const d = Math.hypot(t.x - m.x, t.y - m.y);
-          if (d < 100) t.hp -= 120;
+          if (d < 100) applyTankDamage(t, m.x, m.y, 120, 'mortar');
         });
       } else {
         smokes.push({ x: m.x, y: m.y, r: 130, timer: 700 });
@@ -1365,8 +1695,8 @@ function loop(now) {
       for (let tk of tanks) {
         if (tk.hp > 0 && Math.hypot(tk.x - b.x, tk.y - b.y) < tk.radius) {
           if (tk.team !== b.team) {
-            tk.hp -= Math.floor(b.damage * 0.15);
-            if (b.isPlayerShot) { hitmarkerTimer = 5; playSound('hit'); }
+            applyTankDamage(tk, b.x, b.y, b.damage * 0.15, 'bullet');
+            if (b.isPlayerShot && hitmarkerTimer === 0) { hitmarkerTimer = 5; playSound('hit'); }
           }
           hit = true;
           break;
@@ -1425,7 +1755,7 @@ function loop(now) {
 
     for (let tk of tanks) {
       if (tk.team !== s.team && tk.hp > 0 && Math.hypot(tk.x - s.x, tk.y - s.y) < tk.radius + 5) {
-        tk.hp -= 150;
+        applyTankDamage(tk, s.x, s.y, 150, 'shell');
         explode = true;
         if (s.isPlayerShot) { hitmarkerTimer = 8; playSound('hit'); }
         break;
@@ -1443,18 +1773,21 @@ function loop(now) {
       playSound('explosion');
       explosions.push({ x: s.x, y: s.y, radius: 10, maxRadius: 85, alpha: 1.0 });
       craters.push({ x: s.x, y: s.y, r: 20 });
-      camera.shake = 6;
+      camera.shake = Math.max(camera.shake, 6);
+      destroyTrenchArea(s.x, s.y, 25);
 
       units.forEach(u => {
         const d = Math.hypot(u.x - s.x, u.y - s.y);
-        if (d < 95) {
-          u.hp -= Math.floor((1 - d / 95) * 180);
-          if (s.isPlayerShot && u.team === 2) {
+        if (d < 100) {
+          u.hp -= Math.floor((1 - d / 100) * 180);
+          if (s.isPlayerShot && u.team === 2 && u.hp <= 0) {
+            playerStats.kills++;
+            floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 });
             hitmarkerTimer = 8; playSound('hit');
-            if (u.hp <= 0) {
-              playerStats.kills++;
-              floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 });
-            }
+          }
+          if (u.hp > 0) {
+             u.concussionTimer = 210;
+             if (u.isPlayer) { playSound('tinnitus'); playerConcussionAlpha = 1.0; }
           }
         }
       });
@@ -1472,32 +1805,32 @@ function loop(now) {
       playSound('explosion');
       explosions.push({ x: g.x, y: g.y, radius: 10, maxRadius: 75, alpha: 1.0 });
       craters.push({ x: g.x, y: g.y, r: 18 });
-      camera.shake = 7;
+      camera.shake = Math.max(camera.shake, 7);
+      destroyTrenchArea(g.x, g.y, 20);
 
       trees.forEach(t => {
-        if (t.alive && Math.hypot(t.x - g.x, t.y - g.y) < 40) t.alive = false;
+        if (t.alive && Math.hypot(t.x - g.x, t.y - g.y) < 50) t.alive = false;
       });
 
       units.forEach(u => {
         const d = Math.hypot(u.x - g.x, u.y - g.y);
-        if (d < 85) {
-          u.hp -= Math.floor((1 - d / 85) * 160);
-          if (g.isPlayerShot && u.team === 2) {
+        if (d < 95) {
+          u.hp -= Math.floor((1 - d / 95) * 160);
+          if (g.isPlayerShot && u.team === 2 && u.hp <= 0) {
+            playerStats.kills++;
+            floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 });
             hitmarkerTimer = 8; playSound('hit');
-            if (u.hp <= 0) {
-              playerStats.kills++;
-              floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 });
-            }
+          }
+          if (u.hp > 0) {
+             u.concussionTimer = 180;
+             if (u.isPlayer) { playSound('tinnitus'); playerConcussionAlpha = 1.0; }
           }
         }
       });
 
       tanks.forEach(t => {
         const d = Math.hypot(t.x - g.x, t.y - g.y);
-        if (d < 70) {
-          t.hp -= 120;
-          if (g.isPlayerShot && t.team === 2) { hitmarkerTimer = 8; playSound('hit'); }
-        }
+        if (d < 70) applyTankDamage(t, g.x, g.y, 120, 'grenade');
       });
 
       grenades.splice(i, 1);
@@ -1507,8 +1840,24 @@ function loop(now) {
   for (let i = explosions.length - 1; i >= 0; i--) {
     const exp = explosions[i];
     exp.radius += 4;
-    exp.alpha -= 0.04;
+    exp.alpha -= 0.05;
     if (exp.alpha <= 0) explosions.splice(i, 1);
+  }
+  
+  for (let i = particles.length - 1; i >= 0; i--) {
+    let p = particles[i];
+    p.x += p.vx; p.y += p.vy;
+    p.life--;
+    if (p.type === 'smoke') { p.r = (p.maxLife - p.life) * 0.2; p.alpha = p.life / p.maxLife; }
+    if (p.type === 'fire') { p.r = (p.life / p.maxLife) * 8; p.alpha = p.life / p.maxLife; }
+    if (p.type === 'spark') { p.alpha = p.life / p.maxLife; }
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  for (let i = orderPings.length - 1; i >= 0; i--) {
+    let p = orderPings[i];
+    p.radius += 1.5; p.alpha -= 0.03;
+    if (p.alpha <= 0) orderPings.splice(i, 1);
   }
 
   let playerAtBase = null;
@@ -1649,7 +1998,7 @@ function loop(now) {
     ctx.fillText(b.name, b.x - 45, b.y + 32);
   });
 
-  tanks.forEach(tk => { if (tk.hp > 0) tk.draw(); });
+  tanks.forEach(tk => { tk.draw(); });
 
   crates.forEach(cr => {
     ctx.fillStyle = '#27ae60';
@@ -1673,6 +2022,22 @@ function loop(now) {
     ctx.arc(s.x, s.y, 4, 0, Math.PI * 2);
     ctx.fillStyle = '#ff9f43';
     ctx.fill();
+  });
+  
+  particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.alpha;
+    if (p.type === 'spark') {
+        ctx.fillStyle = '#feca57';
+        ctx.fillRect(p.x - 1, p.y - 1, 3, 3);
+    } else if (p.type === 'smoke') {
+        ctx.fillStyle = '#111';
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    } else if (p.type === 'fire') {
+        ctx.fillStyle = '#ff9f43';
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
   });
 
   explosions.forEach(exp => {
@@ -1712,10 +2077,74 @@ function loop(now) {
     ctx.fillStyle = 'rgba(32, 68, 41, 0.8)';
     ctx.fill();
   });
+  
+  flyingTurrets.forEach(ft => {
+    ft.x += ft.vx; ft.y += ft.vy;
+    ft.z += ft.vz; ft.vz -= 0.5; 
+    ft.angle += ft.va;
+    if (ft.z < 0) { ft.z = 0; ft.vz = 0; ft.vx = 0; ft.vy = 0; ft.va = 0; }
+    
+    ctx.save();
+    ctx.translate(ft.x, ft.y - ft.z); 
+    ctx.rotate(ft.angle);
+    
+    if (ft.z > 0) {
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.beginPath(); ctx.arc(0, ft.z, 15, 0, Math.PI*2); ctx.fill();
+    }
+
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, -3, 30, 6);
+    ctx.beginPath();
+    ctx.arc(0, 0, 13, 0, Math.PI * 2);
+    ctx.fillStyle = ft.z === 0 ? '#1a1a1a' : (ft.team === 1 ? '#3880ff' : '#eb445a'); 
+    ctx.fill();
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // Отрисовка маркеров приказов (зеленый - идти, красный - атака)
+  orderPings.forEach(p => {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.beginPath();
+    ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
+    ctx.strokeStyle = p.isAttack ? `rgba(235, 68, 90, ${p.alpha})` : `rgba(46, 204, 113, ${p.alpha})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // Рамка выделения RTS
+  if (rmbDown) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(46, 204, 113, 0.8)';
+    ctx.fillStyle = 'rgba(46, 204, 113, 0.2)';
+    ctx.lineWidth = 1;
+    const x = Math.min(rmbStartX, rmbCurrentX);
+    const y = Math.min(rmbStartY, rmbCurrentY);
+    const w = Math.abs(rmbCurrentX - rmbStartX);
+    const h = Math.abs(rmbCurrentY - rmbStartY);
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeRect(x, y, w, h);
+    ctx.restore();
+  }
 
   ctx.restore();
+  
+  // Эффект визуальной контузии для игрока
+  if (playerConcussionAlpha > 0) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0); 
+    ctx.fillStyle = `rgba(245, 255, 255, ${playerConcussionAlpha * 0.7})`;
+    ctx.fillRect(0, 0, screenW, screenH);
+    ctx.restore();
+    playerConcussionAlpha -= 0.005;
+    if (playerConcussionAlpha < 0) playerConcussionAlpha = 0;
+  }
 
-  // Отрисовка всплывающих текстов фрагов (+1 ФРАГ)
   for (let i = floatingTexts.length - 1; i >= 0; i--) {
     const ft = floatingTexts[i];
     ft.y -= 0.6;
@@ -1841,14 +2270,25 @@ function loop(now) {
 
   const tacStatus = document.getElementById('tactical-status');
   if (player.inTank) {
-    tacStatus.innerText = "В ТАНКЕ (БРОНЯ)";
-    tacStatus.style.color = "#3880ff";
+    if (player.inTank.trackTimer > 0) {
+      tacStatus.innerText = "ГУСЕНИЦА СБИТА!";
+      tacStatus.style.color = "#e84118";
+    } else if (player.inTank.fireTimer > 0) {
+      tacStatus.innerText = "ПОЖАР ДВИГАТЕЛЯ!";
+      tacStatus.style.color = "#ff9f43";
+    } else {
+      tacStatus.innerText = "В ТАНКЕ (БРОНЯ)";
+      tacStatus.style.color = "#3880ff";
+    }
   } else if (player.tactic === 'entrenched') {
     tacStatus.innerText = "В УКРЫТИИ (-50% УРОНА)";
     tacStatus.style.color = "#f5cd79";
   } else if (player.tactic === 'suppressed') {
     tacStatus.innerText = "ПОДАВЛЕН ОГНЕМ";
     tacStatus.style.color = "#e84118";
+  } else if (player.concussionTimer > 0) {
+    tacStatus.innerText = "КОНТУЗИЯ!";
+    tacStatus.style.color = "#fff200";
   } else if (player.stamina < 20) {
     tacStatus.innerText = "ИСТОЩЕНИЕ";
     tacStatus.style.color = "#e1b12c";
