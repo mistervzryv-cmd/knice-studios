@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Frontline 1944 Mobile Edition</title>
+  <title>Frontline 1944 Mobile Edition (Tactical RTS Update)</title>
   <style>
     * { box-sizing: border-box; -webkit-touch-callout: none; margin: 0; padding: 0; }
     body {
@@ -90,7 +90,7 @@
       width: 44px; height: 44px; border-radius: 50%; background: rgba(14, 20, 16, 0.88);
       border: 1.5px solid #3d4f40; color: #fff; font-weight: bold; font-size: 12px;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: border-color 0.2s, color 0.2s;
     }
     .touch-btn span { font-size: 7px; color: #8fa895; margin-top: 1px; }
     .touch-btn:active { background: #4cd137; color: #000; border-color: #fff; }
@@ -108,7 +108,7 @@
 
 <div id="menu-overlay">
   <h1 class="menu-title">FRONTLINE 1944</h1>
-  <div class="menu-sub">МОБИЛЬНОЕ ИЗДАНИЕ ТВД: 5 ВЫСОТ</div>
+  <div class="menu-sub">МОБИЛЬНОЕ ИЗДАНИЕ ТВД: ТАКТИКА</div>
 
   <div class="class-selection">
     <div class="class-card active" onclick="selectClass('assault', this)">
@@ -152,6 +152,7 @@
 <div id="right-stick-zone" class="stick-zone"><div id="right-stick-thumb" class="stick-thumb"></div></div>
 
 <div id="action-pad">
+  <div class="touch-btn" id="btn-orders">R<span>ПРИКАЗ</span></div>
   <div class="touch-btn" id="btn-grenade">G<span>ГРАНАТА</span></div>
   <div class="touch-btn" id="btn-tank">E<span>ТАНК</span></div>
   <div class="touch-btn" id="btn-artillery">B<span>АРТА</span></div>
@@ -172,7 +173,7 @@
 <canvas id="gameCanvas"></canvas>
 
 <script>
-// --- АУДИО (ГАРАНТИРОВАННЫЙ СТАРТ НА МОБИЛКАХ) ---
+// --- АУДИО ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function resumeAudio() {
   if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -200,7 +201,7 @@ function playSound(type) {
     const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
     osc.type = 'square';
     osc.frequency.setValueAtTime(140, now); osc.frequency.exponentialRampToValueAtTime(25, now + 0.3);
-    gain.gain.setValueAtTime(0.5, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    gain.gain.setValueAtTime(0.6, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
     osc.connect(gain); gain.connect(audioCtx.destination);
     osc.start(now); osc.stop(now + 0.3);
   } else if (type === 'hit') {
@@ -225,6 +226,20 @@ function playSound(type) {
     gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
     osc.connect(gain); gain.connect(audioCtx.destination);
     osc.start(now); osc.stop(now + 0.3);
+  } else if (type === 'mortar_in') {
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(900, now); osc.frequency.exponentialRampToValueAtTime(250, now + 0.6);
+    gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 0.6);
+  } else if (type === 'tinnitus') {
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(6000, now);
+    gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 4.0);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 4.0);
   }
 }
 
@@ -252,6 +267,7 @@ let hitmarkerTimer = 0;
 let floatingTexts = [];
 let damageIndicators = [];
 let respawnInterval = null;
+let playerConcussionAlpha = 0;
 
 let currentDifficulty = 'normal';
 const diffCfg = {
@@ -280,7 +296,7 @@ function getRandomClass() {
   return 'sniper';
 }
 
-// --- БАЗЫ И ФРОНТ ---
+// --- БАЗЫ, ТЕРРИТОРИИ И ОКОПЫ ---
 let bases = [];
 function initBases() {
   bases = [
@@ -296,11 +312,7 @@ initBases();
 const FRONT_SECTIONS = 7;
 const frontlineNodes = [];
 for (let i = 0; i < FRONT_SECTIONS; i++) {
-  frontlineNodes.push({
-    y: (WORLD_H / (FRONT_SECTIONS - 1)) * i,
-    x: WORLD_W * 0.5,
-    targetX: WORLD_W * 0.5
-  });
+  frontlineNodes.push({ y: (WORLD_H / (FRONT_SECTIONS - 1)) * i, x: WORLD_W * 0.5, targetX: WORLD_W * 0.5 });
 }
 
 const trees = [];
@@ -312,22 +324,56 @@ for (let i = 0; i < 220; i++) {
   }
 }
 
-const trenches = [
-  { x: 590, y: 440, w: 120, h: 40 },
-  { x: 840, y: 1440, w: 120, h: 40 },
-  { x: 1940, y: 990, w: 120, h: 40 },
-  { x: 2940, y: 540, w: 120, h: 40 },
-  { x: 3290, y: 1490, w: 120, h: 40 }
-];
+let trenches = [];
+function initTrenches() {
+  trenches = [
+    { x: 590, y: 440, w: 120, h: 40 },
+    { x: 840, y: 1440, w: 120, h: 40 },
+    { x: 1940, y: 990, w: 120, h: 40 },
+    { x: 2940, y: 540, w: 120, h: 40 },
+    { x: 3290, y: 1490, w: 120, h: 40 }
+  ];
+}
+initTrenches();
+
+function subtractRect(R, B) {
+  let res = [];
+  if (R.x >= B.x + B.w || R.x + R.w <= B.x || R.y >= B.y + B.h || R.y + R.h <= B.y) return [R];
+  if (R.y < B.y) res.push({x: R.x, y: R.y, w: R.w, h: B.y - R.y});
+  if (R.y + R.h > B.y + B.h) res.push({x: R.x, y: B.y + B.h, w: R.w, h: (R.y + R.h) - (B.y + B.h)});
+  let midY1 = Math.max(R.y, B.y); let midY2 = Math.min(R.y + R.h, B.y + B.h);
+  if (midY1 < midY2) {
+    if (R.x < B.x) res.push({x: R.x, y: midY1, w: B.x - R.x, h: midY2 - midY1});
+    if (R.x + R.w > B.x + B.w) res.push({x: B.x + B.w, y: midY1, w: (R.x + R.w) - (B.x + B.w), h: midY2 - midY1});
+  }
+  return res.filter(r => r.w > 4 && r.h > 4); 
+}
+
+function destroyTrenchArea(x, y, radius) {
+  const B = { x: x - radius, y: y - radius, w: radius * 2, h: radius * 2 };
+  let newTrenches = [];
+  trenches.forEach(t => { newTrenches.push(...subtractRect(t, B)); });
+  trenches = newTrenches;
+}
 
 let craters = [];
 let smokes = [];
 let incomingMortars = [];
 let tanks = [];
+let particles = [];
+let flyingTurrets = [];
 
-// --- ТАЧ-УПРАВЛЕНИЕ ---
+// --- ТАЧ-УПРАВЛЕНИЕ И RTS ВЫДЕЛЕНИЕ ---
 const leftStick = { active: false, id: null, vx: 0, vy: 0 };
 const rightStick = { active: false, id: null, angle: 0, firing: false };
+
+let tacticalMode = false;
+let tacTouchId = null;
+let tacStartX = 0, tacStartY = 0;
+let tacCurrX = 0, tacCurrY = 0;
+let tacIsDragging = false;
+let selectedUnits = new Set();
+let orderPings = [];
 
 const lZone = document.getElementById('left-stick-zone');
 const lThumb = document.getElementById('left-stick-thumb');
@@ -340,15 +386,30 @@ window.addEventListener('touchstart', e => {
     const t = e.changedTouches[i];
     const lRect = lZone.getBoundingClientRect();
     const rRect = rZone.getBoundingClientRect();
+    
+    let isStickOrUI = false;
 
     if (!leftStick.active && t.clientX >= lRect.left - 25 && t.clientX <= lRect.right + 25 &&
         t.clientY >= lRect.top - 25 && t.clientY <= lRect.bottom + 25) {
       leftStick.active = true; leftStick.id = t.identifier;
       updateLeftStick(t.clientX, t.clientY, lRect);
+      isStickOrUI = true;
     } else if (!rightStick.active && t.clientX >= rRect.left - 25 && t.clientX <= rRect.right + 25 &&
                t.clientY >= rRect.top - 25 && t.clientY <= rRect.bottom + 25) {
       rightStick.active = true; rightStick.id = t.identifier;
       updateRightStick(t.clientX, t.clientY, rRect);
+      isStickOrUI = true;
+    }
+
+    if (e.target.closest('.touch-btn') || e.target.closest('.stick-zone')) isStickOrUI = true;
+
+    if (!isStickOrUI && tacticalMode && tacTouchId === null) {
+      tacTouchId = t.identifier;
+      tacStartX = t.clientX + camera.x;
+      tacStartY = t.clientY + camera.y;
+      tacCurrX = tacStartX;
+      tacCurrY = tacStartY;
+      tacIsDragging = false;
     }
   }
 }, { passive: false });
@@ -360,6 +421,12 @@ window.addEventListener('touchmove', e => {
       updateLeftStick(t.clientX, t.clientY, lZone.getBoundingClientRect());
     } else if (rightStick.active && t.identifier === rightStick.id) {
       updateRightStick(t.clientX, t.clientY, rZone.getBoundingClientRect());
+    } else if (tacticalMode && t.identifier === tacTouchId) {
+      tacCurrX = t.clientX + camera.x;
+      tacCurrY = t.clientY + camera.y;
+      if (Math.hypot(tacCurrX - tacStartX, tacCurrY - tacStartY) > 15) {
+        tacIsDragging = true;
+      }
     }
   }
 }, { passive: false });
@@ -375,6 +442,50 @@ function endTouchHandler(e) {
       rightStick.active = false; rightStick.id = null;
       rightStick.firing = false;
       rThumb.style.transform = `translate(0px, 0px)`;
+    } else if (t.identifier === tacTouchId) {
+      if (tacIsDragging) {
+        selectedUnits.clear();
+        const minX = Math.min(tacStartX, tacCurrX);
+        const maxX = Math.max(tacStartX, tacCurrX);
+        const minY = Math.min(tacStartY, tacCurrY);
+        const maxY = Math.max(tacStartY, tacCurrY);
+
+        units.forEach(u => {
+          if (u.team === 1 && !u.isPlayer && !u.inTank && u.hp > 0) {
+            if (u.x >= minX && u.x <= maxX && u.y >= minY && u.y <= maxY) {
+              selectedUnits.add(u);
+              u.followingPlayer = false;
+            }
+          }
+        });
+      } else {
+        // Одиночный тап (приказ или снятие выделения)
+        if (selectedUnits.size > 0) {
+          let targetEntity = null;
+          tanks.forEach(tk => {
+            if (tk.team === 2 && tk.hp > 0 && Math.hypot(tk.x - tacCurrX, tk.y - tacCurrY) < tk.radius * 2) {
+              targetEntity = tk;
+            }
+          });
+          if (!targetEntity) {
+            units.forEach(u => {
+              if (u.team === 2 && u.hp > 0 && Math.hypot(u.x - tacCurrX, u.y - tacCurrY) < u.radius * 2) {
+                targetEntity = u;
+              }
+            });
+          }
+          const order = { x: tacCurrX, y: tacCurrY, target: targetEntity };
+          selectedUnits.forEach(u => {
+            u.rtsOrder = order;
+            u.aiState = 'run';
+            u.stateTimer = 0;
+          });
+          orderPings.push({ x: tacCurrX, y: tacCurrY, radius: 0, alpha: 1, isAttack: !!targetEntity });
+          playSound('whistle');
+        }
+      }
+      tacTouchId = null;
+      tacIsDragging = false;
     }
   }
 }
@@ -398,7 +509,7 @@ function updateRightStick(cx, cy, rect) {
   let dx = cx - mx; let dy = cy - my;
   const d = Math.hypot(dx, dy);
   const maxR = 36;
-  if (d > 12) { // Мертвая зона
+  if (d > 12) { 
     rightStick.angle = Math.atan2(dy, dx);
     rightStick.firing = true;
   } else {
@@ -408,12 +519,25 @@ function updateRightStick(cx, cy, rect) {
   rThumb.style.transform = `translate(${dx}px, ${dy}px)`;
 }
 
+// Кнопки интерфейса
+document.getElementById('btn-orders').addEventListener('touchstart', e => {
+  e.stopPropagation(); resumeAudio();
+  tacticalMode = !tacticalMode;
+  const btn = document.getElementById('btn-orders');
+  if (tacticalMode) {
+    btn.style.borderColor = '#4cd137'; btn.style.color = '#4cd137';
+  } else {
+    btn.style.borderColor = '#3d4f40'; btn.style.color = '#fff';
+    selectedUnits.clear();
+  }
+});
 document.getElementById('btn-grenade').addEventListener('touchstart', e => { e.stopPropagation(); resumeAudio(); throwGrenade(); });
 document.getElementById('btn-tank').addEventListener('touchstart', e => { e.stopPropagation(); resumeAudio(); toggleTank(); });
 document.getElementById('btn-artillery').addEventListener('touchstart', e => { e.stopPropagation(); resumeAudio(); callArtillery(); });
 document.getElementById('btn-whistle').addEventListener('touchstart', e => { e.stopPropagation(); resumeAudio(); commandWhistle(); });
 
-// --- ТАНКИ ---
+
+// --- ТАНКИ И ЗОНАЛЬНАЯ БРОНЯ ---
 class Tank {
   constructor(x, y, team) {
     this.x = x; this.y = y; this.team = team;
@@ -422,11 +546,50 @@ class Tank {
     this.turretAngle = this.hullAngle;
     this.driver = null; this.radius = 24; this.speed = 2.0;
     this.lastShot = 0; this.fireRate = 1300;
+    this.fireTimer = 0; this.trackTimer = 0; this.deadTimer = 0;
   }
 
   update(now) {
+    if (this.hp <= 0) return;
+
+    if (this.fireTimer > 0) {
+      this.fireTimer--;
+      if (this.fireTimer % 10 === 0) {
+        this.hp -= 5;
+        if (this.hp <= 0) applyTankDamage(this, this.x, this.y, 999, 'fire');
+      }
+      particles.push({
+        x: this.x - Math.cos(this.hullAngle)*15 + (Math.random()-0.5)*10,
+        y: this.y - Math.sin(this.hullAngle)*15 + (Math.random()-0.5)*10,
+        vx: (Math.random()-0.5)*1, vy: -1 - Math.random(),
+        life: 30, maxLife: 30, type: 'fire'
+      });
+    }
+
+    if (this.hp > 0 && this.hp < this.maxHp * 0.4) {
+      if (Math.random() < 0.3) {
+        particles.push({
+          x: this.x + (Math.random()-0.5)*10, y: this.y + (Math.random()-0.5)*10,
+          vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5,
+          life: 50, maxLife: 50, type: 'smoke'
+        });
+      }
+    }
+
+    let canMove = true;
+    if (this.trackTimer > 0) {
+      this.trackTimer--; canMove = false;
+      if (Math.random() < 0.1) {
+         particles.push({
+          x: this.x + (Math.random()-0.5)*20, y: this.y + (Math.random()-0.5)*20,
+          vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2,
+          life: 10, maxLife: 10, type: 'spark'
+        });
+      }
+    }
+
     if (this.driver && this.driver.isPlayer) {
-      if (leftStick.active) {
+      if (canMove && leftStick.active) {
         this.hullAngle = Math.atan2(leftStick.vy, leftStick.vx);
         this.x = Math.max(35, Math.min(WORLD_W - 35, this.x + leftStick.vx * this.speed));
         this.y = Math.max(35, Math.min(WORLD_H - 35, this.y + leftStick.vy * this.speed));
@@ -442,15 +605,15 @@ class Tank {
         this.turretAngle = rightStick.angle;
         if (now - this.lastShot > this.fireRate) {
           shootCannon(this.x, this.y, this.turretAngle, this.team, true);
-          this.lastShot = now; camera.shake = 7;
+          this.lastShot = now; camera.shake = Math.max(camera.shake, 8);
         }
       }
     } else {
-      this.ai(now);
+      this.ai(now, canMove);
     }
   }
 
-  ai(now) {
+  ai(now, canMove) {
     let nearest = null; let minD = 650;
     const diff = diffCfg[currentDifficulty];
 
@@ -483,7 +646,7 @@ class Tank {
       targetX = targetBase.x; targetY = targetBase.y;
     }
 
-    if (targetX !== undefined && targetY !== undefined) {
+    if (canMove && targetX !== undefined && targetY !== undefined) {
       const moveAngle = Math.atan2(targetY - this.y, targetX - this.x);
       this.hullAngle = moveAngle;
       this.x = Math.max(40, Math.min(WORLD_W - 40, this.x + Math.cos(moveAngle) * (this.speed * 0.7)));
@@ -514,19 +677,90 @@ class Tank {
 
   draw() {
     ctx.save(); ctx.translate(this.x, this.y);
-    ctx.save(); ctx.rotate(this.hullAngle);
+    ctx.rotate(this.hullAngle);
+
+    if (this.hp <= 0) {
+      ctx.fillStyle = '#1a1a1a'; ctx.fillRect(-22, -15, 44, 30);
+      ctx.fillStyle = '#0a0a0a'; ctx.fillRect(-24, -18, 48, 6); ctx.fillRect(-24, 12, 48, 6);
+      ctx.restore(); return;
+    }
+
     ctx.fillStyle = this.team === 1 ? '#27496d' : '#8b2635';
     ctx.fillRect(-22, -15, 44, 30);
     ctx.fillStyle = '#141414';
     ctx.fillRect(-24, -18, 48, 6); ctx.fillRect(-24, 12, 48, 6);
     ctx.restore();
 
-    ctx.save(); ctx.rotate(this.turretAngle);
+    ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.turretAngle);
     ctx.fillStyle = '#111'; ctx.fillRect(0, -3, 30, 6);
     ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2);
     ctx.fillStyle = this.team === 1 ? '#3880ff' : '#eb445a';
     ctx.fill(); ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.restore(); ctx.restore();
+    ctx.restore();
+  }
+}
+
+function applyTankDamage(tk, srcX, srcY, baseDmg, type) {
+  if (tk.hp <= 0) return;
+
+  let angleToHit = Math.atan2(srcY - tk.y, srcX - tk.x);
+  let relAngle = angleToHit - tk.hullAngle;
+  while (relAngle > Math.PI) relAngle -= Math.PI * 2;
+  while (relAngle < -Math.PI) relAngle += Math.PI * 2;
+  let absAngle = Math.abs(relAngle);
+
+  let finalDmg = baseDmg;
+  let hitZone = 'side';
+
+  if (absAngle < Math.PI / 4) hitZone = 'front';
+  else if (absAngle > 3 * Math.PI / 4) hitZone = 'rear';
+
+  if (hitZone === 'front') {
+    if (type === 'bullet' || type === 'shell') {
+      finalDmg = Math.floor(baseDmg * 0.1); 
+      playSound('hit');
+      for(let i=0; i<8; i++) {
+        particles.push({
+          x: tk.x + Math.cos(angleToHit)*tk.radius,
+          y: tk.y + Math.sin(angleToHit)*tk.radius,
+          vx: Math.cos(angleToHit + (Math.random()-0.5)) * (Math.random()*4+2),
+          vy: Math.sin(angleToHit + (Math.random()-0.5)) * (Math.random()*4+2),
+          life: 15, maxLife: 15, type: 'spark'
+        });
+      }
+    }
+  }
+  
+  if (hitZone === 'rear') {
+    finalDmg = Math.floor(baseDmg * 2.5);
+    if (Math.random() < 0.4 && type !== 'bullet') tk.fireTimer = 180;
+  }
+
+  if (hitZone === 'side' && (type === 'shell' || type === 'grenade' || type === 'mortar')) {
+    if (Math.random() < 0.6) tk.trackTimer = 300;
+  }
+
+  tk.hp -= finalDmg;
+
+  if (tk.hp <= 0) {
+    tk.hp = 0;
+    if (tk.driver && tk.driver.isPlayer) { tk.driver.hp = 0; triggerRespawn(); }
+    if (tk.driver && !tk.driver.isPlayer) tk.driver.hp = 0;
+    tk.driver = null;
+
+    playSound('explosion');
+    camera.shake = Math.max(camera.shake, 15);
+    explosions.push({ x: tk.x, y: tk.y, radius: 20, maxRadius: 130, alpha: 1.0 });
+    craters.push({ x: tk.x, y: tk.y, r: 28 });
+    destroyTrenchArea(tk.x, tk.y, 30);
+    
+    flyingTurrets.push({
+      x: tk.x, y: tk.y,
+      vx: (Math.random()-0.5)*8, vy: (Math.random()-0.5)*8,
+      z: 5, vz: 10,
+      angle: tk.turretAngle, va: (Math.random()-0.5)*0.4,
+      team: tk.team, life: 1000
+    });
   }
 }
 
@@ -537,15 +771,20 @@ function initTanks() {
   ];
 }
 
-// --- БОЙЦЫ (SLIDE COLLISION) ---
+// --- БОЙЦЫ И ТАКТИЧЕСКИЙ ИИ ---
 class Unit {
   constructor(x, y, team, isPlayer = false, classType = 'assault') {
     this.x = x; this.y = y; this.radius = 10;
     this.team = team; this.isPlayer = isPlayer; this.classType = classType;
     this.stamina = 100; this.angle = 0; this.lastShot = 0;
     this.followingPlayer = false; this.grenades = 3; this.inTank = null;
-    this.tactic = 'normal'; this.suppressionTimer = 0;
+    this.tactic = 'normal'; this.suppressionTimer = 0; this.concussionTimer = 0;
     this.flankOffset = (Math.random() - 0.5) * 550;
+
+    this.aiState = 'run';
+    this.stateTimer = 0;
+    this.tacticalTarget = null;
+    this.rtsOrder = null;
 
     if (classType === 'sniper') {
       this.baseSpeed = isPlayer ? 3.3 : 1.5; this.fireRate = 950;
@@ -581,6 +820,9 @@ class Unit {
 
     let speedMult = 1.0;
     if (this.stamina < 20) speedMult *= 0.6;
+    if (this.concussionTimer > 0) {
+      this.concussionTimer--; this.tactic = 'suppressed'; speedMult *= 0.4;
+    }
 
     if (this.isPlayer) {
       if (leftStick.active) {
@@ -596,6 +838,7 @@ class Unit {
           let spread = 0;
           if (this.stamina < 30) spread += (Math.random() - 0.5) * 0.15;
           if (this.tactic === 'suppressed') spread += (Math.random() - 0.5) * 0.25;
+          if (this.concussionTimer > 0) spread += (Math.random() - 0.5) * 0.50;
           shoot(this.x, this.y, this.angle + spread, this.team, this.bulletDamage, this.bulletSpeed, true, this.classType === 'sniper');
           this.lastShot = now;
         }
@@ -646,77 +889,135 @@ class Unit {
     this.y = Math.max(20, Math.min(WORLD_H - 20, ny));
   }
 
+  findNearestCover(cx, cy, radius) {
+    let bestCover = null; let bestDist = radius;
+    const check = (x, y) => {
+        const d = Math.hypot(x - cx, y - cy);
+        if (d < bestDist && d > 10) { bestDist = d; bestCover = {x, y}; }
+    };
+    craters.forEach(c => check(c.x, c.y));
+    trenches.forEach(t => check(t.x + t.w/2, t.y + t.h/2));
+    return bestCover;
+  }
+
+  findNextCoverTowards(cx, cy, tx, ty, radius) {
+    let bestCover = null; let bestScore = -Infinity;
+    const baseDist = Math.hypot(tx - cx, ty - cy);
+    if (baseDist < 100) return {x: tx, y: ty};
+
+    const check = (x, y) => {
+        const distToMe = Math.hypot(x - cx, y - cy);
+        if (distToMe > radius || distToMe < 30) return;
+        const distToTarget = Math.hypot(tx - x, ty - y);
+        if (distToTarget < baseDist) {
+            const score = -distToTarget;
+            if (score > bestScore) { bestScore = score; bestCover = {x, y}; }
+        }
+    };
+    craters.forEach(c => check(c.x, c.y));
+    trenches.forEach(t => check(t.x + t.w/2, t.y + t.h/2));
+    trees.forEach(t => { if (t.alive) check(t.x, t.y); });
+    return bestCover || {x: tx, y: ty};
+  }
+
   ai(now, speedMult) {
-    let nearest = null;
-    const diff = diffCfg[currentDifficulty];
-    let baseReact = this.team === 2 ? diff.reactionDist : 450;
-    let minD = this.classType === 'sniper' ? baseReact * 1.4 : baseReact;
+    let nearestEnemy = null;
+    const diffCfg = difficultySettings[currentDifficulty];
+    let baseReaction = this.team === 2 ? diffCfg.reactionDist : 450;
+    let minD = this.classType === 'sniper' ? baseReaction * 1.4 : baseReaction;
     let isTargetTank = false;
 
     tanks.forEach(tk => {
       if (tk.team !== this.team && tk.hp > 0) {
         const d = Math.hypot(tk.x - this.x, tk.y - this.y);
-        if (d < minD) { minD = d; nearest = tk; isTargetTank = true; }
+        if (d < minD) { minD = d; nearestEnemy = tk; isTargetTank = true; }
       }
     });
 
     units.forEach(u => {
       if (u.team !== this.team && u.hp > 0 && !u.inTank) {
-        if (smokes.some(s => Math.hypot(s.x - u.x, s.y - u.y) < s.r || Math.hypot(s.x - this.x, s.y - this.y) < s.r)) return;
-        const d = Math.hypot(u.x - this.x, u.y - this.y);
-        if (d < minD) { minD = d; nearest = u; isTargetTank = false; }
+        const inSmoke = smokes.some(s => Math.hypot(s.x - u.x, s.y - u.y) < s.r || Math.hypot(s.x - this.x, s.y - this.y) < s.r);
+        if (!inSmoke) {
+          let d = Math.hypot(u.x - this.x, u.y - this.y);
+          if (this.rtsOrder && this.rtsOrder.target === u) d *= 0.1;
+          if (d < minD) { minD = d; nearestEnemy = u; isTargetTank = false; }
+        }
       }
     });
 
-    if (nearest) {
-      this.angle = Math.atan2(nearest.y - this.y, nearest.x - this.x);
+    if (this.rtsOrder && this.rtsOrder.target && this.rtsOrder.target.hp <= 0) this.rtsOrder = null;
 
-      if (isTargetTank && minD < 220 && this.classType === 'assault' && Math.random() < 0.007) {
-        grenades.push({ x: this.x, y: this.y, tx: nearest.x, ty: nearest.y, timer: 60, isPlayerShot: false });
-      }
+    let goalX, goalY;
+    let isDefendOrder = false;
 
-      const rate = this.team === 2 ? this.fireRate * diff.fireRateMult : this.fireRate;
-      let sp = this.team === 2 ? diff.spread : 0.2;
-      if (this.classType === 'sniper') sp *= 0.3;
-      if (this.classType === 'gunner') sp *= 1.3;
-
-      if (this.classType === 'sniper') {
-        if (minD < 320) {
-          const back = this.angle + Math.PI;
-          this.move(Math.cos(back) * this.baseSpeed * speedMult * 0.6, Math.sin(back) * this.baseSpeed * speedMult * 0.6);
-        }
-      } else if (this.classType === 'gunner') {
-        if (this.tactic !== 'entrenched' && minD < 130) {
-          const back = this.angle + Math.PI;
-          this.move(Math.cos(back) * this.baseSpeed * speedMult * 0.4, Math.sin(back) * this.baseSpeed * speedMult * 0.4);
-        }
-      } else {
-        if (minD < 130) {
-          const back = this.angle + Math.PI;
-          this.move(Math.cos(back) * this.baseSpeed * speedMult * 0.5, Math.sin(back) * this.baseSpeed * speedMult * 0.5);
+    if (this.rtsOrder) {
+        if (this.rtsOrder.target && this.rtsOrder.target.hp > 0) {
+            goalX = this.rtsOrder.target.x; goalY = this.rtsOrder.target.y;
         } else {
-          const dirX = this.team === 1 ? 1 : -1;
-          this.move(dirX * this.baseSpeed * speedMult * 0.35, (Math.random() - 0.5) * 0.8);
+            goalX = this.rtsOrder.x; goalY = this.rtsOrder.y; isDefendOrder = true;
         }
-      }
-
-      if (now - this.lastShot > rate) {
-        const spreadMod = this.tactic === 'entrenched' ? sp * 0.5 : sp;
-        shoot(this.x, this.y, this.angle + (Math.random() - 0.5) * spreadMod, this.team, this.bulletDamage, this.bulletSpeed, false, this.classType === 'sniper');
-        this.lastShot = now;
-      }
     } else if (this.followingPlayer && player && player.hp > 0) {
-      const dToP = Math.hypot(player.x - this.x, player.y - this.y);
-      if (dToP > 80) {
-        this.angle = Math.atan2(player.y - this.y, player.x - this.x);
-        this.move(Math.cos(this.angle) * this.baseSpeed * speedMult, Math.sin(this.angle) * this.baseSpeed * speedMult);
-      }
+        goalX = player.x; goalY = player.y;
     } else {
-      const targetBase = bases.find(b => b.owner !== this.team) || bases[2];
-      const targetY = Math.max(100, Math.min(WORLD_H - 100, targetBase.y + this.flankOffset));
-      const angle = Math.atan2(targetY - this.y, targetBase.x - this.x);
-      this.angle = angle;
-      this.move(Math.cos(angle) * this.baseSpeed * speedMult * 0.6, Math.sin(angle) * this.baseSpeed * speedMult * 0.6);
+        const targetBase = bases.find(b => b.owner !== this.team) || bases[2];
+        goalX = targetBase.x; goalY = Math.max(100, Math.min(WORLD_H - 100, targetBase.y + this.flankOffset));
+    }
+
+    const distToGoal = Math.hypot(goalX - this.x, goalY - this.y);
+
+    if (isDefendOrder && distToGoal < 50) {
+        this.aiState = 'cover'; this.stateTimer = 100; this.tacticalTarget = null;
+    }
+
+    if (this.suppressionTimer > 0 && this.tactic !== 'entrenched') {
+        this.aiState = 'run'; this.stateTimer = 60;
+        if (!this.tacticalTarget || Math.random() < 0.1) {
+            this.tacticalTarget = this.findNearestCover(this.x, this.y, 300) || {x: goalX, y: goalY};
+        }
+    } else {
+        this.stateTimer--;
+        if (this.stateTimer <= 0) {
+            if (this.aiState === 'run') {
+                this.aiState = 'cover'; this.stateTimer = 60 + Math.random() * 60; 
+            } else {
+                this.aiState = 'run'; this.stateTimer = 120 + Math.random() * 120;
+                this.tacticalTarget = this.findNextCoverTowards(this.x, this.y, goalX, goalY, 350);
+            }
+        }
+    }
+
+    if (this.aiState === 'run' && !(isDefendOrder && distToGoal < 50)) {
+        let tx = this.tacticalTarget ? this.tacticalTarget.x : goalX;
+        let ty = this.tacticalTarget ? this.tacticalTarget.y : goalY;
+        let moveAngle = Math.atan2(ty - this.y, tx - this.x);
+
+        if (nearestEnemy && this.classType === 'sniper' && minD < 320 && !this.rtsOrder) {
+            moveAngle = Math.atan2(this.y - nearestEnemy.y, this.x - nearestEnemy.x);
+        } else if (this.classType === 'gunner' && nearestEnemy && minD < 150 && this.tactic !== 'entrenched' && !this.rtsOrder) {
+            moveAngle = Math.atan2(this.y - nearestEnemy.y, this.x - nearestEnemy.x);
+        }
+        this.move(Math.cos(moveAngle) * this.baseSpeed * speedMult * 0.7, Math.sin(moveAngle) * this.baseSpeed * speedMult * 0.7);
+        if (!nearestEnemy) this.angle = moveAngle;
+    }
+
+    if (nearestEnemy) {
+        this.angle = Math.atan2(nearestEnemy.y - this.y, nearestEnemy.x - this.x);
+
+        if (isTargetTank && minD < 220 && this.classType === 'assault' && Math.random() < 0.007) {
+            grenades.push({ x: this.x, y: this.y, tx: nearestEnemy.x, ty: nearestEnemy.y, timer: 60, isPlayerShot: false });
+        }
+
+        const effectiveFireRate = this.team === 2 ? this.fireRate * diffCfg.fireRateMult : this.fireRate;
+        let baseSpread = this.team === 2 ? diffCfg.spread : 0.2;
+        if (this.classType === 'sniper') baseSpread *= 0.3;
+        if (this.classType === 'gunner') baseSpread *= 1.3;
+
+        if (now - this.lastShot > effectiveFireRate) {
+            let finalSpread = (this.tactic === 'entrenched' || this.aiState === 'cover') ? baseSpread * 0.5 : baseSpread;
+            if (this.concussionTimer > 0) finalSpread *= 3;
+            shoot(this.x, this.y, this.angle + (Math.random() - 0.5) * finalSpread, this.team, this.bulletDamage, this.bulletSpeed, false, this.classType === 'sniper');
+            this.lastShot = now;
+        }
     }
   }
 
@@ -737,11 +1038,21 @@ class Unit {
     ctx.fillStyle = this.team === 1 ? (this.isPlayer ? '#2ecc71' : '#3880ff') : '#eb445a';
     ctx.fill(); ctx.strokeStyle = '#0e1410'; ctx.lineWidth = 2; ctx.stroke();
 
+    if (this.classType === 'sniper') {
+      ctx.fillStyle = '#2d3436'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill();
+    } else if (this.classType === 'gunner') {
+      ctx.fillStyle = '#ffeaa7'; ctx.fillRect(-4, -4, 8, 8);
+    }
+
     if (this.tactic === 'entrenched') {
       ctx.beginPath(); ctx.arc(0, 0, this.radius + 4, 0, Math.PI * 2);
       ctx.strokeStyle = '#f5cd79'; ctx.lineWidth = 2; ctx.stroke();
     }
-    if (this.followingPlayer) {
+
+    if (selectedUnits.has(this)) {
+      ctx.beginPath(); ctx.arc(0, 0, this.radius + 7, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(46, 204, 113, 0.9)'; ctx.lineWidth = 2; ctx.stroke();
+    } else if (this.followingPlayer) {
       ctx.beginPath(); ctx.arc(0, 0, this.radius + 6, 0, Math.PI * 2);
       ctx.strokeStyle = '#4cd137'; ctx.lineWidth = 1.5; ctx.stroke();
     }
@@ -749,7 +1060,6 @@ class Unit {
   }
 }
 
-// --- ПУЛИ И АРТИЛЛЕРИЯ ---
 let bullets = [];
 let cannonShells = [];
 let grenades = [];
@@ -765,8 +1075,7 @@ function shoot(x, y, angle, team, dmg, spd, isPlayerShot = false, isSniper = fal
     isPlayerShot: isPlayerShot
   });
   if (isPlayerShot) {
-    if (isSniper) playSound('sniper_shot');
-    else playSound('shot');
+    if (isSniper) playSound('sniper_shot'); else playSound('shot');
   }
 }
 
@@ -781,8 +1090,7 @@ function shootCannon(x, y, angle, team, isPlayerShot = false) {
 }
 
 function throwGrenade() {
-  if (!player || player.hp <= 0 || player.grenades <= 0 || player.inTank) return;
-  player.grenades--;
+  if (!player || player.hp <= 0 || player.inTank) return;
   const dist = 220;
   grenades.push({
     x: player.x, y: player.y,
@@ -792,20 +1100,6 @@ function throwGrenade() {
   });
 }
 
-function toggleTank() {
-  if (!player || player.hp <= 0) return;
-  if (player.inTank) {
-    player.inTank.driver = null;
-    player.x = player.inTank.x + 38; player.y = player.inTank.y;
-    player.inTank = null;
-  } else {
-    const near = tanks.find(t => t.hp > 0 && Math.hypot(t.x - player.x, t.y - player.y) < 60 && !t.driver);
-    if (near && near.team === player.team) {
-      near.driver = player; player.inTank = near;
-    }
-  }
-}
-
 function callArtillery() {
   if (artilleryCooldown > 0 || !player || player.hp <= 0 || player.inTank) return;
   artilleryCooldown = 600;
@@ -813,11 +1107,11 @@ function callArtillery() {
   const tx = player.x + Math.cos(player.angle) * 280;
   const ty = player.y + Math.sin(player.angle) * 280;
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 7; i++) {
     incomingMortars.push({
-      x: tx + (Math.random() - 0.5) * 150,
-      y: ty + (Math.random() - 0.5) * 150,
-      delay: 45 + i * 25,
+      x: tx + (Math.random() - 0.5) * 250,
+      y: ty + (Math.random() - 0.5) * 250,
+      delay: 40 + i * 35 + (Math.random() * 15),
       type: 'explosive'
     });
   }
@@ -826,14 +1120,19 @@ function callArtillery() {
 function commandWhistle() {
   if (!player || player.hp <= 0 || player.inTank) return;
   playSound('whistle');
+  let count = 0;
   units.forEach(u => {
     if (u.team === 1 && !u.isPlayer && u.hp > 0 && !u.inTank) {
-      if (Math.hypot(u.x - player.x, u.y - player.y) < 420) u.followingPlayer = true;
+      if (Math.hypot(u.x - player.x, u.y - player.y) < 420) {
+        u.followingPlayer = true;
+        u.rtsOrder = null;
+        selectedUnits.delete(u);
+        count++;
+      }
     }
   });
 }
 
-// --- УПРАВЛЕНИЕ МАТЧЕМ ---
 let units = [];
 let player = null;
 let gameRunning = false;
@@ -851,16 +1150,18 @@ function startGame() {
   document.getElementById('gameover-screen').style.display = 'none';
   document.getElementById('respawn-screen').style.display = 'none';
 
-  initBases();
-  initTanks();
+  initBases(); initTrenches(); initTanks();
 
   playerStats = { kills: 0, caps: 0, deaths: 0 };
-  artilleryCooldown = 0;
-  isRespawning = false;
-
+  artilleryCooldown = 0; isRespawning = false; playerConcussionAlpha = 0;
   bullets = []; cannonShells = []; grenades = []; explosions = [];
   crates = []; craters = []; smokes = []; incomingMortars = [];
-  floatingTexts = []; damageIndicators = [];
+  floatingTexts = []; damageIndicators = []; particles = []; flyingTurrets = [];
+  selectedUnits.clear(); orderPings = [];
+  
+  tacticalMode = false;
+  document.getElementById('btn-orders').style.borderColor = '#3d4f40';
+  document.getElementById('btn-orders').style.color = '#fff';
 
   units = [];
   player = new Unit(bases[0].x, bases[0].y, 1, true, selectedClass);
@@ -871,8 +1172,7 @@ function startGame() {
     units.push(new Unit(bases[4].x + (Math.random() - 0.5) * 150, bases[4].y + (Math.random() - 0.5) * 220, 2, false, getRandomClass()));
   }
 
-  gameRunning = true;
-  requestAnimationFrame(loop);
+  gameRunning = true; requestAnimationFrame(loop);
 }
 
 function returnToMenu() {
@@ -886,6 +1186,29 @@ function returnToMenu() {
   document.getElementById('action-pad').style.display = 'none';
   document.getElementById('respawn-screen').style.display = 'none';
   document.getElementById('menu-overlay').style.display = 'flex';
+}
+
+function checkEndGame() {
+  if (!gameRunning) return;
+  const blue = bases.filter(b => b.owner === 1).length;
+  const red = bases.filter(b => b.owner === 2).length;
+
+  if (blue === bases.length) endGame(true, "ПОБЕДА!");
+  else if (red === bases.length) endGame(false, "ПОРАЖЕНИЕ");
+}
+
+function endGame(won, title) {
+  gameRunning = false;
+  if (respawnInterval) clearInterval(respawnInterval);
+  const screen = document.getElementById('gameover-screen');
+  document.getElementById('end-status').innerText = title;
+  document.getElementById('end-status').style.color = won ? '#4cd137' : '#e84118';
+  document.getElementById('end-details').innerHTML = `
+    Ликвидировано: <b>${playerStats.kills}</b> бойцов<br>
+    Захвачено высот: <b>${playerStats.caps}</b><br>
+    Смертей: <b>${playerStats.deaths}</b>
+  `;
+  screen.style.display = 'flex';
 }
 
 function triggerRespawn() {
@@ -921,32 +1244,10 @@ function triggerRespawn() {
 
       player.x = safeX; player.y = safeY; player.hp = player.maxHp;
       player.stamina = 100; player.inTank = null;
+      player.concussionTimer = 0; playerConcussionAlpha = 0;
       isRespawning = false;
     }
   }, 1000);
-}
-
-function checkEndGame() {
-  if (!gameRunning) return;
-  const blue = bases.filter(b => b.owner === 1).length;
-  const red = bases.filter(b => b.owner === 2).length;
-
-  if (blue === bases.length) endGame(true, "ПОБЕДА!");
-  else if (red === bases.length) endGame(false, "ПОРАЖЕНИЕ");
-}
-
-function endGame(won, title) {
-  gameRunning = false;
-  if (respawnInterval) clearInterval(respawnInterval);
-  const screen = document.getElementById('gameover-screen');
-  document.getElementById('end-status').innerText = title;
-  document.getElementById('end-status').style.color = won ? '#4cd137' : '#e84118';
-  document.getElementById('end-details').innerHTML = `
-    Ликвидировано: <b>${playerStats.kills}</b> бойцов<br>
-    Захвачено высот: <b>${playerStats.caps}</b><br>
-    Смертей: <b>${playerStats.deaths}</b>
-  `;
-  screen.style.display = 'flex';
 }
 
 setInterval(() => {
@@ -975,85 +1276,94 @@ function loop(now) {
     const u = units[i];
     if (u.hp <= 0) {
       if (Math.random() < 0.35) crates.push({ x: u.x, y: u.y });
-      if (u.isPlayer) triggerRespawn();
-      else units.splice(i, 1);
+      if (selectedUnits.has(u)) selectedUnits.delete(u);
+      if (u.isPlayer) triggerRespawn(); else units.splice(i, 1);
       continue;
     }
     u.update(now);
   }
 
-  // 2. Апдейт танков
-  tanks.forEach(t => { if (t.hp > 0) t.update(now); });
+  // 2. Апдейт танков и респаун
+  tanks.forEach(t => t.update(now));
+  tanks.forEach(tk => {
+    if (tk.hp <= 0) {
+      tk.deadTimer = (tk.deadTimer || 0) + 1;
+      if (tk.deadTimer > 1200) { 
+        tk.hp = tk.maxHp; tk.deadTimer = 0;
+        let homeBase = tk.team === 1 ? bases[0] : bases[4];
+        tk.x = homeBase.x + (Math.random()-0.5)*50; tk.y = homeBase.y + (Math.random()-0.5)*50;
+        tk.hullAngle = tk.team === 1 ? 0 : Math.PI; tk.turretAngle = tk.hullAngle;
+      }
+    }
+  });
 
   // 3. Минометы
   for (let i = incomingMortars.length - 1; i >= 0; i--) {
-    const m = incomingMortars[i];
-    m.delay--;
+    const m = incomingMortars[i]; m.delay--;
+    if (m.delay === 30) playSound('mortar_in');
     if (m.delay <= 0) {
-      playSound('explosion');
-      explosions.push({ x: m.x, y: m.y, radius: 15, maxRadius: 100, alpha: 1.0 });
-      craters.push({ x: m.x, y: m.y, r: 24 });
-      camera.shake = 10;
+      if (m.type === 'explosive') {
+        playSound('explosion');
+        explosions.push({ x: m.x, y: m.y, radius: 15, maxRadius: 110, alpha: 1.0 });
+        craters.push({ x: m.x, y: m.y, r: 24 });
+        camera.shake = Math.max(camera.shake, 16);
+        destroyTrenchArea(m.x, m.y, 25);
 
-      trees.forEach(t => { if (t.alive && Math.hypot(t.x - m.x, t.y - m.y) < 65) t.alive = false; });
-      units.forEach(u => {
-        const d = Math.hypot(u.x - m.x, u.y - m.y);
-        if (d < 110) {
-          u.hp -= Math.floor((1 - d / 110) * 190);
-          if (u.team === 2 && u.hp <= 0) {
-            playerStats.kills++;
-            floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 });
-            hitmarkerTimer = 8; playSound('hit');
+        trees.forEach(t => { if (t.alive && Math.hypot(t.x - m.x, t.y - m.y) < 80) t.alive = false; });
+        units.forEach(u => {
+          const d = Math.hypot(u.x - m.x, u.y - m.y);
+          if (d < 130) {
+            u.hp -= Math.floor((1 - d / 130) * 200);
+            if (u.team === 2 && u.hp <= 0) {
+              playerStats.kills++;
+              floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 });
+              hitmarkerTimer = 8; playSound('hit');
+            }
+            if (u.hp > 0) {
+              u.concussionTimer = 210;
+              if (u.isPlayer) { playSound('tinnitus'); playerConcussionAlpha = 1.0; }
+            }
           }
-        }
-      });
-      tanks.forEach(t => { if (Math.hypot(t.x - m.x, t.y - m.y) < 90) t.hp -= 120; });
+        });
+        tanks.forEach(t => { if (Math.hypot(t.x - m.x, t.y - m.y) < 100) applyTankDamage(t, m.x, m.y, 120, 'mortar'); });
+      } else {
+        smokes.push({ x: m.x, y: m.y, r: 130, timer: 700 });
+      }
       incomingMortars.splice(i, 1);
     }
   }
 
+  for (let i = smokes.length - 1; i >= 0; i--) { smokes[i].timer--; if (smokes[i].timer <= 0) smokes.splice(i, 1); }
+
   // 4. Пули
   for (let i = bullets.length - 1; i >= 0; i--) {
-    const b = bullets[i];
-    b.x += b.vx; b.y += b.vy; b.life--;
-
+    const b = bullets[i]; b.x += b.vx; b.y += b.vy; b.life--;
     let hit = false;
-    for (let t of trees) {
-      if (t.alive && Math.hypot(t.x - b.x, t.y - b.y) < t.r) { hit = true; break; }
-    }
-
+    for (let t of trees) { if (t.alive && Math.hypot(t.x - b.x, t.y - b.y) < t.r) { hit = true; break; } }
     if (!hit) {
       for (let tk of tanks) {
         if (tk.hp > 0 && Math.hypot(tk.x - b.x, tk.y - b.y) < tk.radius) {
           if (tk.team !== b.team) {
-            tk.hp -= Math.floor(b.damage * 0.15);
-            if (b.isPlayerShot) { hitmarkerTimer = 5; playSound('hit'); }
+            applyTankDamage(tk, b.x, b.y, b.damage * 0.15, 'bullet');
+            if (b.isPlayerShot && hitmarkerTimer === 0) { hitmarkerTimer = 5; playSound('hit'); }
           }
           hit = true; break;
         }
       }
     }
-
     if (!hit) {
       for (let u of units) {
         if (u.team !== b.team && u.hp > 0 && !u.inTank) {
           const dist = Math.hypot(u.x - b.x, u.y - b.y);
           if (dist < 35) u.suppressionTimer = 40;
-
           if (dist < u.radius + 2) {
             const dmg = u.tactic === 'entrenched' ? b.damage * 0.5 : b.damage;
             u.hp -= dmg; hit = true;
-
             if (b.isPlayerShot) {
               hitmarkerTimer = 7; playSound('hit');
-              if (u.hp <= 0) {
-                playerStats.kills++;
-                floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 });
-              }
+              if (u.hp <= 0) { playerStats.kills++; floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 }); }
             }
-            if (u.isPlayer) {
-              damageIndicators.push({ angle: Math.atan2(b.y - u.y, b.x - u.x), alpha: 1.0 });
-            }
+            if (u.isPlayer) damageIndicators.push({ angle: Math.atan2(b.y - u.y, b.x - u.x), alpha: 1.0 });
             break;
           }
         }
@@ -1064,38 +1374,29 @@ function loop(now) {
 
   // 5. Фугасы
   for (let i = cannonShells.length - 1; i >= 0; i--) {
-    const s = cannonShells[i];
-    s.x += s.vx; s.y += s.vy; s.life--;
-
+    const s = cannonShells[i]; s.x += s.vx; s.y += s.vy; s.life--;
     let explode = false;
-    for (let t of trees) {
-      if (t.alive && Math.hypot(t.x - s.x, t.y - s.y) < t.r + 5) {
-        t.alive = false; explode = true; break;
-      }
-    }
-
+    for (let t of trees) { if (t.alive && Math.hypot(t.x - s.x, t.y - s.y) < t.r + 5) { t.alive = false; explode = true; break; } }
     for (let tk of tanks) {
       if (tk.team !== s.team && tk.hp > 0 && Math.hypot(tk.x - s.x, tk.y - s.y) < tk.radius + 5) {
-        tk.hp -= 150; explode = true;
+        applyTankDamage(tk, s.x, s.y, 150, 'shell'); explode = true;
         if (s.isPlayerShot) { hitmarkerTimer = 8; playSound('hit'); }
         break;
       }
     }
-
+    for (let u of units) { if (u.team !== s.team && u.hp > 0 && !u.inTank && Math.hypot(u.x - s.x, u.y - s.y) < u.radius + 6) { explode = true; break; } }
     if (s.life <= 0 || explode) {
       playSound('explosion');
-      explosions.push({ x: s.x, y: s.y, radius: 10, maxRadius: 80, alpha: 1.0 });
+      explosions.push({ x: s.x, y: s.y, radius: 10, maxRadius: 85, alpha: 1.0 });
       craters.push({ x: s.x, y: s.y, r: 20 });
-      camera.shake = 6;
-
+      camera.shake = Math.max(camera.shake, 6);
+      destroyTrenchArea(s.x, s.y, 25);
       units.forEach(u => {
         const d = Math.hypot(u.x - s.x, u.y - s.y);
-        if (d < 90) {
-          u.hp -= Math.floor((1 - d / 90) * 170);
-          if (s.isPlayerShot && u.team === 2 && u.hp <= 0) {
-            playerStats.kills++;
-            floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 });
-          }
+        if (d < 100) {
+          u.hp -= Math.floor((1 - d / 100) * 180);
+          if (s.isPlayerShot && u.team === 2 && u.hp <= 0) { playerStats.kills++; floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 }); hitmarkerTimer = 8; playSound('hit'); }
+          if (u.hp > 0) { u.concussionTimer = 210; if (u.isPlayer) { playSound('tinnitus'); playerConcussionAlpha = 1.0; } }
         }
       });
       cannonShells.splice(i, 1);
@@ -1104,34 +1405,43 @@ function loop(now) {
 
   // 6. Гранаты
   for (let i = grenades.length - 1; i >= 0; i--) {
-    const g = grenades[i];
-    g.x += (g.tx - g.x) * 0.08; g.y += (g.ty - g.y) * 0.08; g.timer--;
+    const g = grenades[i]; g.x += (g.tx - g.x) * 0.08; g.y += (g.ty - g.y) * 0.08; g.timer--;
     if (g.timer <= 0) {
       playSound('explosion');
       explosions.push({ x: g.x, y: g.y, radius: 10, maxRadius: 75, alpha: 1.0 });
       craters.push({ x: g.x, y: g.y, r: 18 });
-      camera.shake = 7;
-
-      trees.forEach(t => { if (t.alive && Math.hypot(t.x - g.x, t.y - g.y) < 40) t.alive = false; });
+      camera.shake = Math.max(camera.shake, 7);
+      destroyTrenchArea(g.x, g.y, 20);
+      trees.forEach(t => { if (t.alive && Math.hypot(t.x - g.x, t.y - g.y) < 50) t.alive = false; });
       units.forEach(u => {
         const d = Math.hypot(u.x - g.x, u.y - g.y);
-        if (d < 85) {
-          u.hp -= Math.floor((1 - d / 85) * 160);
-          if (g.isPlayerShot && u.team === 2 && u.hp <= 0) {
-            playerStats.kills++;
-            floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 });
-          }
+        if (d < 95) {
+          u.hp -= Math.floor((1 - d / 95) * 160);
+          if (g.isPlayerShot && u.team === 2 && u.hp <= 0) { playerStats.kills++; floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 }); hitmarkerTimer = 8; playSound('hit'); }
+          if (u.hp > 0) { u.concussionTimer = 180; if (u.isPlayer) { playSound('tinnitus'); playerConcussionAlpha = 1.0; } }
         }
       });
-      tanks.forEach(t => { if (Math.hypot(t.x - g.x, t.y - g.y) < 70) t.hp -= 120; });
+      tanks.forEach(t => { if (Math.hypot(t.x - g.x, t.y - g.y) < 70) applyTankDamage(t, g.x, g.y, 120, 'grenade'); });
       grenades.splice(i, 1);
     }
   }
 
-  for (let i = explosions.length - 1; i >= 0; i--) {
-    const exp = explosions[i];
-    exp.radius += 4; exp.alpha -= 0.05;
-    if (exp.alpha <= 0) explosions.splice(i, 1);
+  for (let i = explosions.length - 1; i >= 0; i--) { const exp = explosions[i]; exp.radius += 4; exp.alpha -= 0.05; if (exp.alpha <= 0) explosions.splice(i, 1); }
+
+  // Частицы
+  for (let i = particles.length - 1; i >= 0; i--) {
+    let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life--;
+    if (p.type === 'smoke') { p.r = (p.maxLife - p.life) * 0.2; p.alpha = p.life / p.maxLife; }
+    if (p.type === 'fire') { p.r = (p.life / p.maxLife) * 8; p.alpha = p.life / p.maxLife; }
+    if (p.type === 'spark') { p.alpha = p.life / p.maxLife; }
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  // Маркеры приказов
+  for (let i = orderPings.length - 1; i >= 0; i--) {
+    let p = orderPings[i];
+    p.radius += 1.5; p.alpha -= 0.03;
+    if (p.alpha <= 0) orderPings.splice(i, 1);
   }
 
   // 7. Захват баз
@@ -1139,16 +1449,12 @@ function loop(now) {
   bases.forEach(b => {
     let blue = units.filter(u => u.team === 1 && Math.hypot(u.x - b.x, u.y - b.y) < b.radius).length;
     let red = units.filter(u => u.team === 2 && Math.hypot(u.x - b.x, u.y - b.y) < b.radius).length;
-    const diff = blue - red;
-    const oldOwner = b.owner;
+    const diff = blue - red; const oldOwner = b.owner;
 
     if (diff > 0) b.capProgress = Math.min(1.0, b.capProgress + 0.004);
     else if (diff < 0) b.capProgress = Math.max(-1.0, b.capProgress - 0.004);
 
-    if (b.capProgress > 0.6) b.owner = 1;
-    else if (b.capProgress < -0.6) b.owner = 2;
-    else if (Math.abs(b.capProgress) < 0.2) b.owner = 0;
-
+    if (b.capProgress > 0.6) b.owner = 1; else if (b.capProgress < -0.6) b.owner = 2; else if (Math.abs(b.capProgress) < 0.2) b.owner = 0;
     if (oldOwner !== 1 && b.owner === 1) playerStats.caps++;
     if (player && Math.hypot(player.x - b.x, player.y - b.y) < b.radius) playerAtBase = b;
   });
@@ -1159,24 +1465,19 @@ function loop(now) {
     document.getElementById('capture-title').innerText = `${playerAtBase.name} (${playerAtBase.owner === 1 ? 'АЛЬЯНС' : playerAtBase.owner === 2 ? 'ВРАГ' : 'НЕЙТРАЛ'})`;
     const pct = Math.round(((playerAtBase.capProgress + 1) / 2) * 100);
     const fillEl = document.getElementById('capture-bar-fill');
-    fillEl.style.width = pct + '%';
-    fillEl.style.background = playerAtBase.owner === 1 ? '#3880ff' : playerAtBase.owner === 2 ? '#eb445a' : '#f5cd79';
+    fillEl.style.width = pct + '%'; fillEl.style.background = playerAtBase.owner === 1 ? '#3880ff' : playerAtBase.owner === 2 ? '#eb445a' : '#f5cd79';
   } else {
     capHud.style.display = 'none';
   }
 
   // 8. Векторная линия фронта
   for (let i = 0; i < FRONT_SECTIONS; i++) {
-    const nodeY = frontlineNodes[i].y;
-    let weightSum = 0, weightedX = 0;
-
+    const nodeY = frontlineNodes[i].y; let weightSum = 0, weightedX = 0;
     bases.forEach(b => {
-      const distY = Math.abs(b.y - nodeY);
-      const w = 1 / (1 + (distY * distY) * 0.000003);
+      const distY = Math.abs(b.y - nodeY); const w = 1 / (1 + (distY * distY) * 0.000003);
       const target = b.owner === 1 ? b.x + 350 : (b.owner === 2 ? b.x - 350 : b.x);
       weightedX += target * w; weightSum += w;
     });
-
     frontlineNodes[i].targetX = weightSum > 0 ? (weightedX / weightSum) : (WORLD_W * 0.5);
     frontlineNodes[i].x += (frontlineNodes[i].targetX - frontlineNodes[i].x) * 0.04;
   }
@@ -1184,99 +1485,63 @@ function loop(now) {
   // Камера
   let shakeX = 0, shakeY = 0;
   if (camera.shake > 0) {
-    shakeX = (Math.random() - 0.5) * camera.shake;
-    shakeY = (Math.random() - 0.5) * camera.shake;
+    shakeX = (Math.random() - 0.5) * camera.shake; shakeY = (Math.random() - 0.5) * camera.shake;
     camera.shake = Math.max(0, camera.shake - 0.5);
   }
-
   camera.x = Math.max(0, Math.min(WORLD_W - screenW, player.x - screenW / 2)) + shakeX;
   camera.y = Math.max(0, Math.min(WORLD_H - screenH, player.y - screenH / 2)) + shakeY;
 
-  // Туман войны
   const visibleUnits = new Set();
   units.forEach(u => {
-    if (u.team === 1) {
-      visibleUnits.add(u);
-    } else {
-      const seen = units.some(blue => blue.team === 1 && Math.hypot(blue.x - u.x, blue.y - u.y) < 450);
-      if (seen) visibleUnits.add(u);
-    }
+    if (u.team === 1) visibleUnits.add(u);
+    else { const seen = units.some(blue => blue.team === 1 && Math.hypot(blue.x - u.x, blue.y - u.y) < 450); if (seen) visibleUnits.add(u); }
   });
 
-  // --- РЕНДЕР ---
+  // --- РЕНДЕР МИРА ---
   ctx.clearRect(0, 0, screenW, screenH);
   ctx.save(); ctx.translate(-camera.x, -camera.y);
 
   ctx.fillStyle = '#141c16'; ctx.fillRect(0, 0, WORLD_W, WORLD_H);
 
-  craters.forEach(c => {
-    ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
-    ctx.fillStyle = '#0a0d0b'; ctx.fill(); ctx.strokeStyle = '#232b25'; ctx.lineWidth = 2; ctx.stroke();
-  });
+  craters.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2); ctx.fillStyle = '#0a0d0b'; ctx.fill(); ctx.strokeStyle = '#232b25'; ctx.lineWidth = 2; ctx.stroke(); });
+  ctx.fillStyle = '#0b0f0c'; trenches.forEach(t => { ctx.fillRect(t.x, t.y, t.w, t.h); ctx.strokeStyle = '#27382c'; ctx.strokeRect(t.x, t.y, t.w, t.h); });
 
-  ctx.fillStyle = '#0b0f0c';
-  trenches.forEach(t => {
-    ctx.fillRect(t.x, t.y, t.w, t.h);
-    ctx.strokeStyle = '#27382c'; ctx.strokeRect(t.x, t.y, t.w, t.h);
-  });
-
-  // Векторная линия фронта
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(frontlineNodes[0].x, frontlineNodes[0].y);
+  ctx.save(); ctx.beginPath(); ctx.moveTo(frontlineNodes[0].x, frontlineNodes[0].y);
   for (let i = 0; i < FRONT_SECTIONS - 1; i++) {
-    const xc = (frontlineNodes[i].x + frontlineNodes[i + 1].x) / 2;
-    const yc = (frontlineNodes[i].y + frontlineNodes[i + 1].y) / 2;
+    const xc = (frontlineNodes[i].x + frontlineNodes[i + 1].x) / 2; const yc = (frontlineNodes[i].y + frontlineNodes[i + 1].y) / 2;
     ctx.quadraticCurveTo(frontlineNodes[i].x, frontlineNodes[i].y, xc, yc);
   }
   ctx.lineTo(frontlineNodes[FRONT_SECTIONS - 1].x, frontlineNodes[FRONT_SECTIONS - 1].y);
-  ctx.strokeStyle = 'rgba(245, 205, 121, 0.45)';
-  ctx.lineWidth = 4; ctx.setLineDash([12, 10]); ctx.stroke();
-  ctx.restore();
+  ctx.strokeStyle = 'rgba(245, 205, 121, 0.45)'; ctx.lineWidth = 4; ctx.setLineDash([12, 10]); ctx.stroke(); ctx.restore();
 
-  // Базы
   bases.forEach(b => {
     ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
     ctx.fillStyle = b.owner === 1 ? 'rgba(56, 128, 255, 0.05)' : b.owner === 2 ? 'rgba(235, 68, 90, 0.05)' : 'rgba(255, 255, 255, 0.03)';
-    ctx.fill(); ctx.strokeStyle = b.owner === 1 ? '#3880ff' : b.owner === 2 ? '#eb445a' : '#555';
-    ctx.lineWidth = 2; ctx.stroke();
-
+    ctx.fill(); ctx.strokeStyle = b.owner === 1 ? '#3880ff' : b.owner === 2 ? '#eb445a' : '#555'; ctx.lineWidth = 2; ctx.stroke();
     ctx.beginPath(); ctx.arc(b.x, b.y, 14, 0, Math.PI * 2); ctx.fillStyle = '#222'; ctx.fill();
     ctx.fillStyle = b.owner === 1 ? '#3880ff' : b.owner === 2 ? '#eb445a' : '#f5cd79';
-    ctx.fillRect(b.x, b.y - 18, 24, 15);
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.strokeRect(b.x, b.y - 18, 24, 15);
+    ctx.fillRect(b.x, b.y - 18, 24, 15); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.strokeRect(b.x, b.y - 18, 24, 15);
   });
 
-  tanks.forEach(tk => { if (tk.hp > 0) tk.draw(); });
+  tanks.forEach(tk => { tk.draw(); });
 
-  crates.forEach(cr => {
-    ctx.fillStyle = '#27ae60'; ctx.fillRect(cr.x - 7, cr.y - 7, 14, 14);
-    ctx.fillStyle = '#fff'; ctx.fillRect(cr.x - 5, cr.y - 2, 10, 4); ctx.fillRect(cr.x - 2, cr.y - 5, 4, 10);
+  crates.forEach(cr => { ctx.fillStyle = '#27ae60'; ctx.fillRect(cr.x - 7, cr.y - 7, 14, 14); ctx.fillStyle = '#fff'; ctx.fillRect(cr.x - 5, cr.y - 2, 10, 4); ctx.fillRect(cr.x - 2, cr.y - 5, 4, 10); });
+  grenades.forEach(g => { ctx.beginPath(); ctx.arc(g.x, g.y, 4, 0, Math.PI * 2); ctx.fillStyle = '#2f3640'; ctx.fill(); ctx.strokeStyle = '#f5cd79'; ctx.stroke(); });
+  cannonShells.forEach(s => { ctx.beginPath(); ctx.arc(s.x, s.y, 4, 0, Math.PI * 2); ctx.fillStyle = '#ff9f43'; ctx.fill(); });
+
+  particles.forEach(p => {
+    ctx.save(); ctx.globalAlpha = p.alpha;
+    if (p.type === 'spark') { ctx.fillStyle = '#feca57'; ctx.fillRect(p.x - 1, p.y - 1, 3, 3); }
+    else if (p.type === 'smoke') { ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); }
+    else if (p.type === 'fire') { ctx.fillStyle = '#ff9f43'; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); }
+    ctx.restore();
   });
 
-  grenades.forEach(g => {
-    ctx.beginPath(); ctx.arc(g.x, g.y, 4, 0, Math.PI * 2);
-    ctx.fillStyle = '#2f3640'; ctx.fill(); ctx.strokeStyle = '#f5cd79'; ctx.stroke();
-  });
+  explosions.forEach(exp => { ctx.beginPath(); ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2); ctx.fillStyle = `rgba(243, 156, 18, ${exp.alpha})`; ctx.fill(); });
+  smokes.forEach(s => { ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(220, 225, 222, 0.45)'; ctx.fill(); });
+  ctx.fillStyle = '#f5cd79'; bullets.forEach(b => { ctx.beginPath(); ctx.arc(b.x, b.y, 2.5, 0, Math.PI * 2); ctx.fill(); });
 
-  cannonShells.forEach(s => {
-    ctx.beginPath(); ctx.arc(s.x, s.y, 4, 0, Math.PI * 2);
-    ctx.fillStyle = '#ff9f43'; ctx.fill();
-  });
-
-  explosions.forEach(exp => {
-    ctx.beginPath(); ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(243, 156, 18, ${exp.alpha})`; ctx.fill();
-  });
-
-  ctx.fillStyle = '#f5cd79';
-  bullets.forEach(b => {
-    ctx.beginPath(); ctx.arc(b.x, b.y, 2.5, 0, Math.PI * 2); ctx.fill();
-  });
-
-  units.forEach(u => {
-    if (u.hp > 0 && visibleUnits.has(u)) u.draw();
-  });
+  units.forEach(u => { if (u.hp > 0 && visibleUnits.has(u)) u.draw(); });
 
   trees.forEach(t => {
     if (!t.alive) return;
@@ -1284,44 +1549,65 @@ function loop(now) {
     ctx.beginPath(); ctx.arc(t.x, t.y, t.foliageR, 0, Math.PI * 2); ctx.fillStyle = 'rgba(32, 68, 41, 0.8)'; ctx.fill();
   });
 
+  flyingTurrets.forEach(ft => {
+    ft.x += ft.vx; ft.y += ft.vy; ft.z += ft.vz; ft.vz -= 0.5; ft.angle += ft.va;
+    if (ft.z < 0) { ft.z = 0; ft.vz = 0; ft.vx = 0; ft.vy = 0; ft.va = 0; }
+    ctx.save(); ctx.translate(ft.x, ft.y - ft.z); ctx.rotate(ft.angle);
+    if (ft.z > 0) { ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.arc(0, ft.z, 15, 0, Math.PI*2); ctx.fill(); }
+    ctx.fillStyle = '#111'; ctx.fillRect(0, -3, 30, 6);
+    ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2);
+    ctx.fillStyle = ft.z === 0 ? '#1a1a1a' : (ft.team === 1 ? '#3880ff' : '#eb445a'); 
+    ctx.fill(); ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
+  });
+
+  orderPings.forEach(p => {
+    ctx.save(); ctx.translate(p.x, p.y);
+    ctx.beginPath(); ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
+    ctx.strokeStyle = p.isAttack ? `rgba(235, 68, 90, ${p.alpha})` : `rgba(46, 204, 113, ${p.alpha})`;
+    ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
+  });
+
+  if (tacticalMode && tacIsDragging) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(46, 204, 113, 0.8)'; ctx.fillStyle = 'rgba(46, 204, 113, 0.2)'; ctx.lineWidth = 1;
+    const rx = Math.min(tacStartX, tacCurrX); const ry = Math.min(tacStartY, tacCurrY);
+    const rw = Math.abs(tacCurrX - tacStartX); const rh = Math.abs(tacCurrY - tacStartY);
+    ctx.fillRect(rx, ry, rw, rh); ctx.strokeRect(rx, ry, rw, rh);
+    ctx.restore();
+  }
+
   ctx.restore();
 
-  // Хитмаркер
+  if (playerConcussionAlpha > 0) {
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); 
+    ctx.fillStyle = `rgba(245, 255, 255, ${playerConcussionAlpha * 0.7})`; ctx.fillRect(0, 0, screenW, screenH);
+    ctx.restore(); playerConcussionAlpha -= 0.005; if (playerConcussionAlpha < 0) playerConcussionAlpha = 0;
+  }
+
+  for (let i = floatingTexts.length - 1; i >= 0; i--) {
+    const ft = floatingTexts[i]; ft.y -= 0.6; ft.alpha -= 0.02;
+    if (ft.alpha <= 0) { floatingTexts.splice(i, 1); continue; }
+    ctx.save(); ctx.font = 'bold 15px sans-serif'; ctx.fillStyle = `rgba(232, 65, 24, ${ft.alpha})`;
+    ctx.fillText(ft.text, ft.x - camera.x, ft.y - camera.y); ctx.restore();
+  }
+
   if (hitmarkerTimer > 0) {
-    hitmarkerTimer--;
-    ctx.save(); ctx.translate(screenW / 2, screenH / 2);
-    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(-6, -6); ctx.lineTo(-2, -2);
-    ctx.moveTo(6, -6);  ctx.lineTo(2, -2);
-    ctx.moveTo(-6, 6);  ctx.lineTo(-2, 2);
-    ctx.moveTo(6, 6);   ctx.lineTo(2, 2);
+    hitmarkerTimer--; ctx.save(); ctx.translate(screenW / 2, screenH / 2);
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.moveTo(-6, -6); ctx.lineTo(-2, -2); ctx.moveTo(6, -6); ctx.lineTo(2, -2);
+    ctx.moveTo(-6, 6); ctx.lineTo(-2, 2); ctx.moveTo(6, 6); ctx.lineTo(2, 2);
     ctx.stroke(); ctx.restore();
   }
 
-  // Фраги
-  for (let i = floatingTexts.length - 1; i >= 0; i--) {
-    const ft = floatingTexts[i];
-    ft.y -= 0.6; ft.alpha -= 0.02;
-    if (ft.alpha <= 0) { floatingTexts.splice(i, 1); continue; }
-    ctx.save(); ctx.font = 'bold 15px sans-serif';
-    ctx.fillStyle = `rgba(232, 65, 24, ${ft.alpha})`;
-    ctx.fillText(ft.text, ft.x - camera.x, ft.y - camera.y);
-    ctx.restore();
-  }
-
-  // Индикатор урона
   for (let i = damageIndicators.length - 1; i >= 0; i--) {
-    const di = damageIndicators[i];
-    di.alpha -= 0.025;
+    const di = damageIndicators[i]; di.alpha -= 0.025;
     if (di.alpha <= 0) { damageIndicators.splice(i, 1); continue; }
     ctx.save(); ctx.translate(screenW / 2, screenH / 2); ctx.rotate(di.angle);
-    ctx.beginPath(); ctx.arc(0, 0, 80, -0.35, 0.35);
-    ctx.strokeStyle = `rgba(235, 68, 90, ${di.alpha})`; ctx.lineWidth = 5; ctx.stroke();
-    ctx.restore();
+    ctx.beginPath(); ctx.arc(0, 0, 80, -0.35, 0.35); ctx.strokeStyle = `rgba(235, 68, 90, ${di.alpha})`;
+    ctx.lineWidth = 5; ctx.stroke(); ctx.restore();
   }
 
-  // Миникарта
   mCtx.clearRect(0, 0, mCanvas.width, mCanvas.height);
   const sx = mCanvas.width / WORLD_W; const sy = mCanvas.height / WORLD_H;
 
@@ -1353,13 +1639,20 @@ function loop(now) {
     const x2 = frontlineNodes[i + 1].x * sx, y2 = frontlineNodes[i + 1].y * sy;
     mCtx.quadraticCurveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2);
   }
-  mCtx.strokeStyle = '#f5cd79'; mCtx.lineWidth = 1.5; mCtx.stroke();
-  mCtx.restore();
+  mCtx.strokeStyle = '#f5cd79'; mCtx.lineWidth = 1.5; mCtx.stroke(); mCtx.restore();
 
   bases.forEach(b => {
     mCtx.fillStyle = b.owner === 1 ? '#3880ff' : b.owner === 2 ? '#eb445a' : '#f5cd79';
     mCtx.beginPath(); mCtx.arc(b.x * sx, b.y * sy, 3, 0, Math.PI * 2); mCtx.fill();
   });
+
+  tanks.forEach(tk => {
+    mCtx.fillStyle = tk.hp > 0 ? (tk.team === 1 ? '#3880ff' : '#eb445a') : '#1a1a1a';
+    mCtx.fillRect(tk.x * sx - 3, tk.y * sy - 3, 6, 6);
+  });
+
+  mCtx.strokeStyle = '#ffffff'; mCtx.lineWidth = 1;
+  mCtx.strokeRect(camera.x * sx, camera.y * sy, screenW * sx, screenH * sy);
 
   units.forEach(u => {
     if (u.hp <= 0 || !visibleUnits.has(u)) return;
@@ -1367,7 +1660,6 @@ function loop(now) {
     mCtx.fillRect(u.x * sx, u.y * sy, 2, 2);
   });
 
-  // UI
   const hpP = Math.max(0, Math.round((player.hp / player.maxHp) * 100));
   document.getElementById('hp-val').innerText = player.inTank ? `ТАНК: ${hpP}` : hpP;
   document.getElementById('hp-bar-fill').style.width = hpP + '%';
@@ -1377,9 +1669,14 @@ function loop(now) {
   document.getElementById('kills-val').innerText = playerStats.kills;
 
   const tacStatus = document.getElementById('tactical-status');
-  if (player.inTank) { tacStatus.innerText = "В ТАНКЕ"; tacStatus.style.color = "#3880ff"; }
+  if (player.inTank) {
+    if (player.inTank.trackTimer > 0) { tacStatus.innerText = "ГУСЕНИЦА СБИТА!"; tacStatus.style.color = "#e84118"; }
+    else if (player.inTank.fireTimer > 0) { tacStatus.innerText = "ПОЖАР ДВИГАТЕЛЯ!"; tacStatus.style.color = "#ff9f43"; }
+    else { tacStatus.innerText = "В ТАНКЕ"; tacStatus.style.color = "#3880ff"; }
+  }
   else if (player.tactic === 'entrenched') { tacStatus.innerText = "В УКРЫТИИ (-50%)"; tacStatus.style.color = "#f5cd79"; }
   else if (player.tactic === 'suppressed') { tacStatus.innerText = "ПОДАВЛЕН"; tacStatus.style.color = "#e84118"; }
+  else if (player.concussionTimer > 0) { tacStatus.innerText = "КОНТУЗИЯ!"; tacStatus.style.color = "#fff200"; }
   else if (player.stamina < 20) { tacStatus.innerText = "ИСТОЩЕНИЕ"; tacStatus.style.color = "#e1b12c"; }
   else { tacStatus.innerText = "ГОТОВ"; tacStatus.style.color = "#4cd137"; }
 
