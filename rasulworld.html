@@ -22,9 +22,16 @@
             background: radial-gradient(circle, #1e293b 0%, #020617 100%); z-index: 3000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
-        .menu-container { width: 650px; padding: 40px; border-radius: 12px; text-align: center; }
+        .menu-container { width: 650px; max-width: 90%; padding: 40px; border-radius: 12px; text-align: center; box-sizing: border-box; }
         .menu-container h1 { color: #38bdf8; font-size: 32px; margin-bottom: 10px; }
         
+        .lang-switch { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .lang-btn {
+            padding: 8px 18px; border-radius: 6px; background: #1e293b; border: 1px solid #475569;
+            color: #94a3b8; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .lang-btn.active { background: #0284c7; border-color: #38bdf8; color: #fff; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
+
         select, .btn {
             width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px;
             background: #1e293b; border: 1px solid #475569; color: #f8fafc; font-size: 14px; cursor: pointer; transition: 0.2s; font-weight: bold;
@@ -37,9 +44,11 @@
             position: absolute; top: 0; left: 0; right: 0; height: 60px; z-index: 1000; display: none;
             align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 2px solid #334155;
         }
-        .stats { display: flex; gap: 15px; font-size: 14px; font-weight: 600; flex-wrap: wrap;}
+        .stats { display: flex; gap: 15px; font-size: 14px; font-weight: 600; flex-wrap: wrap; align-items: center; }
         .stat-box { background: #1e293b; padding: 6px 12px; border-radius: 6px; border: 1px solid #475569; }
         
+        .top-right { display: flex; gap: 10px; align-items: center; }
+        #btn-lang-toggle { width: auto; margin: 0; padding: 8px 14px; background: #334155; border-color: #64748b; font-size: 13px; }
         #btn-next-turn { width: auto; margin: 0; padding: 8px 20px; background: #2563eb; border-color: #3b82f6; }
 
         .side-panel {
@@ -92,22 +101,29 @@
 
     <div id="start-screen">
         <div class="menu-container aoh-panel">
-            <h1>Идеальный Мир 2026</h1>
-            <p>Полная карта государств. Формируйте дивизии и управляйте миром.</p>
+            <div class="lang-switch">
+                <button class="lang-btn active" id="btn-lang-ru" onclick="setLanguage('ru')">РУССКИЙ</button>
+                <button class="lang-btn" id="btn-lang-en" onclick="setLanguage('en')">ENGLISH</button>
+            </div>
+            <h1 id="txt-menu-title">Идеальный Мир 2026</h1>
+            <p id="txt-menu-desc">Полная карта государств. Формируйте дивизии и управляйте миром.</p>
             <select id="country-select"></select>
-            <button class="btn" onclick="startGame()">Начать кампанию</button>
+            <button class="btn" id="btn-start-game" onclick="startGame()">Начать кампанию</button>
         </div>
     </div>
 
     <div id="top-bar" class="aoh-panel">
         <div class="stats">
-            <div class="stat-box" id="player-faction">Игрок: -</div>
+            <div class="stat-box" id="player-faction">Фракция: -</div>
             <div class="stat-box">💰 <span id="player-money">0</span></div>
             <div class="stat-box">👥 <span id="player-pop">0</span>M</div>
-            <div class="stat-box">⚡ ОД: <span id="player-ap">10</span>/10</div>
-            <div class="stat-box">📅 Ход: <span id="turn-counter">1</span></div>
+            <div class="stat-box">⚡ <span id="lbl-ap">ОД</span>: <span id="player-ap">10</span>/10</div>
+            <div class="stat-box">📅 <span id="lbl-turn">Ход</span>: <span id="turn-counter">1</span></div>
         </div>
-        <button id="btn-next-turn" class="btn" onclick="nextTurn()">Завершить ход</button>
+        <div class="top-right">
+            <button id="btn-lang-toggle" class="btn" onclick="toggleLanguage()">EN</button>
+            <button id="btn-next-turn" class="btn" onclick="nextTurn()">Завершить ход</button>
+        </div>
     </div>
 
     <div id="diplomacy-panel" class="side-panel">
@@ -115,16 +131,16 @@
         <div class="panel-subtitle" id="region-name">-</div>
         
         <div class="grid-stats">
-            <div class="stat-card">ВВП<b id="diplo-econ">0</b></div>
-            <div class="stat-card">Гарнизон<b id="diplo-garrison">0</b></div>
+            <div class="stat-card"><span id="lbl-gdp">ВВП</span><b id="diplo-econ">0</b></div>
+            <div class="stat-card"><span id="lbl-garrison">Гарнизон</span><b id="diplo-garrison">0</b></div>
         </div>
         
         <div style="margin-bottom: 10px; border-bottom: 1px solid #334155; padding-bottom:10px;">
             <div style="display:flex; justify-content:space-between; font-size:13px;">
-                <span>Отношения:</span> <span id="diplo-relations">0</span>
+                <span id="lbl-relations">Отношения:</span> <span id="diplo-relations">0</span>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:13px;">
-                <span>Статус:</span> <span id="diplo-status" style="font-weight:bold;">Мир</span>
+                <span id="lbl-status">Статус:</span> <span id="diplo-status" style="font-weight:bold;">Мир</span>
             </div>
         </div>
         
@@ -141,8 +157,8 @@
         <div class="panel-subtitle" id="div-owner">-</div>
         
         <div class="grid-stats">
-            <div class="stat-card">Численность<b id="div-strength">0</b></div>
-            <div class="stat-card">Приказ<b id="div-order">Удержание</b></div>
+            <div class="stat-card"><span id="lbl-strength">Численность</span><b id="div-strength">0</b></div>
+            <div class="stat-card"><span id="lbl-order">Приказ</span><b id="div-order">Удержание</b></div>
         </div>
 
         <button class="btn btn-action" id="btn-order-move" onclick="startTargeting()">Отдать приказ: Вторжение/Марш</button>
@@ -153,37 +169,241 @@
     <div id="map"></div>
 
     <script>
+        // --- СИСТЕМА ЛОКАЛИЗАЦИИ (I18N) ---
+        let currentLang = localStorage.getItem('rasulworld_lang') || 'ru';
+
+        const i18n = {
+            ru: {
+                menuTitle: "Идеальный Мир 2026",
+                menuDesc: "Полная карта государств. Формируйте дивизии и управляйте миром.",
+                startCampaign: "Начать кампанию",
+                factionLabel: "Фракция",
+                playerPrefix: "Игрок",
+                aiPrefix: "ИИ",
+                apLabel: "ОД",
+                turnLabel: "Ход",
+                nextTurnBtn: "Завершить ход",
+                gdp: "ВВП",
+                garrison: "Гарнизон",
+                relations: "Отношения:",
+                status: "Статус:",
+                statusOwn: "Ваша территория",
+                statusPeace: "Мир",
+                statusWar: "ВОЙНА",
+                statusAlliance: "Альянс",
+                recruitBtn: "Сформировать Дивизию (⚡3, 💰150)",
+                improveBtn: "Улучшить отношения (⚡2)",
+                allianceBtn: "Предложить Альянс (⚡5)",
+                warBtn: "Объявить войну (⚡5)",
+                divisionTitle: "Дивизия",
+                divStrength: "Численность",
+                divOrder: "Приказ",
+                orderHold: "Удержание",
+                orderMoveTo: "Движение в {name}",
+                orderMoveBtn: "Отдать приказ: Вторжение/Марш",
+                orderTargeting: "Кликните по региону на карте...",
+                orderCancelBtn: "Отменить приказ",
+                noResources: "❌ Недостаточно ресурсов (нужно ⚡3, 💰150).",
+                divFormed: "⚔️ Дивизия сформирована в {name}.",
+                noAP: "❌ Недостаточно ОД.",
+                warDeclared: "🚨 ВЫ ОБЪЯВИЛИ ВОЙНУ {name}!",
+                allianceMade: "🛡️ Альянс с {name} заключен.",
+                orderCancelledNoWar: "❌ Приказ отменен: нет состояния войны с {name}.",
+                combatWin: "🚩 ПОБЕДА! Войска захватили {name}!",
+                combatLoss: "💀 ПОРАЖЕНИЕ. Наступление на {name} отбито.",
+                mapInitLog: "Глобальная карта инициализирована. Создавайте дивизии, прокладывайте маршруты, побеждайте.",
+                turnEndLog: "--- Ход {turn} завершен ---"
+            },
+            en: {
+                menuTitle: "Ideal World 2026",
+                menuDesc: "Complete state map. Deploy divisions and rule the world.",
+                startCampaign: "Start Campaign",
+                factionLabel: "Faction",
+                playerPrefix: "Player",
+                aiPrefix: "AI",
+                apLabel: "AP",
+                turnLabel: "Turn",
+                nextTurnBtn: "End Turn",
+                gdp: "GDP",
+                garrison: "Garrison",
+                relations: "Relations:",
+                status: "Status:",
+                statusOwn: "Your Territory",
+                statusPeace: "Peace",
+                statusWar: "WAR",
+                statusAlliance: "Alliance",
+                recruitBtn: "Recruit Division (⚡3, 💰150)",
+                improveBtn: "Improve Relations (⚡2)",
+                allianceBtn: "Propose Alliance (⚡5)",
+                warBtn: "Declare War (⚡5)",
+                divisionTitle: "Division",
+                divStrength: "Manpower",
+                divOrder: "Order",
+                orderHold: "Hold Position",
+                orderMoveTo: "Moving to {name}",
+                orderMoveBtn: "Issue Order: Invasion/March",
+                orderTargeting: "Click target region on map...",
+                orderCancelBtn: "Cancel Order",
+                noResources: "❌ Insufficient resources (requires ⚡3, 💰150).",
+                divFormed: "⚔️ Division recruited in {name}.",
+                noAP: "❌ Not enough Action Points (AP).",
+                warDeclared: "🚨 YOU DECLARED WAR ON {name}!",
+                allianceMade: "🛡️ Alliance with {name} established.",
+                orderCancelledNoWar: "❌ Order cancelled: not at war with {name}.",
+                combatWin: "🚩 VICTORY! Troops captured {name}!",
+                combatLoss: "💀 DEFEAT. Assault on {name} was repelled.",
+                mapInitLog: "Global theater initialized. Deploy divisions, set battlepaths, conquer.",
+                turnEndLog: "--- Turn {turn} finished ---"
+            }
+        };
+
+        const countryNames = {
+            aze: { ru: 'Объединенный Азербайджан', en: 'United Azerbaijan' },
+            geo: { ru: 'Грузия', en: 'Georgia' },
+            arm: { ru: 'Армения', en: 'Armenia' },
+            ady: { ru: 'Адыгея', en: 'Adygea' },
+            kar: { ru: 'Карачай', en: 'Karachay' },
+            bal: { ru: 'Балкария', en: 'Balkaria' },
+            ose: { ru: 'Северная Осетия', en: 'North Ossetia' },
+            ing: { ru: 'Ингушетия', en: 'Ingushetia' },
+            che: { ru: 'Чечня', en: 'Chechnya' },
+            nog: { ru: 'Ногайстан', en: 'Nogaistan' },
+            kum: { ru: 'Кумыкия', en: 'Kumykia' },
+            ava: { ru: 'Аварская Респ.', en: 'Avar Republic' },
+            dar: { ru: 'Даргинская Респ.', en: 'Dargin Republic' },
+            lez: { ru: 'Лезгинская Респ.', en: 'Lezgin Republic' },
+            tat: { ru: 'Татарстан', en: 'Tatarstan' },
+            bas: { ru: 'Башкортостан', en: 'Bashkortostan' },
+            chu: { ru: 'Чувашия', en: 'Chuvashia' },
+            udm: { ru: 'Удмуртия', en: 'Udmurtia' },
+            mar: { ru: 'Марий Эл', en: 'Mari El' },
+            mor: { ru: 'Мордовия', en: 'Mordovia' },
+            rus: { ru: 'Российская Федерация', en: 'Russian Federation' },
+            kom: { ru: 'Республика Коми', en: 'Komi Republic' },
+            kha: { ru: 'Хантская Респ.', en: 'Khanty Republic' },
+            nen: { ru: 'Ненецкая Респ.', en: 'Nenets Republic' },
+            yak: { ru: 'Якутия', en: 'Yakutia' },
+            zel: { ru: 'Зеленый Клин', en: 'Zeleny Klyn' },
+            niv: { ru: 'Нивхи', en: 'Nivkhia' },
+            kor_r: { ru: 'Корякия', en: 'Koryakia' },
+            chu_r: { ru: 'Чукотка', en: 'Chukotka' },
+            kaz: { ru: 'Казахстан', en: 'Kazakhstan' },
+            uzb: { ru: 'Узбекистан', en: 'Uzbekistan' },
+            kar_p: { ru: 'Каракалпакстан', en: 'Karakalpakstan' },
+            tkm: { ru: 'Туркменистан', en: 'Turkmenistan' },
+            ger: { ru: 'Великая Германия', en: 'Greater Germany' },
+            pru: { ru: 'Пруссия (Германия)', en: 'Prussia (Germany)' },
+            pol: { ru: 'Польша', en: 'Poland' },
+            ukr: { ru: 'Украина', en: 'Ukraine' },
+            fra: { ru: 'Франция', en: 'France' },
+            ita: { ru: 'Италия (с Корсикой)', en: 'Italy (with Corsica)' },
+            spa: { ru: 'Испания', en: 'Spain' },
+            cat: { ru: 'Каталония', en: 'Catalonia' },
+            uk: { ru: 'Великобритания', en: 'United Kingdom' },
+            fin: { ru: 'Финляндия (с Карелией)', en: 'Finland (with Karelia)' },
+            gre: { ru: 'Греция (с Измиром)', en: 'Greece (with Izmir)' },
+            bul: { ru: 'Болгария', en: 'Bulgaria' },
+            ser: { ru: 'Сербское Царство', en: 'Serbian Tsardom' },
+            tur: { ru: 'Турция', en: 'Turkey' },
+            irn: { ru: 'Иран', en: 'Iran' },
+            chi: { ru: 'Китайская Республика', en: 'Republic of China' },
+            tib: { ru: 'Тибет', en: 'Tibet' },
+            uyg: { ru: 'Восточный Туркестан', en: 'East Turkestan' },
+            mon: { ru: 'Монголия', en: 'Mongolia' },
+            kor: { ru: 'Единая Корея', en: 'Unified Korea' },
+            jpn: { ru: 'Япония', en: 'Japan' },
+            ind: { ru: 'Новая Индия', en: 'New India' },
+            ban: { ru: 'Бангладеш', en: 'Bangladesh' },
+            nei: { ru: 'Северо-Восточный Союз', en: 'Northeast Union' },
+            ear: { ru: 'Восточноафриканская Респ.', en: 'East African Rep.' },
+            aza: { ru: 'Азавад', en: 'Azawad' },
+            som: { ru: 'Объединенное Сомали', en: 'United Somalia' },
+            egy: { ru: 'Египет', en: 'Egypt' },
+            saf: { ru: 'ЮАР', en: 'South Africa' },
+            les: { ru: 'Лесото', en: 'Lesotho' },
+            usa: { ru: 'США', en: 'United States' },
+            bra: { ru: 'Бразилия', en: 'Brazil' },
+            lag: { ru: 'Лагвианн', en: 'Lagviann' },
+            cub: { ru: 'Куба', en: 'Cuba' },
+            pur: { ru: 'Пуэрто-Рико', en: 'Puerto Rico' },
+            aus: { ru: 'Австралия', en: 'Australia' },
+            nzl: { ru: 'Новая Зеландия', en: 'New Zealand' },
+            kan: { ru: 'Респ. Канак Нувель', en: 'Kanak Nouvel Rep.' }
+        };
+
+        function getCountryName(id) {
+            return (countryNames[id] && countryNames[id][currentLang]) || id;
+        }
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('rasulworld_lang', lang);
+            const t = i18n[lang];
+
+            document.getElementById('btn-lang-ru').classList.toggle('active', lang === 'ru');
+            document.getElementById('btn-lang-en').classList.toggle('active', lang === 'en');
+            document.getElementById('btn-lang-toggle').innerText = lang === 'ru' ? 'EN' : 'RU';
+
+            document.getElementById('txt-menu-title').innerText = t.menuTitle;
+            document.getElementById('txt-menu-desc').innerText = t.menuDesc;
+            document.getElementById('btn-start-game').innerText = t.startCampaign;
+
+            document.getElementById('lbl-ap').innerText = t.apLabel;
+            document.getElementById('lbl-turn').innerText = t.turnLabel;
+            document.getElementById('btn-next-turn').innerText = t.nextTurnBtn;
+
+            document.getElementById('lbl-gdp').innerText = t.gdp;
+            document.getElementById('lbl-garrison').innerText = t.garrison;
+            document.getElementById('lbl-relations').innerText = t.relations;
+            document.getElementById('lbl-status').innerText = t.status;
+            document.getElementById('btn-recruit').innerText = t.recruitBtn;
+            document.getElementById('btn-improve').innerText = t.improveBtn;
+            document.getElementById('btn-alliance').innerText = t.allianceBtn;
+            document.getElementById('btn-war').innerText = t.warBtn;
+
+            document.getElementById('div-title').innerText = t.divisionTitle;
+            document.getElementById('lbl-strength').innerText = t.divStrength;
+            document.getElementById('lbl-order').innerText = t.divOrder;
+            document.getElementById('btn-order-move').innerText = isTargeting ? t.orderTargeting : t.orderMoveBtn;
+            document.getElementById('btn-order-cancel').innerText = t.orderCancelBtn;
+
+            populateCountrySelect();
+            if (playerFacId) {
+                updateUI();
+                if (selectedRegion) updateDiploUI();
+                if (selectedDivision) updateDivUI();
+            }
+        }
+
+        function toggleLanguage() {
+            setLanguage(currentLang === 'ru' ? 'en' : 'ru');
+        }
+
         const map = L.map('map', { center: [40, 45], zoom: 3, minZoom: 2, maxZoom: 8, zoomControl: false });
         L.control.zoom({ position: 'topleft' }).addTo(map);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // КОЛЛЕКЦИЯ ВСЕХ СТРАН ИЗ ЛОРА
         const regionsData = [
-            // Кавказ
             { id: 'aze', faction: 'aze', name: 'Объединенный Азербайджан', coords: [[37, 44], [41.5, 45], [41.5, 50], [37, 49]], color: '#1f77b4', econ: 450, pop: 18 },
             { id: 'geo', faction: 'geo', name: 'Грузия', coords: [[41.5, 40], [43.5, 40], [43.5, 45], [41.5, 45]], color: '#d62728', econ: 200, pop: 5 },
             { id: 'arm', faction: 'arm', name: 'Армения', coords: [[39, 43.5], [41.2, 43.5], [41.2, 45], [39, 45]], color: '#e67e22', econ: 150, pop: 3 },
-            // Северный Кавказ
             { id: 'ady', faction: 'ady', name: 'Адыгея', coords: [[44, 38], [45, 38], [45, 40.5], [44, 40.5]], color: '#2ca02c', econ: 80, pop: 1 },
             { id: 'kar', faction: 'kar', name: 'Карачай', coords: [[43.5, 40.5], [44, 40.5], [44, 42], [43.5, 42]], color: '#f1c40f', econ: 70, pop: 0.8 },
             { id: 'bal', faction: 'bal', name: 'Балкария', coords: [[43.5, 42], [44, 42], [44, 43.5], [43.5, 43.5]], color: '#e74c3c', econ: 70, pop: 0.8 },
             { id: 'ose', faction: 'ose', name: 'Северная Осетия', coords: [[42.8, 43.5], [43.8, 43.5], [43.8, 44.5], [42.8, 44.5]], color: '#9b59b6', econ: 90, pop: 1.2 },
             { id: 'ing', faction: 'ing', name: 'Ингушетия', coords: [[42.8, 44.5], [43.5, 44.5], [43.5, 45.2], [42.8, 45.2]], color: '#34495e', econ: 80, pop: 1 },
             { id: 'che', faction: 'che', name: 'Чечня', coords: [[42.8, 45.2], [44, 45.2], [44, 46.5], [42.8, 46.5]], color: '#27ae60', econ: 120, pop: 1.5 },
-            // Дагестан
             { id: 'nog', faction: 'nog', name: 'Ногайстан', coords: [[44, 45], [45, 45], [45, 47], [44, 47]], color: '#e377c2', econ: 60, pop: 0.5 },
             { id: 'kum', faction: 'kum', name: 'Кумыкия', coords: [[42.8, 46.5], [43.5, 46.5], [43.5, 47.5], [42.8, 47.5]], color: '#8e44ad', econ: 80, pop: 0.9 },
             { id: 'ava', faction: 'ava', name: 'Аварская Респ.', coords: [[42, 45.5], [42.8, 45.5], [42.8, 47], [42, 47]], color: '#d35400', econ: 90, pop: 1.1 },
             { id: 'dar', faction: 'dar', name: 'Даргинская Респ.', coords: [[42, 47], [42.8, 47], [42.8, 48], [42, 48]], color: '#16a085', econ: 85, pop: 1 },
             { id: 'lez', faction: 'lez', name: 'Лезгинская Респ.', coords: [[41.5, 47], [42, 47], [42, 48.5], [41.5, 48.5]], color: '#2980b9', econ: 85, pop: 1 },
-            // Поволжье
             { id: 'tat', faction: 'tat', name: 'Татарстан', coords: [[54.5, 48.5], [56.5, 48.5], [56.5, 53], [54.5, 53]], color: '#2ecc71', econ: 350, pop: 4 },
             { id: 'bas', faction: 'bas', name: 'Башкортостан', coords: [[52, 53], [56.5, 53], [56.5, 60], [52, 60]], color: '#3498db', econ: 300, pop: 4 },
             { id: 'chu', faction: 'chu', name: 'Чувашия', coords: [[54.5, 46], [56.5, 46], [56.5, 48.5], [54.5, 48.5]], color: '#f1c40f', econ: 120, pop: 1.2 },
             { id: 'udm', faction: 'udm', name: 'Удмуртия', coords: [[56.5, 51], [58.5, 51], [58.5, 54], [56.5, 54]], color: '#e74c3c', econ: 140, pop: 1.5 },
             { id: 'mar', faction: 'mar', name: 'Марий Эл', coords: [[56.5, 46], [57.5, 46], [57.5, 50], [56.5, 50]], color: '#9b59b6', econ: 90, pop: 0.7 },
             { id: 'mor', faction: 'mor', name: 'Мордовия', coords: [[53.5, 42.5], [55, 42.5], [55, 46], [53.5, 46]], color: '#1abc9c', econ: 100, pop: 0.8 },
-            // Россия и Сибирь
             { id: 'rus', faction: 'rus', name: 'Российская Федерация', coords: [[50, 30], [60, 30], [60, 46], [50, 46]], color: '#7f8c8d', econ: 1200, pop: 90 },
             { id: 'kom', faction: 'kom', name: 'Республика Коми', coords: [[60, 48], [67, 48], [67, 60], [60, 60]], color: '#27ae60', econ: 150, pop: 1 },
             { id: 'kha', faction: 'kha', name: 'Хантская Респ.', coords: [[60, 60], [67, 60], [67, 80], [60, 80]], color: '#f1c40f', econ: 200, pop: 1.5 },
@@ -193,12 +413,10 @@
             { id: 'niv', faction: 'niv', name: 'Нивхи', coords: [[51, 139], [54, 139], [54, 144], [51, 144]], color: '#e67e22', econ: 50, pop: 0.5 },
             { id: 'kor_r', faction: 'kor_r', name: 'Корякия', coords: [[60, 160], [65, 160], [65, 168], [60, 168]], color: '#34495e', econ: 40, pop: 0.3 },
             { id: 'chu_r', faction: 'chu_r', name: 'Чукотка', coords: [[65, 160], [70, 160], [70, 175], [65, 175]], color: '#ecf0f1', econ: 60, pop: 0.2 },
-            // Центральная Азия
             { id: 'kaz', faction: 'kaz', name: 'Казахстан', coords: [[42, 50], [55, 50], [55, 85], [42, 85]], color: '#3498db', econ: 600, pop: 22 },
             { id: 'uzb', faction: 'uzb', name: 'Узбекистан', coords: [[37, 56], [42, 56], [42, 65], [37, 65]], color: '#27ae60', econ: 300, pop: 25 },
             { id: 'kar_p', faction: 'kar_p', name: 'Каракалпакстан', coords: [[42, 56], [45, 56], [45, 62], [42, 62]], color: '#e67e22', econ: 80, pop: 2 },
             { id: 'tkm', faction: 'tkm', name: 'Туркменистан', coords: [[35, 52], [42, 52], [42, 65], [35, 65]], color: '#16a085', econ: 350, pop: 12 },
-            // Европа
             { id: 'ger', faction: 'ger', name: 'Великая Германия', coords: [[47, 6], [54, 6], [54, 15], [47, 15]], color: '#555', econ: 1500, pop: 90 },
             { id: 'pru', faction: 'pru', name: 'Пруссия (Германия)', coords: [[52, 15], [54, 15], [54, 22], [52, 22]], color: '#555', econ: 400, pop: 15 },
             { id: 'pol', faction: 'pol', name: 'Польша', coords: [[50, 15], [52, 15], [52, 22], [50, 22]], color: '#e74c3c', econ: 450, pop: 30 },
@@ -212,7 +430,6 @@
             { id: 'gre', faction: 'gre', name: 'Греция (с Измиром)', coords: [[35, 20], [41, 20], [41, 27], [35, 27]], color: '#2980b9', econ: 250, pop: 11 },
             { id: 'bul', faction: 'bul', name: 'Болгария', coords: [[41, 22], [44, 22], [44, 28], [41, 28]], color: '#27ae60', econ: 150, pop: 7 },
             { id: 'ser', faction: 'ser', name: 'Сербское Царство', coords: [[42, 18], [46, 18], [46, 23], [42, 23]], color: '#c0392b', econ: 300, pop: 15 },
-            // Азия & Ближний Восток
             { id: 'tur', faction: 'tur', name: 'Турция', coords: [[36, 27], [42, 27], [42, 40], [36, 40]], color: '#c0392b', econ: 700, pop: 80 },
             { id: 'irn', faction: 'irn', name: 'Иран', coords: [[25, 44], [37, 44], [35, 52], [25, 60]], color: '#d35400', econ: 600, pop: 75 },
             { id: 'chi', faction: 'chi', name: 'Китайская Республика', coords: [[20, 100], [42, 100], [42, 122], [20, 122]], color: '#ff7f0e', econ: 3000, pop: 400 },
@@ -224,14 +441,12 @@
             { id: 'ind', faction: 'ind', name: 'Новая Индия', coords: [[8, 70], [30, 70], [30, 88], [8, 88]], color: '#f39c12', econ: 1800, pop: 1000 },
             { id: 'ban', faction: 'ban', name: 'Бангладеш', coords: [[21, 88], [27, 88], [27, 92], [21, 92]], color: '#27ae60', econ: 300, pop: 200 },
             { id: 'nei', faction: 'nei', name: 'Северо-Восточный Союз', coords: [[23, 92], [29, 92], [29, 97], [23, 97]], color: '#e67e22', econ: 100, pop: 40 },
-            // Африка
             { id: 'ear', faction: 'ear', name: 'Восточноафриканская Респ.', coords: [[-11, 29], [4, 29], [4, 41], [-11, 41]], color: '#17becf', econ: 500, pop: 160 },
             { id: 'aza', faction: 'aza', name: 'Азавад', coords: [[14, -10], [25, -10], [25, 5], [14, 5]], color: '#e377c2', econ: 150, pop: 6 },
             { id: 'som', faction: 'som', name: 'Объединенное Сомали', coords: [[-2, 38], [12, 42], [12, 51], [-2, 51]], color: '#bcbd22', econ: 250, pop: 45 },
             { id: 'egy', faction: 'egy', name: 'Египет', coords: [[22, 25], [31, 25], [31, 35], [22, 35]], color: '#d35400', econ: 400, pop: 100 },
             { id: 'saf', faction: 'saf', name: 'ЮАР', coords: [[-35, 16], [-22, 16], [-22, 33], [-35, 33]], color: '#2ecc71', econ: 600, pop: 60 },
             { id: 'les', faction: 'les', name: 'Лесото', coords: [[-30.5, 27], [-28.5, 27], [-28.5, 29.5], [-30.5, 29.5]], color: '#8e44ad', econ: 20, pop: 2 },
-            // Америка & Океания
             { id: 'usa', faction: 'usa', name: 'США', coords: [[30, -125], [49, -125], [49, -70], [30, -70]], color: '#2ca02c', econ: 4000, pop: 340 },
             { id: 'bra', faction: 'bra', name: 'Бразилия', coords: [[5, -70], [-30, -70], [-30, -35], [5, -35]], color: '#27ae60', econ: 1200, pop: 215 },
             { id: 'lag', faction: 'lag', name: 'Лагвианн', coords: [[2, -54], [6, -54], [6, -51], [2, -51]], color: '#2ecc71', econ: 60, pop: 1 },
@@ -254,14 +469,18 @@
         let playerFacId = '';
         let divIdCounter = 0;
 
-        // Генерация списка стран
         const uniqueFactions = [...new Set(regionsData.map(r => r.faction))];
         const select = document.getElementById('country-select');
-        uniqueFactions.sort().forEach(fid => {
-            let name = regionsData.find(r => r.faction === fid).name;
-            select.innerHTML += `<option value="${fid}">${name}</option>`;
-        });
-        select.value = 'aze';
+
+        function populateCountrySelect() {
+            const currentVal = select.value || 'aze';
+            select.innerHTML = '';
+            uniqueFactions.slice().sort((a, b) => getCountryName(a).localeCompare(getCountryName(b))).forEach(fid => {
+                let name = getCountryName(fid);
+                select.innerHTML += `<option value="${fid}">${name}</option>`;
+            });
+            select.value = currentVal;
+        }
 
         function addLog(msg, isTurn = false) {
             const p = document.getElementById('log-panel');
@@ -283,13 +502,13 @@
                 let totalEcon = facRegions.reduce((sum, r) => sum + r.econ, 0);
                 let totalPop = facRegions.reduce((sum, r) => sum + r.pop, 0);
                 factions[fid] = {
-                    id: fid, name: fid === playerFacId ? 'Игрок' : 'ИИ',
+                    id: fid,
                     ap: 10, money: totalEcon * 2, econ: totalEcon, pop: totalPop,
-                    color: facRegions[0].color, countryName: facRegions[0].name
+                    color: facRegions[0].color
                 };
             });
 
-            document.getElementById('player-faction').innerText = `Фракция: ${factions[playerFacId].countryName}`;
+            document.getElementById('player-faction').innerText = `${i18n[currentLang].factionLabel}: ${getCountryName(playerFacId)}`;
             
             regionsData.forEach(r => {
                 r.owner = r.faction; 
@@ -307,14 +526,14 @@
             });
 
             updateUI();
-            addLog('Глобальная карта инициализирована. Создавайте дивизии, прокладывайте маршруты, побеждайте.', true);
+            addLog(i18n[currentLang].mapInitLog, true);
         }
 
         function handleRegionClick(regionId) {
             if (isTargeting && selectedDivision) {
                 setDivisionOrder(selectedDivision, regionId);
                 isTargeting = false;
-                document.getElementById('btn-order-move').innerText = "Отдать приказ: Вторжение/Марш";
+                document.getElementById('btn-order-move').innerText = i18n[currentLang].orderMoveBtn;
                 document.getElementById('btn-order-move').classList.remove('btn-target');
                 return;
             }
@@ -345,17 +564,17 @@
         function updateDiploUI() {
             if(!selectedRegion) return;
             const ownerId = selectedRegion.owner;
-            const targetFac = factions[ownerId];
-            const myFac = factions[playerFacId];
             const isMe = ownerId === playerFacId;
+            const t = i18n[currentLang];
             
-            document.getElementById('country-name').innerText = targetFac.countryName;
-            document.getElementById('region-name').innerText = selectedRegion.name;
+            document.getElementById('country-name').innerText = getCountryName(ownerId);
+            document.getElementById('region-name').innerText = getCountryName(selectedRegion.id);
             document.getElementById('diplo-econ').innerText = Math.floor(selectedRegion.econ);
             document.getElementById('diplo-garrison').innerText = Math.floor(selectedRegion.garrison);
 
             const status = getStatus(playerFacId, ownerId);
-            document.getElementById('diplo-status').innerText = isMe ? 'Ваша территория' : (status === 'war' ? 'ВОЙНА' : 'Мир');
+            let statusText = isMe ? t.statusOwn : (status === 'war' ? t.statusWar : (status === 'alliance' ? t.statusAlliance : t.statusPeace));
+            document.getElementById('diplo-status').innerText = statusText;
             document.getElementById('diplo-status').style.color = status === 'war' ? '#ef4444' : '#10b981';
 
             document.getElementById('btn-recruit').style.display = isMe ? 'block' : 'none';
@@ -366,8 +585,13 @@
 
         function updateDivUI() {
             if(!selectedDivision) return;
+            const t = i18n[currentLang];
+            document.getElementById('div-owner').innerText = selectedDivision.owner === playerFacId ? t.playerPrefix : t.aiPrefix;
             document.getElementById('div-strength').innerText = Math.floor(selectedDivision.strength);
-            let orderText = selectedDivision.targetRegionId ? `Движение в ${regionsData.find(r=>r.id === selectedDivision.targetRegionId).name}` : 'Удержание';
+            
+            let orderText = selectedDivision.targetRegionId 
+                ? t.orderMoveTo.replace('{name}', getCountryName(selectedDivision.targetRegionId))
+                : t.orderHold;
             document.getElementById('div-order').innerText = orderText;
             document.getElementById('btn-order-cancel').style.display = selectedDivision.targetRegionId ? 'block' : 'none';
         }
@@ -386,20 +610,21 @@
 
         function recruitDivision() {
             const myFac = factions[playerFacId];
-            if (myFac.ap < 3 || myFac.money < 150) { addLog("❌ Недостаточно ресурсов (нужно ⚡3, 💰150)."); return; }
+            const t = i18n[currentLang];
+            if (myFac.ap < 3 || myFac.money < 150) { addLog(t.noResources); return; }
             myFac.ap -= 3; myFac.money -= 150;
             
             let centerLat = selectedRegion.coords.reduce((sum, p) => sum + p[0], 0) / selectedRegion.coords.length;
             let centerLng = selectedRegion.coords.reduce((sum, p) => sum + p[1], 0) / selectedRegion.coords.length;
 
             createDivision(playerFacId, selectedRegion.id, centerLat, centerLng, 15000);
-            addLog(`⚔️ Дивизия сформирована в ${selectedRegion.name}.`);
+            addLog(t.divFormed.replace('{name}', getCountryName(selectedRegion.id)));
             updateUI(); updateDiploUI();
         }
 
         function startTargeting() {
             isTargeting = true;
-            document.getElementById('btn-order-move').innerText = "Кликните по региону на карте...";
+            document.getElementById('btn-order-move').innerText = i18n[currentLang].orderTargeting;
             document.getElementById('btn-order-move').classList.add('btn-target');
         }
 
@@ -425,21 +650,23 @@
         function doDiplo(action) {
             const ownerId = selectedRegion.owner;
             const myFac = factions[playerFacId];
-            if (myFac.ap < (action==='improve'?2:5)) { addLog("❌ Недостаточно ОД."); return; }
+            const t = i18n[currentLang];
+            if (myFac.ap < (action==='improve'?2:5)) { addLog(t.noAP); return; }
             myFac.ap -= (action==='improve'?2:5);
 
             if (action === 'war') {
                 setStatus(playerFacId, ownerId, 'war');
-                addLog(`🚨 ВЫ ОБЪЯВИЛИ ВОЙНУ ${factions[ownerId].countryName.toUpperCase()}!`);
+                addLog(t.warDeclared.replace('{name}', getCountryName(ownerId).toUpperCase()));
             } else if (action === 'alliance') {
                 setStatus(playerFacId, ownerId, 'alliance');
-                addLog(`🛡️ Альянс с ${factions[ownerId].countryName} заключен.`);
+                addLog(t.allianceMade.replace('{name}', getCountryName(ownerId)));
             }
             updateUI(); updateDiploUI();
         }
 
         function updateUI() {
             const p = factions[playerFacId];
+            document.getElementById('player-faction').innerText = `${i18n[currentLang].factionLabel}: ${getCountryName(playerFacId)}`;
             document.getElementById('player-money').innerText = Math.floor(p.money);
             document.getElementById('player-ap').innerText = p.ap;
             document.getElementById('turn-counter').innerText = currentTurn;
@@ -459,6 +686,7 @@
             document.getElementById('diplomacy-panel').classList.remove('active');
             document.getElementById('division-panel').classList.remove('active');
             selectedDivision = null; isTargeting = false;
+            const t = i18n[currentLang];
 
             let combats = {};
             divisions.forEach(div => {
@@ -470,7 +698,7 @@
                         if (!combats[targetReg.id]) combats[targetReg.id] = { attackers: [] };
                         combats[targetReg.id].attackers.push(div);
                     } else {
-                        if (div.owner === playerFacId) addLog(`❌ Приказ отменен: нет состояния войны с ${factions[targetReg.owner].countryName}.`);
+                        if (div.owner === playerFacId) addLog(t.orderCancelledNoWar.replace('{name}', getCountryName(targetReg.owner)));
                         if (div.orderLine) map.removeLayer(div.orderLine);
                         div.targetRegionId = null; div.orderLine = null;
                     }
@@ -486,13 +714,13 @@
                 let defPower = targetReg.garrison + defDivs.reduce((sum, d) => sum + d.strength, 0);
 
                 if (atkPower > defPower * 1.1) {
-                    if(atkDivs.some(d => d.owner === playerFacId)) addLog(`🚩 ПОБЕДА! Войска захватили ${targetReg.name}!`);
+                    if(atkDivs.some(d => d.owner === playerFacId)) addLog(t.combatWin.replace('{name}', getCountryName(targetReg.id)));
                     targetReg.owner = atkDivs[0].owner;
                     targetReg.garrison = 5000;
                     defDivs.forEach(d => d.strength = 0);
                     atkDivs.forEach(div => { div.strength -= defPower * 0.2; executeMove(div, targetReg); });
                 } else {
-                    if(atkDivs.some(d => d.owner === playerFacId)) addLog(`💀 ПОРАЖЕНИЕ. Наступление на ${targetReg.name} отбито.`);
+                    if(atkDivs.some(d => d.owner === playerFacId)) addLog(t.combatLoss.replace('{name}', getCountryName(targetReg.id)));
                     atkDivs.forEach(div => {
                         div.strength *= 0.5;
                         if (div.orderLine) map.removeLayer(div.orderLine);
@@ -528,7 +756,7 @@
 
             currentTurn++;
             updateUI();
-            addLog(`--- Ход ${currentTurn} завершен ---`, true);
+            addLog(t.turnEndLog.replace('{turn}', currentTurn), true);
         }
 
         function executeMove(div, targetReg) {
@@ -539,6 +767,9 @@
             if (div.orderLine) map.removeLayer(div.orderLine);
             div.targetRegionId = null; div.orderLine = null;
         }
+
+        // Инициализируем язык при загрузке
+        setLanguage(currentLang);
     </script>
 </body>
 </html>
