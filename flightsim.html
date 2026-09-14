@@ -179,19 +179,26 @@
 <body>
     <div id="start-overlay">
         <div class="menu-container">
-            <h1>НАСТРОЙКИ ПОЛЁТА</h1>
+            <h1 id="txt-title">НАСТРОЙКИ ПОЛЁТА</h1>
             <div class="menu-section">
-                <h3>ТОЧКА СТАРТА</h3>
-                <div class="toggle-group" id="spawn-group">
-                    <div class="toggle-btn active" data-val="runway">НА ВПП</div>
-                    <div class="toggle-btn" data-val="air">В ВОЗДУХЕ</div>
+                <h3 id="txt-lang">ЯЗЫК / LANGUAGE</h3>
+                <div class="toggle-group" id="lang-group">
+                    <div class="toggle-btn active" data-val="ru">РУССКИЙ</div>
+                    <div class="toggle-btn" data-val="en">ENGLISH</div>
                 </div>
             </div>
             <div class="menu-section">
-                <h3>ВРЕМЯ СУТОК</h3>
+                <h3 id="txt-spawn">ТОЧКА СТАРТА</h3>
+                <div class="toggle-group" id="spawn-group">
+                    <div class="toggle-btn active" data-val="runway" id="btn-spawn-runway">НА ВПП</div>
+                    <div class="toggle-btn" data-val="air" id="btn-spawn-air">В ВОЗДУХЕ</div>
+                </div>
+            </div>
+            <div class="menu-section">
+                <h3 id="txt-time">ВРЕМЯ СУТОК</h3>
                 <div class="toggle-group" id="time-group">
-                    <div class="toggle-btn active" data-val="day">ДЕНЬ</div>
-                    <div class="toggle-btn" data-val="sunset">ЗАКАТ</div>
+                    <div class="toggle-btn active" data-val="day" id="btn-time-day">ДЕНЬ</div>
+                    <div class="toggle-btn" data-val="sunset" id="btn-time-sunset">ЗАКАТ</div>
                 </div>
             </div>
             <div class="start-btn" id="btn-start-flight">В ПОЛЁТ</div>
@@ -201,19 +208,20 @@
     <div id="hud">
         <div class="hud-top">
             <div class="instruments">
-                <div>СКОРОСТЬ: <span id="hud-spd">0</span> км/ч</div>
-                <div>ВЫСОТА: &nbsp;&nbsp;<span id="hud-alt">0</span> м</div>
-                <div>ВЕРТ.СК: &nbsp;<span id="hud-vs">0</span> м/с</div>
+                <div><span id="lbl-spd">СКОРОСТЬ</span>: <span id="hud-spd">0</span> <span id="lbl-spd-unit">км/ч</span></div>
+                <div><span id="lbl-alt">ВЫСОТА</span>: &nbsp;&nbsp;<span id="hud-alt">0</span> <span id="lbl-alt-unit">м</span></div>
+                <div><span id="lbl-vs">ВЕРТ.СК</span>: &nbsp;<span id="hud-vs">0</span> <span id="lbl-vs-unit">м/с</span></div>
             </div>
             <div class="instruments">
-                <div>ТЯГА: <span id="hud-thr">0</span>% <span class="bar-container"><span id="hud-thr-bar" class="bar-fill"></span></span></div>
-                <div>КРЕН: &nbsp;<span id="hud-roll">0</span>°</div>
-                <div>ШАССИ: <span id="hud-gear" style="color: #00ff88;">ВЫПУЩЕНЫ</span></div>
-                <div>ЗАКРЫЛКИ: <span id="hud-flaps">0°</span></div>
+                <div><span id="lbl-thr">ТЯГА</span>: <span id="hud-thr">0</span>% <span class="bar-container"><span id="hud-thr-bar" class="bar-fill"></span></span></div>
+                <div><span id="lbl-roll">КРЕН</span>: &nbsp;<span id="hud-roll">0</span>°</div>
+                <div><span id="lbl-gear">ШАССИ</span>: <span id="hud-gear" style="color: #00ff88;">ВЫПУЩЕНЫ</span></div>
+                <div><span id="lbl-flaps">ЗАКРЫЛКИ</span>: <span id="hud-flaps">0°</span></div>
                 
                 <div class="top-btns">
                     <div class="m-btn" id="btn-gear" onclick="toggleLandingGear()" style="padding: 5px 10px; font-size: 10px;">ШАССИ</div>
                     <div class="m-btn" id="btn-cam" onclick="toggleCameraView()" style="padding: 5px 10px; font-size: 10px;">КАМЕРА</div>
+                    <div class="m-btn" id="btn-lang-hud" onclick="toggleLanguage()" style="padding: 5px 10px; font-size: 10px; color: #fff; border-color: #00ffcc;">EN</div>
                 </div>
             </div>
         </div>
@@ -222,7 +230,7 @@
         <div id="hud-alert" class="alert-box"></div>
 
         <div class="hud-bottom">
-            <div class="help-box">
+            <div class="help-box" id="help-box-content">
                 <b>Управление:</b><br>
                 W/S — Тангаж | A/D — Крен | Q/E — Рыскание<br>
                 ПРОБЕЛ / SHIFT / CTRL — Газ | F — Закрылки<br>
@@ -249,6 +257,136 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
     <script>
+        // --- СИСТЕМА ЛОКАЛИЗАЦИИ (I18N) ---
+        let currentLang = localStorage.getItem('flightsim_lang') || 'ru';
+
+        const i18n = {
+            ru: {
+                title: "НАСТРОЙКИ ПОЛЁТА",
+                langSection: "ЯЗЫК / LANGUAGE",
+                spawnSection: "ТОЧКА СТАРТА",
+                spawnRunway: "НА ВПП",
+                spawnAir: "В ВОЗДУХЕ",
+                timeSection: "ВРЕМЯ СУТОК",
+                timeDay: "ДЕНЬ",
+                timeSunset: "ЗАКАТ",
+                startFlight: "В ПОЛЁТ",
+                spd: "СКОРОСТЬ",
+                alt: "ВЫСОТА",
+                vs: "ВЕРТ.СК",
+                spdUnit: "км/ч",
+                altUnit: "м",
+                vsUnit: "м/с",
+                thr: "ТЯГА",
+                roll: "КРЕН",
+                gear: "ШАССИ",
+                flaps: "ЗАКРЫЛКИ",
+                gearDown: "ВЫПУЩЕНЫ",
+                gearUp: "УБРАНЫ",
+                btnGear: "ШАССИ",
+                btnCam: "КАМЕРА",
+                btnBrake: "ТОРМОЗ",
+                btnThrottle: "ГАЗ",
+                stall: "ВНИМАНИЕ: СВАЛИВАНИЕ!",
+                crashSpeed: "СЛИШКОМ ВЫСОКАЯ ВЕРТ. СКОРОСТЬ!",
+                crashRoll: "СИЛЬНЫЙ КРЕН ПРИ КАСАНИИ!",
+                crashNose: "УДАР НОСОМ (ТАНГАЖ < 0)!",
+                crashTail: "УДАР ХВОСТОМ (TAIL STRIKE)!",
+                crashBellyHard: "ЖЕСТКАЯ ПОСАДКА НА БРЮХО!",
+                crashBellyRoll: "СИЛЬНЫЙ КРЕН БЕЗ ШАССИ!",
+                crashBellyPitch: "НЕВЕРНЫЙ ТАНГАЖ БЕЗ ШАССИ!",
+                restartSuffix: " ПЕРЕЗАПУСК...",
+                help: "<b>Управление:</b><br>W/S — Тангаж | A/D — Крен | Q/E — Рыскание<br>ПРОБЕЛ / SHIFT / CTRL — Газ | F — Закрылки<br>B — Тормоз колёс | G — Шасси | C — Камера"
+            },
+            en: {
+                title: "FLIGHT SETTINGS",
+                langSection: "LANGUAGE / ЯЗЫК",
+                spawnSection: "START LOCATION",
+                spawnRunway: "RUNWAY",
+                spawnAir: "AIRBORNE",
+                timeSection: "TIME OF DAY",
+                timeDay: "DAY",
+                timeSunset: "SUNSET",
+                startFlight: "FLY NOW",
+                spd: "AIRSPEED",
+                alt: "ALTITUDE",
+                vs: "V.SPEED",
+                spdUnit: "km/h",
+                altUnit: "m",
+                vsUnit: "m/s",
+                thr: "THROTTLE",
+                roll: "ROLL",
+                gear: "GEAR",
+                flaps: "FLAPS",
+                gearDown: "DOWN",
+                gearUp: "UP",
+                btnGear: "GEAR",
+                btnCam: "CAMERA",
+                btnBrake: "BRAKE",
+                btnThrottle: "THR",
+                stall: "WARNING: STALL!",
+                crashSpeed: "VERTICAL SPEED TOO HIGH!",
+                crashRoll: "EXCESSIVE ROLL ON TOUCHDOWN!",
+                crashNose: "NOSE IMPACT (PITCH < 0)!",
+                crashTail: "TAIL STRIKE DETECTED!",
+                crashBellyHard: "HARD BELLY LANDING!",
+                crashBellyRoll: "EXCESSIVE ROLL WITHOUT GEAR!",
+                crashBellyPitch: "IMPROPER PITCH ON TOUCHDOWN!",
+                restartSuffix: " RESTARTING...",
+                help: "<b>Controls:</b><br>W/S — Pitch | A/D — Roll | Q/E — Yaw<br>SPACE / SHIFT / CTRL — Throttle | F — Flaps<br>B — Wheel Brakes | G — Gear | C — Camera"
+            }
+        };
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('flightsim_lang', lang);
+            const t = i18n[lang];
+
+            document.getElementById('txt-title').textContent = t.title;
+            document.getElementById('txt-lang').textContent = t.langSection;
+            document.getElementById('txt-spawn').textContent = t.spawnSection;
+            document.getElementById('btn-spawn-runway').textContent = t.spawnRunway;
+            document.getElementById('btn-spawn-air').textContent = t.spawnAir;
+            document.getElementById('txt-time').textContent = t.timeSection;
+            document.getElementById('btn-time-day').textContent = t.timeDay;
+            document.getElementById('btn-time-sunset').textContent = t.timeSunset;
+            document.getElementById('btn-start-flight').textContent = t.startFlight;
+
+            document.getElementById('lbl-spd').textContent = t.spd;
+            document.getElementById('lbl-alt').textContent = t.alt;
+            document.getElementById('lbl-vs').textContent = t.vs;
+            document.getElementById('lbl-spd-unit').textContent = t.spdUnit;
+            document.getElementById('lbl-alt-unit').textContent = t.altUnit;
+            document.getElementById('lbl-vs-unit').textContent = t.vsUnit;
+            document.getElementById('lbl-thr').textContent = t.thr;
+            document.getElementById('lbl-roll').textContent = t.roll;
+            document.getElementById('lbl-gear').textContent = t.gear;
+            document.getElementById('lbl-flaps').textContent = t.flaps;
+
+            document.getElementById('btn-gear').textContent = t.btnGear;
+            document.getElementById('btn-cam').textContent = t.btnCam;
+            document.getElementById('btn-brake').textContent = t.btnBrake;
+            document.getElementById('throttle-knob').textContent = t.btnThrottle;
+            document.getElementById('help-box-content').innerHTML = t.help;
+
+            document.getElementById('btn-lang-hud').textContent = lang === 'ru' ? 'EN' : 'RU';
+
+            const hudGear = document.getElementById('hud-gear');
+            hudGear.textContent = state.gearDeployed ? t.gearDown : t.gearUp;
+
+            document.getElementById('hud-flaps').textContent = state.flaps + '°';
+            document.getElementById('btn-flaps-mob').textContent = `${t.flaps}: ${state.flaps}°`;
+
+            document.querySelectorAll('#lang-group .toggle-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.val === lang);
+            });
+        }
+
+        function toggleLanguage() {
+            setLanguage(currentLang === 'ru' ? 'en' : 'ru');
+        }
+        window.toggleLanguage = toggleLanguage;
+
         // --- Настройки старта ---
         let startType = 'runway';
         let timeOfDay = 'day';
@@ -266,6 +404,7 @@
             });
         };
 
+        setupMenuButtons('#lang-group .toggle-btn', val => setLanguage(val));
         setupMenuButtons('#spawn-group .toggle-btn', val => startType = val);
         setupMenuButtons('#time-group .toggle-btn', val => timeOfDay = val);
 
@@ -338,7 +477,6 @@
                 if (!this.initialized || !this.ctx) return;
                 const t = this.ctx.currentTime;
                 
-                // Звук удара корпуса (Thud)
                 const osc = this.ctx.createOscillator();
                 const oscGain = this.ctx.createGain();
                 osc.type = 'sine';
@@ -354,7 +492,6 @@
                 osc.start(t);
                 osc.stop(t + 0.2);
 
-                // Визг резины на скорости
                 if (speed > 10) {
                     const bufferSize = this.ctx.sampleRate * 0.4;
                     const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -458,7 +595,6 @@
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.2, 14000);
 
-        // Динамический шейдер неба (Uniforms)
         const skyUniforms = {
             topColor: { value: new THREE.Color(0x0f388c) },
             bottomColor: { value: new THREE.Color(0xb8dbf5) },
@@ -513,7 +649,6 @@
         const lightMatGreen = new THREE.MeshBasicMaterial({ color: 0x11ff11 });
         const lightMatWhite = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
-        // Ландшафт
         const WORLD_SIZE = 9000;
         const TERRAIN_SEGS = 180; 
         const terrainGeo = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, TERRAIN_SEGS, TERRAIN_SEGS);
@@ -547,7 +682,6 @@
         waterMesh.position.set(0, 1.5, 450);
         scene.add(waterMesh);
 
-        // ВПП
         const runwayGroup = new THREE.Group();
         const runwayBase = new THREE.Mesh(new THREE.BoxGeometry(60, 0.4, 900), new THREE.MeshStandardMaterial({ color: 0x242729 }));
         runwayBase.position.set(0, 0.2, 0); runwayBase.receiveShadow = true; runwayGroup.add(runwayBase);
@@ -557,7 +691,6 @@
             stripe.rotateX(-Math.PI / 2); stripe.position.set(0, 0.42, z); runwayGroup.add(stripe);
         }
 
-        // Инстанцированные огни ВПП
         const rLightGeo = new THREE.SphereGeometry(0.5, 8, 8);
         const edgeInst = new THREE.InstancedMesh(rLightGeo, lightMatWhite, 38);
         const dummy = new THREE.Object3D();
@@ -582,7 +715,6 @@
         }
         runwayGroup.add(endInst);
 
-        // PAPI Огни
         const papiLights = [];
         for (let i = 0; i < 4; i++) {
             const pLight = new THREE.Mesh(new THREE.SphereGeometry(0.8, 8, 8), lightMatWhite);
@@ -593,7 +725,6 @@
 
         scene.add(runwayGroup);
 
-        // Деревья
         const foliageGroup = new THREE.Group();
         const trunkGeo = new THREE.CylinderGeometry(0.6, 0.9, 5, 5);
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a2e18 });
@@ -615,7 +746,6 @@
         }
         scene.add(foliageGroup);
 
-        // Самолет
         const airplane = new THREE.Group();
         const matSilver = new THREE.MeshStandardMaterial({ color: 0xd8dde3, metalness: 0.75, roughness: 0.3 });
         const matRed = new THREE.MeshStandardMaterial({ color: 0xd91e18, roughness: 0.4 });
@@ -632,7 +762,6 @@
         const blade = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.22, 0.05), new THREE.MeshStandardMaterial({ color: 0x1a1a1a }));
         propGroup.add(blade); airplane.add(propGroup);
 
-        // Навигационные бортовые огни
         const navGeo = new THREE.SphereGeometry(0.25, 8, 8);
         const navLeft = new THREE.Mesh(navGeo, lightMatRed);
         navLeft.position.set(-7.9, 0.1, -0.6);
@@ -659,7 +788,6 @@
         scene.add(airplane);
         const cockpitCameraAnchor = new THREE.Object3D(); cockpitCameraAnchor.position.set(0, 1.1, -1.0); airplane.add(cockpitCameraAnchor);
 
-        // --- ЛЕГКОВЕСНАЯ СИСТЕМА ЧАСТИЦ (Пул) ---
         const MAX_PARTICLES = 250;
         const pGeo = new THREE.BufferGeometry();
         const pPosArr = new Float32Array(MAX_PARTICLES * 3);
@@ -699,7 +827,6 @@
         });
         window.addEventListener('keyup', (e) => { keyboard[e.code] = false; });
 
-        // Сенсорные переменные
         let touchPitch = 0, touchRoll = 0, touchYaw = 0, touchBrake = false;
         
         const joyBase = document.getElementById('joy-base');
@@ -777,7 +904,7 @@
         function toggleLandingGear() {
             state.gearDeployed = !state.gearDeployed;
             const hudGear = document.getElementById('hud-gear');
-            hudGear.textContent = state.gearDeployed ? 'ВЫПУЩЕНЫ' : 'УБРАНЫ';
+            hudGear.textContent = state.gearDeployed ? i18n[currentLang].gearDown : i18n[currentLang].gearUp;
             hudGear.style.color = state.gearDeployed ? '#00ff88' : '#ff9900';
         }
         window.toggleLandingGear = toggleLandingGear;
@@ -792,7 +919,7 @@
             else if (state.flaps === 15) state.flaps = 30;
             else state.flaps = 0;
             document.getElementById('hud-flaps').textContent = state.flaps + '°';
-            document.getElementById('btn-flaps-mob').textContent = 'ЗАКРЫЛКИ: ' + state.flaps + '°';
+            document.getElementById('btn-flaps-mob').textContent = `${i18n[currentLang].flaps}: ${state.flaps}°`;
         }
 
         function applyStartSettings() {
@@ -829,7 +956,7 @@
                 state.isGrounded = false;
                 throttleKnob.style.bottom = '65%';
                 throttleKnob.style.transform = `translate(-50%, 50%)`;
-                document.getElementById('hud-gear').textContent = 'УБРАНЫ';
+                document.getElementById('hud-gear').textContent = i18n[currentLang].gearUp;
                 document.getElementById('hud-gear').style.color = '#ff9900';
             } else {
                 airplane.position.set(0, 1.8, 380); 
@@ -844,17 +971,16 @@
                 state.isGrounded = true;
                 throttleKnob.style.bottom = '0%';
                 throttleKnob.style.transform = `translate(-50%, 0%)`;
-                document.getElementById('hud-gear').textContent = 'ВЫПУЩЕНЫ';
+                document.getElementById('hud-gear').textContent = i18n[currentLang].gearDown;
                 document.getElementById('hud-gear').style.color = '#00ff88';
             }
             document.getElementById('hud-alert').textContent = '';
             document.getElementById('hud-flaps').textContent = '0°';
-            document.getElementById('btn-flaps-mob').textContent = 'ЗАКРЫЛКИ: 0°';
+            document.getElementById('btn-flaps-mob').textContent = `${i18n[currentLang].flaps}: 0°`;
         }
 
         function respawnAirplane() { applyStartSettings(); }
 
-        // Глобальные пред-алокации
         const MASS = 1100, ENGINE_FORCE = 6800, WING_AREA = 16.5, AIR_DENSITY = 1.225, GRAVITY = 9.81;
         const _vForward = new THREE.Vector3(), _vUp = new THREE.Vector3(), _vRight = new THREE.Vector3();
         const _totalForce = new THREE.Vector3(), _liftForce = new THREE.Vector3(), _thrustForce = new THREE.Vector3(), _dragForce = new THREE.Vector3(), _gravityForce = new THREE.Vector3(0, -MASS * GRAVITY, 0);
@@ -940,7 +1066,6 @@
             let hAGL = airplane.position.y - wheelBaseAlt;
             let wasGrounded = state.isGrounded;
 
-            // Экранный эффект
             if (hAGL > 0 && hAGL < 12.0 && !state.isGrounded) {
                 let ge = 1.0 - (hAGL / 12.0);
                 cl *= (1.0 + 0.25 * ge);
@@ -948,10 +1073,11 @@
             }
 
             let hudAlert = document.getElementById('hud-alert');
+            const stallMsg = i18n[currentLang].stall;
             if (Math.abs(alpha) > stallAngle && !state.isGrounded) {
                 cl *= Math.max(0.1, 1.0 - (Math.abs(alpha) - stallAngle) * 5.0);
-                hudAlert.textContent = 'ВНИМАНИЕ: СВАЛИВАНИЕ!';
-            } else if (hudAlert.textContent === 'ВНИМАНИЕ: СВАЛИВАНИЕ!') {
+                hudAlert.textContent = stallMsg;
+            } else if (hudAlert.textContent === stallMsg || hudAlert.textContent === i18n.ru.stall || hudAlert.textContent === i18n.en.stall) {
                 hudAlert.textContent = '';
             }
 
@@ -966,7 +1092,6 @@
 
             state.velocity.addScaledVector(_totalForce.divideScalar(MASS), dt);
 
-            // Обработка касания земли
             if (airplane.position.y <= wheelBaseAlt) {
                 const verticalImpact = -state.velocity.y;
                 
@@ -977,66 +1102,60 @@
                 const hU = getTerrainHeight(airplane.position.x, airplane.position.z + eps);
                 _surfNormal.set(hL - hR, 2 * eps, hU - hD).normalize();
 
-                // Относительные углы касания
-                const relPitch = _vForward.dot(_surfNormal); // >0 нос вверх (Flare), <0 нос вниз
-                const relRoll = Math.abs(_vRight.dot(_surfNormal)); // 0 = параллельно
+                const relPitch = _vForward.dot(_surfNormal);
+                const relRoll = Math.abs(_vRight.dot(_surfNormal));
 
                 let isCrash = false;
                 let crashReason = "";
+                const langDict = i18n[currentLang];
 
                 if (state.gearDeployed) {
-                    if (verticalImpact > 12.0) { isCrash = true; crashReason = "СЛИШКОМ ВЫСОКАЯ ВЕРТ. СКОРОСТЬ!"; }
-                    else if (relRoll > 0.45) { isCrash = true; crashReason = "СИЛЬНЫЙ КРЕН ПРИ КАСАНИИ!"; }
-                    else if (relPitch < -0.15) { isCrash = true; crashReason = "УДАР НОСОМ (ТАНГАЖ < 0)!"; }
-                    else if (relPitch > 0.35) { isCrash = true; crashReason = "УДАР ХВОСТОМ (TAIL STRIKE)!"; }
+                    if (verticalImpact > 12.0) { isCrash = true; crashReason = langDict.crashSpeed; }
+                    else if (relRoll > 0.45) { isCrash = true; crashReason = langDict.crashRoll; }
+                    else if (relPitch < -0.15) { isCrash = true; crashReason = langDict.crashNose; }
+                    else if (relPitch > 0.35) { isCrash = true; crashReason = langDict.crashTail; }
                 } else {
-                    if (verticalImpact > 4.0) { isCrash = true; crashReason = "ЖЕСТКАЯ ПОСАДКА НА БРЮХО!"; }
-                    else if (relRoll > 0.45) { isCrash = true; crashReason = "СИЛЬНЫЙ КРЕН БЕЗ ШАССИ!"; }
-                    else if (relPitch < -0.1 || relPitch > 0.25) { isCrash = true; crashReason = "НЕВЕРНЫЙ ТАНГАЖ БЕЗ ШАССИ!"; }
+                    if (verticalImpact > 4.0) { isCrash = true; crashReason = langDict.crashBellyHard; }
+                    else if (relRoll > 0.45) { isCrash = true; crashReason = langDict.crashBellyRoll; }
+                    else if (relPitch < -0.1 || relPitch > 0.25) { isCrash = true; crashReason = langDict.crashBellyPitch; }
                 }
 
                 if (isCrash) {
                     state.crashed = true; state.crashTimer = 4.0;
-                    document.getElementById('hud-alert').textContent = crashReason + ' ПЕРЕЗАПУСК...'; 
+                    document.getElementById('hud-alert').textContent = crashReason + langDict.restartSuffix; 
                     return;
                 }
 
                 state.isGrounded = true; 
                 airplane.position.y = wheelBaseAlt;
                 
-                // Амортизация и звук при первом касании
                 if (!wasGrounded) {
                     sound.playTouchdown(verticalImpact, state.speed);
-                    if (verticalImpact > 1.5) state.velocity.y = verticalImpact * 0.15; // Мягкий отскок
+                    if (verticalImpact > 1.5) state.velocity.y = verticalImpact * 0.15;
                     else state.velocity.y = 0;
                 } else {
                     if (state.velocity.y < 0) state.velocity.y = 0;
                 }
 
-                // Выравнивание по нормали склона
                 _alignQuat.setFromUnitVectors(_vUp, _surfNormal); 
                 _targetQuat.copy(_alignQuat).multiply(airplane.quaternion);
                 
-                // Более плавный slerp на первом касании, чтобы избежать рывков
                 airplane.quaternion.slerp(_targetQuat, (wasGrounded ? 5.0 : 2.5) * dt);
 
-                // Раздельное трение поверхности
                 const onRunway = Math.abs(airplane.position.x) < 32 && Math.abs(airplane.position.z) < 460;
-                let surfaceFriction = onRunway ? 0.2 : 1.8; // Трава тормозит сильнее
-                if (!state.gearDeployed) surfaceFriction = 5.0; // Трение пуза
+                let surfaceFriction = onRunway ? 0.2 : 1.8;
+                if (!state.gearDeployed) surfaceFriction = 5.0;
                 
                 let wheelFriction = (keyboard['KeyB'] || touchBrake) ? 4.8 : surfaceFriction;
                 
                 state.velocity.x *= Math.max(0, 1.0 - wheelFriction * dt);
                 state.velocity.z *= Math.max(0, 1.0 - wheelFriction * dt);
 
-                // Защита от бокового скольжения колес
                 if (state.speed > 0.8) {
                     const gSpeed = state.velocity.dot(_vForward);
                     state.velocity.copy(_vForward).multiplyScalar(gSpeed);
                 }
 
-                // Пыль при касании грунта или торможении
                 if (state.speed > 10 && (!onRunway || touchBrake)) {
                     for (let k = 0; k < 2; k++) {
                         pIndex = (pIndex + 1) % MAX_PARTICLES; pAges[pIndex] = 0;
@@ -1153,6 +1272,9 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        // Инициализируем стартовый язык
+        setLanguage(currentLang);
 
         renderer.render(scene, camera);
         requestAnimationFrame((time) => { lastTime = time; animate(time); });
