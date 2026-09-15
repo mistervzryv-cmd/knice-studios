@@ -333,7 +333,7 @@
       <div class="card-tags">
         <span class="tag">Forex</span>
         <span class="tag">Crypto</span>
-        <span class="tag">Archive [20 versions]</span>
+        <span class="tag">Archive [26 versions]</span>
       </div>
     </div>
 
@@ -363,7 +363,7 @@
       <div class="card-tags">
         <span class="tag">Shooter</span>
         <span class="tag">Tanks</span>
-        <span class="tag">Archive [19 versions]</span>
+        <span class="tag">Archive [22 versions]</span>
       </div>
     </div>
 
@@ -456,7 +456,7 @@
         <span class="tag">3D Sim</span>
         <span class="tag">Three.js</span>
         <span class="tag">Flight</span>
-        <span class="tag">Archive [6 versions]</span>
+        <span class="tag">Archive [7 versions]</span>
       </div>
     </div>
   </div>
@@ -558,8 +558,17 @@
       <p>Select a game version:</p>
       <div class="version-btns">
         <button class="btn-version primary" onclick="launchFrontlineLatest()">
-          <span>⚡ <b>3.2</b> (Tactical RTS, Artillery, Tanks)</span>
+          <span>⚡ <b>3.3.2</b> (Tactical Balance & Artillery Patch)</span>
           <small style="color:inherit">Latest</small>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_3_3_1.html', 'Frontline 3.3.1')">
+          <span>3.3.1 (Combat Overhaul Beta)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_3_3.html', 'Frontline 3.3')">
+          <span>3.3.0 (Tanks & Terrain Update)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_3_2.html', 'Frontline 3.2')">
+          <span>3.2.0 (Tactical RTS, Artillery, Tanks)</span>
         </button>
         <button class="btn-version" onclick="chooseVersion('frontline_3_1.html', 'Frontline 3.1')">
           <span>3.1.0 (Bugfixes & Polish)</span>
@@ -657,8 +666,11 @@
       <p>Select a simulator version:</p>
       <div class="version-btns">
         <button class="btn-version primary" onclick="launchFlightLatest()">
-          <span>⚡ <b>1.5</b> (Latest Build)</span>
+          <span>⚡ <b>1.6</b> (Dynamic Aerodynamics & View Modes)</span>
           <small style="color:inherit">Latest</small>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('flightsim_1_5.html', '3D Flight Simulator 1.5')">
+          <span>1.5.0</span>
         </button>
         <button class="btn-version" onclick="chooseVersion('flightsim_1_4.html', '3D Flight Simulator 1.4')">
           <span>1.4.0</span>
@@ -704,8 +716,8 @@
     }
 
     function launchFrontlineLatest() {
-      const target = 'frontline_3_2.html';
-      chooseVersion(target, 'Frontline 1944 (v3.2)');
+      const target = 'frontline_3_3_2.html';
+      chooseVersion(target, 'Frontline 1944 (v3.3.2)');
     }
 
     function launchMegaLatest() {
@@ -714,8 +726,8 @@
     }
 
     function launchFlightLatest() {
-      const target = 'flightsim_1_5.html';
-      chooseVersion(target, '3D Flight Simulator (v1.5)');
+      const target = 'flightsim_1_6.html';
+      chooseVersion(target, '3D Flight Simulator (v1.6)');
     }
 
     function launchGame(url, title) {
