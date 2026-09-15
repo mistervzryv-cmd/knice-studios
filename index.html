@@ -255,6 +255,16 @@
       color: #38bdf8;
     }
     .btn-version.primary:hover { background: #38bdf8; color: #060913; }
+    .btn-version.warning {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+    .btn-version.warning:hover {
+      background: #dc2626;
+      color: #fff;
+      border-color: #ef4444;
+    }
     .btn-dialog-close {
       margin-top: 16px;
       background: transparent;
@@ -322,8 +332,8 @@
           <line x1="20" y1="120" x2="300" y2="120" stroke="#1e293b" stroke-width="1"/>
           <polyline points="20,110 50,105 80,115 120,70 160,85 200,45 240,65 280,30 300,38" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
           <polyline points="20,95 60,90 100,120 150,110 190,130 230,95 270,105 300,80" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="3,3"/>
-          <rect x="220" y="15" width="80" height="20" rx="4" fill="rgba(56,189,248,0.2)"/>
-          <text x="236" y="29" fill="#38bdf8" font-size="10" font-weight="bold">8.8 ACTIVE</text>
+          <rect x="215" y="15" width="90" height="20" rx="4" fill="rgba(56,189,248,0.2)"/>
+          <text x="224" y="29" fill="#38bdf8" font-size="10" font-weight="bold">8.7.1 STABLE</text>
         </svg>
       </div>
       <div class="card-content">
@@ -468,11 +478,12 @@
       <p>Select an economic simulation version:</p>
       <div class="version-btns">
         <button class="btn-version primary" onclick="launchBankLatest()">
-          <span>⚡ <b>8.8</b> (Translations, Map Fixes, Logic Overhaul)</span>
-          <small style="color:inherit">Latest</small>
+          <span>⚡ <b>8.7.1</b> (Forex, Hammam, Startups)</span>
+          <small style="color:inherit">Stable Active</small>
         </button>
-        <button class="btn-version" onclick="chooseVersion('Knice_Bank_8_7_1.html', 'Knice Bank 8.7.1')">
-          <span>8.7.1 (Forex, Hammam, Startups)</span>
+        <button class="btn-version warning" onclick="chooseVersion('Knice_Bank_8_8.html', 'Knice Bank 8.8 (Unsuccessful)')">
+          <span>⚠️ <b>8.8.0</b> (Translations & Logic Test)</span>
+          <small style="color:inherit">Unsuccessful Build</small>
         </button>
         <button class="btn-version" onclick="chooseVersion('Knice_Bank_8_7_0.html', 'Knice Bank 8.7.0')">
           <span>8.7.0 (Macroeconomics & Bubbles)</span>
@@ -714,8 +725,8 @@
     let currentGameUrl = '';
 
     function launchBankLatest() {
-      const target = 'Knice_Bank_8_8.html';
-      chooseVersion(target, 'Knice Bank 8.8');
+      const target = 'Knice_Bank_8_7_1.html';
+      chooseVersion(target, 'Knice Bank 8.7.1');
     }
 
     function launchFrontlineLatest() {
