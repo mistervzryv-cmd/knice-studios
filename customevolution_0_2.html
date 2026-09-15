@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cell Morphogenesis Sandbox</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: #090d16;
+      color: #e2e8f0;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Левая колонка: аквариум и кликер */
+    .viewport-panel {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px;
+      background: radial-gradient(circle at center, #101c33 0%, #060911 100%);
+      position: relative;
+      border-right: 2px solid #1e293b;
+    }
+
+    .top-stats {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(10px);
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .stat-badge { display: flex; flex-direction: column; gap: 2px; }
+    .stat-cells { color: #38bdf8; }
+    .stat-body { color: #4ade80; }
+    .stat-dna { color: #c084fc; }
+    .stat-rate { color: #94a3b8; }
+
+    #bioCanvas {
+      width: 100%;
+      max-width: 520px;
+      height: 420px;
+      background: rgba(2, 6, 23, 0.6);
+      border-radius: 24px;
+      border: 1px solid #1e293b;
+      box-shadow: inset 0 0 50px rgba(56, 189, 248, 0.05);
+      cursor: pointer;
+    }
+
+    .action-controls {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .btn-main {
+      flex: 1;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-main:active { transform: scale(0.97); }
+
+    .btn-feed {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+    }
+    .btn-feed:hover { background: linear-gradient(135deg, #38bdf8, #0284c7); }
+
+    .btn-body-grow {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
+    }
+    .btn-body-grow:hover:not(:disabled) { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .btn-body-grow:disabled { background: #334155; color: #64748b; cursor: not-allowed; box-shadow: none; }
+
+    .btn-dna {
+      background: linear-gradient(135deg, #7e22ce, #6b21a8);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(126, 34, 206, 0.3);
+    }
+    .btn-dna:hover:not(:disabled) { background: linear-gradient(135deg, #a855f7, #7e22ce); }
+    .btn-dna:disabled { background: #334155; color: #64748b; cursor: not-allowed; box-shadow: none; }
+
+    /* Правая колонка: Магазин */
+    .shop-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #0f172a;
+      overflow-y: auto;
+      padding: 24px;
+      gap: 20px;
+    }
+
+    .shop-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #f8fafc;
+      border-bottom: 2px solid #1e293b;
+      padding-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stage-badge {
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid #38bdf8;
+      border-radius: 20px;
+      color: #38bdf8;
+    }
+
+    .category-card {
+      background: #1e293b;
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid #334155;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .category-header {
+      font-weight: 700;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .upgrade-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .upgrade-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f172a;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #1e293b;
+    }
+
+    .upgrade-item.bought {
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.05);
+    }
+
+    .upgrade-info h4 {
+      font-size: 0.9rem;
+      color: #f1f5f9;
+      margin-bottom: 2px;
+    }
+
+    .upgrade-info p {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    .btn-buy {
+      background: #38bdf8;
+      color: #0f172a;
+      border: none;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-buy:hover:not(:disabled) {
+      background: #7dd3fc;
+      transform: translateY(-1px);
+    }
+
+    .btn-buy:disabled {
+      background: #1e293b;
+      color: #475569;
+      cursor: not-allowed;
+    }
+
+    .btn-buy.purchased {
+      background: #22c55e;
+      color: #fff;
+      cursor: default;
+    }
+
+    .floating-text {
+      position: absolute;
+      font-weight: bold;
+      color: #38bdf8;
+      pointer-events: none;
+      animation: floatUp 0.8s ease-out forwards;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-40px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="viewport-panel">
+    <div class="top-stats">
+      <div class="stat-badge stat-cells">
+        <span>Биомасса</span>
+        <span id="cellsCount">1</span>
+      </div>
+      <div class="stat-badge stat-body">
+        <span>Клетки тела</span>
+        <span id="bodyCellsCount">1</span>
+      </div>
+      <div class="stat-badge stat-dna">
+        <span>ДНК</span>
+        <span id="dnaCount">0</span>
+      </div>
+      <div class="stat-badge stat-rate">
+        <span>Синтез</span>
+        <span id="passiveIncome">0/с</span>
+      </div>
+    </div>
+
+    <canvas id="bioCanvas" width="520" height="420"></canvas>
+
+    <div class="action-controls">
+      <button class="btn-main btn-feed" id="clickBtn">
+        <span>Питание</span>
+        <small id="clickPowerText">+1 Биомасса</small>
+      </button>
+
+      <button class="btn-main btn-body-grow" id="growBodyBtn">
+        <span>+1 Клетка Тела</span>
+        <small id="bodyCostText">Цена: 10 биомассы</small>
+      </button>
+
+      <button class="btn-main btn-dna" id="synthDnaBtn" disabled>
+        <span>Мутация (+1 🧬)</span>
+        <small id="dnaCostText">Цена: 30 биомассы</small>
+      </button>
+    </div>
+  </div>
+
+  <div class="shop-panel">
+    <div class="shop-title">
+      <span>Эволюция & Органы</span>
+      <span class="stage-badge" id="stageBadge">Одноклеточное</span>
+    </div>
+
+    <div class="category-card">
+      <div class="category-header">1. Клеточный метаболизм (За биомассу)</div>
+      <div class="upgrade-grid" id="cellUpgrades"></div>
+    </div>
+
+    <div class="category-card">
+      <div class="category-header">2. Таксономия и Органы (За ДНК)</div>
+      <div class="upgrade-grid" id="dnaUpgrades"></div>
+    </div>
+  </div>
+
+  <script>
+    // --- СОСТОЯНИЕ ИГРЫ ---
+    const state = {
+      biomass: 1,
+      bodyCells: 1,
+      bodyCellCost: 10,
+      dna: 0,
+      dnaCost: 30,
+      clickPower: 1,
+      passiveBiomass: 0,
+      upgrades: {}
+    };
+
+    // --- СТРУКТУРА ТЕЛА СУЩЕСТВА (МОРФОГЕНЕЗ) ---
+    // Каждая клетка имеет относительные координаты (ox, oy), радиус и тип
+    let bodyStructure = [
+      { ox: 0, oy: 0, r: 24, type: 'core' } // Начальная 1 клетка
+    ];
+
+    // --- КАТАЛОГ АПГРЕЙДОВ ---
+    const upgradesData = [
+      { id: 'mitochondria', name: 'Митохондрии', desc: '+1 к сбору биомассы за клик', cost: 15, type: 'biomass', effect: () => state.clickPower += 1, bought: false },
+      { id: 'cilia', name: 'Реснички', desc: 'Авто-поглощение: +3 биомассы/сек', cost: 60, type: 'biomass', effect: () => state.passiveBiomass += 3, bought: false },
+      { id: 'chloroplast', name: 'Хлоропласты (Царство Растения)', desc: 'Зеленый биом: +12 биомассы/сек', cost: 180, type: 'biomass', trait: 'plant', effect: () => state.passiveBiomass += 12, bought: false },
+
+      // ДНК Мутации
+      { id: 'flagella', name: 'Жгутик передвижения', desc: 'Хвост на задней клетке (+5/с)', cost: 1, type: 'dna', trait: 'tail', effect: () => state.passiveBiomass += 5, bought: false },
+      { id: 'eyes', name: 'Глазные сенсоры', desc: 'Глаза на головных клетках (+8 к клику)', cost: 3, type: 'dna', trait: 'eyes', effect: () => state.clickPower += 8, bought: false },
+      { id: 'chitin', name: 'Хитиновый панцирь', desc: 'Плотная броня на внешних клетках (+25/с)', cost: 6, type: 'dna', trait: 'chitin', effect: () => state.passiveBiomass += 25, bought: false },
+      { id: 'tentacles', name: 'Ловчие щупальца', desc: 'Щупальца из боковых клеток (+40 клик)', cost: 12, type: 'dna', trait: 'tentacles', effect: () => state.clickPower += 40, bought: false },
+      { id: 'mandibles', name: 'Хищные жвалы / Челюсти', desc: 'Ротовой аппарат впереди (+100/с)', cost: 20, type: 'dna', trait: 'mandibles', effect: () => state.passiveBiomass += 100, bought: false },
+      { id: 'wings', name: 'Плавники / Крылья', desc: 'Аэро-сегменты (+250/с, +100 клик)', cost: 40, type: 'dna', trait: 'wings', effect: () => { state.passiveBiomass += 250; state.clickPower += 100; }, bought: false }
+    ];
+
+    function hasTrait(id) {
+      const upg = upgradesData.find(u => u.id === id);
+      return upg ? upg.bought : false;
+    }
+
+    // --- ПРИРАЩЕНИЕ НОВОЙ КЛЕТКИ К ТЕЛУ (Генерация многоклеточности) ---
+    function growNewCell() {
+      state.bodyCells += 1;
+      rebuildBodyAnatomy();
+    }
+
+    function rebuildBodyAnatomy() {
+      const n = state.bodyCells;
+      bodyStructure = [];
+
+      if (n === 1) {
+        bodyStructure.push({ ox: 0, oy: 0, r: 28, type: 'core' });
+      } else if (n === 2) {
+        bodyStructure.push({ ox: -16, oy: 0, r: 22, type: 'head' });
+        bodyStructure.push({ ox: 16, oy: 0, r: 22, type: 'tail' });
+      } else if (n <= 4) {
+        // Квадратная колония
+        const spacing = 18;
+        const coords = [
+          { ox: -spacing, oy: -spacing, type: 'head' },
+          { ox: spacing, oy: -spacing, type: 'head' },
+          { ox: -spacing, oy: spacing, type: 'tail' },
+          { ox: spacing, oy: spacing, type: 'tail' }
+        ];
+        for (let i = 0; i < n; i++) {
+          bodyStructure.push({ ...coords[i], r: 18 });
+        }
+      } else {
+        // Линейное червеобразное/членистое тело с головой, сегментами и хвостом
+        const count = n;
+        const step = 26;
+        const startX = -((count - 1) * step) / 2;
+
+        for (let i = 0; i < count; i++) {
+          let type = 'body';
+          let r = 18;
+
+          if (i === 0) {
+            type = 'head';
+            r = 22;
+          } else if (i === count - 1) {
+            type = 'tail';
+            r = 14;
+          } else {
+            // Эллиптическое сужение к хвосту
+            r = 17 + Math.sin((i / count) * Math.PI) * 5;
+          }
+
+          bodyStructure.push({
+            ox: startX + i * step,
+            oy: 0,
+            r: r,
+            type: type,
+            idx: i
+          });
+        }
+      }
+    }
+
+    // --- СТАДИИ ЭВОЛЮЦИИ ---
+    function getStageName() {
+      const b = state.bodyCells;
+      if (b === 1) return '1. Одноклеточное';
+      if (b === 2) return '2. Диплоидная клетка';
+      if (b <= 4) return '3. Первичная колония';
+      if (b <= 8) return '4. Бластула (Полип)';
+      if (b <= 15) return '5. Червеобразное существо';
+      return '6. Развитый Хищный Организм';
+    }
+
+    // --- МАГАЗИН ---
+    function initShop() {
+      const cellContainer = document.getElementById('cellUpgrades');
+      const dnaContainer = document.getElementById('dnaUpgrades');
+      cellContainer.innerHTML = '';
+      dnaContainer.innerHTML = '';
+
+      upgradesData.forEach(upg => {
+        const item = document.createElement('div');
+        item.className = `upgrade-item ${upg.bought ? 'bought' : ''}`;
+        item.id = `upg-${upg.id}`;
+
+        item.innerHTML = `
+          <div class="upgrade-info">
+            <h4>${upg.name}</h4>
+            <p>${upg.desc}</p>
+          </div>
+          <button class="btn-buy ${upg.bought ? 'purchased' : ''}" id="btn-${upg.id}" onclick="buyUpgrade('${upg.id}')">
+            ${upg.bought ? 'Изучено' : `${upg.cost} ${upg.type === 'biomass' ? '🦠' : '🧬'}`}
+          </button>
+        `;
+
+        if (upg.type === 'biomass') cellContainer.appendChild(item);
+        else dnaContainer.appendChild(item);
+      });
+    }
+
+    window.buyUpgrade = function(id) {
+      const upg = upgradesData.find(u => u.id === id);
+      if (!upg || upg.bought) return;
+
+      if (upg.type === 'biomass' && state.biomass >= upg.cost) {
+        state.biomass -= upg.cost;
+        finishBuy(upg);
+      } else if (upg.type === 'dna' && state.dna >= upg.cost) {
+        state.dna -= upg.cost;
+        finishBuy(upg);
+      }
+    };
+
+    function finishBuy(upg) {
+      upg.bought = true;
+      upg.effect();
+      const item = document.getElementById(`upg-${upg.id}`);
+      const btn = document.getElementById(`btn-${upg.id}`);
+      item.classList.add('bought');
+      btn.classList.add('purchased');
+      btn.textContent = 'Изучено';
+      btn.disabled = true;
+      updateUI();
+    }
+
+    // --- КНОПКИ ДЕЙСТВИЙ ---
+    document.getElementById('clickBtn').addEventListener('click', (e) => {
+      state.biomass += state.clickPower;
+      pulseCreature();
+      createFloatText(e.clientX, e.clientY, `+${state.clickPower}`);
+      updateUI();
+    });
+
+    document.getElementById('growBodyBtn').addEventListener('click', () => {
+      if (state.biomass >= state.bodyCellCost) {
+        state.biomass -= state.bodyCellCost;
+        state.bodyCellCost = Math.floor(state.bodyCellCost * 1.6);
+        growNewCell();
+        pulseCreature();
+        updateUI();
+      }
+    });
+
+    document.getElementById('synthDnaBtn').addEventListener('click', () => {
+      if (state.biomass >= state.dnaCost) {
+        state.biomass -= state.dnaCost;
+        state.dna += 1;
+        state.dnaCost = Math.floor(state.dnaCost * 1.45);
+        updateUI();
+      }
+    });
+
+    function pulseCreature() {
+      organismAnim.pulse = 1.2;
+    }
+
+    function createFloatText(x, y, text) {
+      const el = document.createElement('div');
+      el.className = 'floating-text';
+      el.textContent = text;
+      el.style.left = `${x - 15}px`;
+      el.style.top = `${y - 25}px`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 800);
+    }
+
+    function updateUI() {
+      document.getElementById('cellsCount').textContent = Math.floor(state.biomass).toLocaleString();
+      document.getElementById('bodyCellsCount').textContent = state.bodyCells;
+      document.getElementById('dnaCount').textContent = state.dna;
+      document.getElementById('passiveIncome').textContent = `+${state.passiveBiomass}/с`;
+      document.getElementById('clickPowerText').textContent = `+${state.clickPower} биомассы`;
+      
+      document.getElementById('bodyCostText').textContent = `Цена: ${state.bodyCellCost} биом.`;
+      document.getElementById('dnaCostText').textContent = `Цена: ${state.dnaCost} биом.`;
+      document.getElementById('stageBadge').textContent = getStageName();
+
+      document.getElementById('growBodyBtn').disabled = state.biomass < state.bodyCellCost;
+      document.getElementById('synthDnaBtn').disabled = state.biomass < state.dnaCost;
+
+      upgradesData.forEach(upg => {
+        if (!upg.bought) {
+          const btn = document.getElementById(`btn-${upg.id}`);
+          if (btn) {
+            btn.disabled = upg.type === 'biomass' ? state.biomass < upg.cost : state.dna < upg.cost;
+          }
+        }
+      });
+    }
+
+    // Игровой цикл
+    setInterval(() => {
+      if (state.passiveBiomass > 0) {
+        state.biomass += state.passiveBiomass / 10;
+        updateUI();
+      }
+    }, 100);
+
+    // ==========================================
+    // --- CANVAS АНИМАЦИЯ МНОГОКЛЕТОЧНОГО СУЩЕСТВА ---
+    // ==========================================
+    const canvas = document.getElementById('bioCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const organismAnim = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      angle: 0,
+      pulse: 1
+    };
+
+    function render(time) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Плавное движение существа в воде
+      const t = time * 0.002;
+      organismAnim.x = canvas.width / 2 + Math.sin(t * 0.7) * 40;
+      organismAnim.y = canvas.height / 2 + Math.cos(t * 0.5) * 25;
+      organismAnim.pulse += (1 - organismAnim.pulse) * 0.1;
+
+      ctx.save();
+      ctx.translate(organismAnim.x, organismAnim.y);
+
+      // Легкий волнообразный поворот
+      const wiggle = Math.sin(t * 1.5) * 0.1;
+      ctx.rotate(wiggle);
+
+      // 1. Отрисовка соединенных связок между клетками
+      if (bodyStructure.length > 1) {
+        ctx.strokeStyle = hasTrait('chitin') ? '#64748b' : 'rgba(56, 189, 248, 0.4)';
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        for (let i = 0; i < bodyStructure.length; i++) {
+          const cell = bodyStructure[i];
+          const waveY = Math.sin(t * 2 + i * 0.6) * 4;
+          if (i === 0) ctx.moveTo(cell.ox, cell.oy + waveY);
+          else ctx.lineTo(cell.ox, cell.oy + waveY);
+        }
+        ctx.stroke();
+      }
+
+      // 2. Отрисовка каждой отдельной клетки
+      bodyStructure.forEach((cell, idx) => {
+        const cellWaveY = Math.sin(t * 2 + idx * 0.6) * 4;
+        const cx = cell.ox;
+        const cy = cell.oy + cellWaveY;
+        const r = cell.r * organismAnim.pulse;
+
+        // --- ОРГАН: Крылья (Класс Летающие/Плавники) ---
+        if (hasTrait('wings') && (cell.type === 'core' || idx === Math.floor(bodyStructure.length / 2))) {
+          const wingFlap = Math.sin(t * 4) * 8;
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.3)';
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 2;
+          
+          // Верхнее крыло
+          ctx.beginPath();
+          ctx.ellipse(cx, cy - r - 12, 14, 25 + wingFlap, 0, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+
+          // Нижнее крыло
+          ctx.beginPath();
+          ctx.ellipse(cx, cy + r + 12, 14, 25 - wingFlap, 0, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+        }
+
+        // --- ОРГАН: Щупальца на боковых клетках ---
+        if (hasTrait('tentacles') && idx % 2 === 1) {
+          ctx.strokeStyle = 'rgba(168, 85, 247, 0.8)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy + r);
+          ctx.quadraticCurveTo(cx + Math.sin(t * 3 + idx) * 15, cy + r + 20, cx, cy + r + 35);
+          ctx.stroke();
+        }
+
+        // --- ОРГАН: Хвостовой жгутик (на последней клетке) ---
+        if (hasTrait('flagella') && (cell.type === 'tail' || idx === bodyStructure.length - 1)) {
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(cx + r, cy);
+          const wave = Math.sin(t * 5) * 15;
+          ctx.bezierCurveTo(cx + r + 20, cy - 10, cx + r + 35, cy + wave, cx + r + 50, cy + wave);
+          ctx.stroke();
+        }
+
+        // --- КЛЕТОЧНАЯ МЕМБРАНА И ТЕЛО ---
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+
+        if (hasTrait('chitin')) {
+          ctx.fillStyle = '#334155';
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 3;
+        } else if (hasTrait('chloroplast')) {
+          ctx.fillStyle = 'rgba(34, 197, 94, 0.85)';
+          ctx.strokeStyle = '#86efac';
+          ctx.lineWidth = 2.5;
+        } else {
+          ctx.fillStyle = 'rgba(14, 165, 233, 0.75)';
+          ctx.strokeStyle = '#7dd3fc';
+          ctx.lineWidth = 2;
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        // Ядро клетки
+        ctx.beginPath();
+        ctx.arc(cx - 2, cy - 2, r * 0.35, 0, Math.PI * 2);
+        ctx.fillStyle = hasTrait('chitin') ? '#1e293b' : (hasTrait('chloroplast') ? '#15803d' : '#0369a1');
+        ctx.fill();
+
+        // --- ОРГАН: Глаза (на первой / головной клетке) ---
+        if (hasTrait('eyes') && (cell.type === 'head' || idx === 0)) {
+          ctx.fillStyle = '#fff';
+          ctx.beginPath();
+          ctx.arc(cx - 4, cy - 6, 5, 0, Math.PI * 2);
+          ctx.arc(cx - 4, cy + 6, 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Зрачки смотрят вперед
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath();
+          ctx.arc(cx - 6, cy - 6, 2.5, 0, Math.PI * 2);
+          ctx.arc(cx - 6, cy + 6, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // --- ОРГАН: Челюсти / Жвалы ---
+        if (hasTrait('mandibles') && (cell.type === 'head' || idx === 0)) {
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 3;
+          const bite = Math.sin(t * 4) * 4;
+          // Верхняя жвала
+          ctx.beginPath();
+          ctx.moveTo(cx - r, cy - 8);
+          ctx.lineTo(cx - r - 12, cy - 12 + bite);
+          ctx.stroke();
+          // Нижняя жвала
+          ctx.beginPath();
+          ctx.moveTo(cx - r, cy + 8);
+          ctx.lineTo(cx - r - 12, cy + 12 - bite);
+          ctx.stroke();
+        }
+      });
+
+      ctx.restore();
+      requestAnimationFrame(render);
+    }
+
+    // Запуск
+    rebuildBodyAnatomy();
+    initShop();
+    updateUI();
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>

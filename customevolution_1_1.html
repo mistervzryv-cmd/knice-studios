@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Custom Evolution: Органический Морфогенез</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: #050811;
+      color: #e2e8f0;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Левая панель: Интерактивный Аквариум/Мир */
+    .viewport-panel {
+      flex: 1.35;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: radial-gradient(circle at center, #0f1c38 0%, #03060f 100%);
+      position: relative;
+      border-right: 2px solid #1e293b;
+    }
+
+    .top-stats {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .stat-badge { display: flex; flex-direction: column; gap: 2px; }
+    .stat-cells { color: #38bdf8; }
+    .stat-body { color: #4ade80; }
+    .stat-dna { color: #c084fc; }
+    .stat-rate { color: #f59e0b; }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      max-width: 620px;
+      height: 420px;
+      cursor: crosshair;
+    }
+
+    #bioCanvas {
+      width: 100%;
+      height: 100%;
+      background: rgba(2, 6, 23, 0.75);
+      border-radius: 20px;
+      border: 1px solid #1e293b;
+      box-shadow: inset 0 0 50px rgba(56, 189, 248, 0.04);
+      display: block;
+    }
+
+    .era-overlay {
+      position: absolute;
+      top: 12px;
+      left: 16px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid #38bdf8;
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #38bdf8;
+      pointer-events: none;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+    }
+
+    .controls-hint {
+      position: absolute;
+      bottom: 12px;
+      left: 16px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 4px 12px;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      pointer-events: none;
+    }
+
+    .action-controls {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 620px;
+    }
+
+    .btn-main {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .btn-main:active { transform: scale(0.97); }
+
+    .btn-feed {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+    .btn-feed:hover { background: linear-gradient(135deg, #38bdf8, #0284c7); }
+
+    .btn-body-grow {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+    }
+    .btn-body-grow:hover:not(:disabled) { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .btn-body-grow:disabled { background: #1e293b; color: #64748b; cursor: not-allowed; box-shadow: none; }
+
+    .btn-dna {
+      background: linear-gradient(135deg, #7e22ce, #6b21a8);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(126, 34, 206, 0.3);
+    }
+    .btn-dna:hover:not(:disabled) { background: linear-gradient(135deg, #a855f7, #7e22ce); }
+    .btn-dna:disabled { background: #1e293b; color: #64748b; cursor: not-allowed; box-shadow: none; }
+
+    /* Правая панель */
+    .shop-panel {
+      flex: 1.15;
+      display: flex;
+      flex-direction: column;
+      background: #0b1120;
+      overflow-y: auto;
+      padding: 16px 20px;
+      gap: 14px;
+    }
+
+    .shop-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #f8fafc;
+      border-bottom: 2px solid #1e293b;
+      padding-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .archetype-selector-card {
+      background: linear-gradient(135deg, #1e1b4b, #0f172a);
+      border: 1px solid #6366f1;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .archetype-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .btn-archetype {
+      background: #0f172a;
+      border: 1px solid #334155;
+      padding: 8px;
+      border-radius: 8px;
+      color: #cbd5e1;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .btn-archetype:hover {
+      border-color: #a855f7;
+      background: #1e1b4b;
+    }
+
+    .btn-archetype.active {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.2);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    }
+
+    /* Выбор покровов (Кожа / Панцирь / Перья / Чешуя) */
+    .skin-selector {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .btn-skin {
+      flex: 1;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      padding: 5px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .btn-skin.active {
+      background: #0284c7;
+      color: #fff;
+      border-color: #38bdf8;
+    }
+
+    .tabs-header {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 6px;
+    }
+
+    .tab-btn {
+      background: #1e293b;
+      border: none;
+      color: #94a3b8;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: #0284c7;
+      color: #fff;
+    }
+
+    .category-card {
+      background: #131d33;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #1e293b;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .category-header {
+      font-weight: 700;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .upgrade-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .upgrade-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0a0f1d;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+      gap: 8px;
+    }
+
+    .upgrade-item.bought {
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.05);
+    }
+
+    .upgrade-info h4 {
+      font-size: 0.84rem;
+      color: #f1f5f9;
+      margin-bottom: 1px;
+    }
+
+    .upgrade-info p {
+      font-size: 0.7rem;
+      color: #64748b;
+    }
+
+    .btn-buy {
+      background: #38bdf8;
+      color: #0f172a;
+      border: none;
+      padding: 5px 9px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-buy:hover:not(:disabled) {
+      background: #7dd3fc;
+      transform: translateY(-1px);
+    }
+
+    .btn-buy:disabled {
+      background: #1e293b;
+      color: #475569;
+      cursor: not-allowed;
+    }
+
+    .btn-buy.purchased {
+      background: #22c55e;
+      color: #fff;
+      cursor: default;
+    }
+
+    .floating-text {
+      position: absolute;
+      font-weight: bold;
+      color: #38bdf8;
+      pointer-events: none;
+      animation: floatUp 0.8s ease-out forwards;
+      z-index: 100;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-35px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="viewport-panel">
+    <div class="top-stats">
+      <div class="stat-badge stat-cells">
+        <span>Биомасса</span>
+        <span id="cellsCount">1</span>
+      </div>
+      <div class="stat-badge stat-body">
+        <span>Клетки тела</span>
+        <span id="bodyCellsCount">1</span>
+      </div>
+      <div class="stat-badge stat-dna">
+        <span>ДНК</span>
+        <span id="dnaCount">0</span>
+      </div>
+      <div class="stat-badge stat-rate">
+        <span>Синтез</span>
+        <span id="passiveIncome">0/с</span>
+      </div>
+    </div>
+
+    <div class="canvas-container" id="canvasContainer">
+      <canvas id="bioCanvas" width="620" height="420"></canvas>
+      <div class="era-overlay" id="eraOverlay">Эра 1: Одноклеточное</div>
+      <div class="controls-hint">💡 Двигай курсором мыши или [WASD], чтобы управлять существом</div>
+    </div>
+
+    <div class="action-controls">
+      <button class="btn-main btn-feed" id="clickBtn">
+        <span>Питание (Клик/Охота)</span>
+        <small id="clickPowerText">+1 Биомасса</small>
+      </button>
+
+      <button class="btn-main btn-body-grow" id="growBodyBtn">
+        <span>+1 Клетка Тела (Морфогенез)</span>
+        <small id="bodyCostText">Цена: 10 биомассы</small>
+      </button>
+
+      <button class="btn-main btn-dna" id="synthDnaBtn" disabled>
+        <span>Мутация (+1 🧬)</span>
+        <small id="dnaCostText">Цена: 25 биомассы</small>
+      </button>
+    </div>
+  </div>
+
+  <div class="shop-panel">
+    <div class="shop-title">
+      <span>Генетическая Студия</span>
+      <button id="resetBtn" style="background:transparent; border:1px solid #475569; color:#64748b; padding:2px 8px; border-radius:6px; font-size:0.7rem; cursor:pointer;">Сброс</button>
+    </div>
+
+    <!-- Кастомизация существа: Классы & Покровы -->
+    <div class="archetype-selector-card" id="archetypeCard">
+      <div style="font-weight: 700; color: #c084fc; font-size: 0.78rem;">🧬 Ветка Эволюции: Класс существа</div>
+      <div class="archetype-grid">
+        <button class="btn-archetype active" onclick="setArchetype('insect')">🐛 Членистоногое / Богомол</button>
+        <button class="btn-archetype" onclick="setArchetype('reptile')">🦎 Дракон / Василиск</button>
+        <button class="btn-archetype" onclick="setArchetype('beast')">🐺 Хищный Кот / Зверь</button>
+        <button class="btn-archetype" onclick="setArchetype('aquatic')">🐙 Глубоководный Кракен</button>
+        <button class="btn-archetype" onclick="setArchetype('avian')">🦅 Птицеящер / Грифон</button>
+        <button class="btn-archetype" onclick="setArchetype('alien')">👾 Био-Ксеноморф</button>
+      </div>
+
+      <div style="font-weight: 700; color: #38bdf8; font-size: 0.75rem; margin-top: 4px;">🛡️ Текстура / Покров:</div>
+      <div class="skin-selector">
+        <button class="btn-skin active" onclick="setSkin('smooth')">Кожа</button>
+        <button class="btn-skin" onclick="setSkin('chitin')">Хитин</button>
+        <button class="btn-skin" onclick="setSkin('scales')">Чешуя</button>
+        <button class="btn-skin" onclick="setSkin('fur')">Шерсть</button>
+      </div>
+    </div>
+
+    <div class="tabs-header">
+      <button class="tab-btn active" onclick="switchTab('cells')">Метаболизм (Биомасса)</button>
+      <button class="tab-btn" onclick="switchTab('dna')">Органы & Мутации (ДНК)</button>
+    </div>
+
+    <div id="tabCells" class="category-card">
+      <div class="category-header">Клеточные органеллы</div>
+      <div class="upgrade-grid" id="cellUpgrades"></div>
+    </div>
+
+    <div id="tabDna" class="category-card" style="display: none;">
+      <div class="category-header">Органы, Конечности & Оружие</div>
+      <div class="upgrade-grid" id="dnaUpgrades"></div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      biomass: 1,
+      bodyCells: 1,
+      bodyCellCost: 10,
+      dna: 0,
+      dnaCost: 25,
+      clickPower: 1,
+      passiveBiomass: 0,
+      archetype: 'insect',
+      skin: 'smooth',
+      upgrades: {}
+    };
+
+    const upgradesData = [
+      { id: 'mitochondria', tab: 'cells', name: 'Митохондрии', desc: '+1 биомасса за клик', cost: 12, type: 'biomass', effect: () => state.clickPower += 1, bought: false },
+      { id: 'cilia', tab: 'cells', name: 'Реснички-фильтраторы', desc: 'Авто-поглощение: +2/сек', cost: 40, type: 'biomass', effect: () => state.passiveBiomass += 2, bought: false },
+      { id: 'chloroplast', tab: 'cells', name: 'Хлоропласты (Симбиоз)', desc: 'Пассивный синтез: +10/сек', cost: 140, type: 'biomass', trait: 'chloroplast', effect: () => state.passiveBiomass += 10, bought: false },
+      { id: 'muscles', tab: 'cells', name: 'Мускульные волокна', desc: 'Скорость и мощь: +35/сек, +8 клик', cost: 450, type: 'biomass', effect: () => { state.passiveBiomass += 35; state.clickPower += 8; }, bought: false },
+      { id: 'brain', tab: 'cells', name: 'Развитый Мозг', desc: '+120/сек, +25 клик', cost: 1800, type: 'biomass', effect: () => { state.passiveBiomass += 120; state.clickPower += 25; }, bought: false },
+
+      // ДНК Мутации
+      { id: 'eyes', tab: 'dna', name: 'Глаза с ночным зрением', desc: 'Охотничий взор (+10 к клику)', cost: 1, type: 'dna', trait: 'eyes', effect: () => state.clickPower += 10, bought: false },
+      { id: 'antennae', tab: 'dna', name: 'Усики-локаторы / Рога', desc: 'Чувствует питательные вещества (+20/с)', cost: 2, type: 'dna', trait: 'antennae', effect: () => state.passiveBiomass += 20, bought: false },
+      { id: 'legs', tab: 'dna', name: 'Бегающие Лапы / Конечности', desc: 'Активное перемещение (+45/с)', cost: 5, type: 'dna', trait: 'legs', effect: () => state.passiveBiomass += 45, bought: false },
+      { id: 'mandibles', tab: 'dna', name: 'Челюсти / Клыки / Жвалы', desc: 'Укус хищника (+70 к клику)', cost: 10, type: 'dna', trait: 'mandibles', effect: () => state.clickPower += 70, bought: false },
+      { id: 'tail', tab: 'dna', name: 'Хлыстовой Хвост с шипом', desc: 'Хвостовой плавник / жало (+90/с)', cost: 15, type: 'dna', trait: 'tail', effect: () => state.passiveBiomass += 90, bought: false },
+      { id: 'wings', tab: 'dna', name: 'Крылья / Птериготы', desc: 'Полет над миром (+250/с, +100 клик)', cost: 25, type: 'dna', trait: 'wings', effect: () => { state.passiveBiomass += 250; state.clickPower += 100; }, bought: false },
+      { id: 'bioluminescence', tab: 'dna', name: 'Биолюминесценция & Яд', desc: 'Светящиеся железы (+600/с, +200 клик)', cost: 45, type: 'dna', trait: 'glow', effect: () => { state.passiveBiomass += 600; state.clickPower += 200; }, bought: false }
+    ];
+
+    function hasTrait(id) {
+      const upg = upgradesData.find(u => u.id === id);
+      return upg ? upg.bought : false;
+    }
+
+    function getEra() {
+      const c = state.bodyCells;
+      if (c === 1) return 'Эра 1: Одноклеточный Микроб';
+      if (c <= 3) return 'Эра 2: Клеточная Колония';
+      if (c <= 6) return 'Эра 3: Личинка (Слияние в ткани)';
+      if (c <= 12) return 'Эра 4: Органическое Тело с Кожей';
+      return 'Эра 5: Совершенное Кастомное Животное';
+    }
+
+    window.setArchetype = function(type) {
+      state.archetype = type;
+      document.querySelectorAll('.btn-archetype').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    };
+
+    window.setSkin = function(skin) {
+      state.skin = skin;
+      document.querySelectorAll('.btn-skin').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    };
+
+    window.switchTab = function(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tabCells').style.display = tab === 'cells' ? 'flex' : 'none';
+      document.getElementById('tabDna').style.display = tab === 'dna' ? 'flex' : 'none';
+    };
+
+    function initShop() {
+      const cellContainer = document.getElementById('cellUpgrades');
+      const dnaContainer = document.getElementById('dnaUpgrades');
+      cellContainer.innerHTML = '';
+      dnaContainer.innerHTML = '';
+
+      upgradesData.forEach(upg => {
+        const item = document.createElement('div');
+        item.className = `upgrade-item ${upg.bought ? 'bought' : ''}`;
+        item.id = `upg-${upg.id}`;
+
+        item.innerHTML = `
+          <div class="upgrade-info">
+            <h4>${upg.name}</h4>
+            <p>${upg.desc}</p>
+          </div>
+          <button class="btn-buy ${upg.bought ? 'purchased' : ''}" id="btn-${upg.id}" onclick="buyUpgrade('${upg.id}')">
+            ${upg.bought ? 'Изучено' : `${upg.cost} ${upg.type === 'biomass' ? '🦠' : '🧬'}`}
+          </button>
+        `;
+
+        if (upg.tab === 'cells') cellContainer.appendChild(item);
+        else dnaContainer.appendChild(item);
+      });
+    }
+
+    window.buyUpgrade = function(id) {
+      const upg = upgradesData.find(u => u.id === id);
+      if (!upg || upg.bought) return;
+
+      if (upg.type === 'biomass' && state.biomass >= upg.cost) {
+        state.biomass -= upg.cost;
+        finishBuy(upg);
+      } else if (upg.type === 'dna' && state.dna >= upg.cost) {
+        state.dna -= upg.cost;
+        finishBuy(upg);
+      }
+    };
+
+    function finishBuy(upg) {
+      upg.bought = true;
+      upg.effect();
+      const item = document.getElementById(`upg-${upg.id}`);
+      const btn = document.getElementById(`btn-${upg.id}`);
+      item.classList.add('bought');
+      btn.classList.add('purchased');
+      btn.textContent = 'Изучено';
+      btn.disabled = true;
+      updateUI();
+    }
+
+    // --- КНОПКИ ДЕЙСТВИЙ ---
+    document.getElementById('clickBtn').addEventListener('click', (e) => {
+      feedCreature(e.clientX, e.clientY);
+    });
+
+    function feedCreature(x, y) {
+      state.biomass += state.clickPower;
+      playerCreature.pulse = 1.25;
+      createFloatText(x || (window.innerWidth / 3), y || (window.innerHeight / 2), `+${state.clickPower}`);
+      updateUI();
+    }
+
+    document.getElementById('growBodyBtn').addEventListener('click', () => {
+      if (state.biomass >= state.bodyCellCost) {
+        state.biomass -= state.bodyCellCost;
+        state.bodyCellCost = Math.floor(state.bodyCellCost * 1.5);
+        state.bodyCells += 1;
+        initSpineSegments();
+        playerCreature.pulse = 1.35;
+        updateUI();
+      }
+    });
+
+    document.getElementById('synthDnaBtn').addEventListener('click', () => {
+      if (state.biomass >= state.dnaCost) {
+        state.biomass -= state.dnaCost;
+        state.dna += 1;
+        state.dnaCost = Math.floor(state.dnaCost * 1.4);
+        updateUI();
+      }
+    });
+
+    function createFloatText(x, y, text) {
+      const el = document.createElement('div');
+      el.className = 'floating-text';
+      el.textContent = text;
+      el.style.left = `${x - 15}px`;
+      el.style.top = `${y - 25}px`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 800);
+    }
+
+    function updateUI() {
+      document.getElementById('cellsCount').textContent = Math.floor(state.biomass).toLocaleString();
+      document.getElementById('bodyCellsCount').textContent = state.bodyCells;
+      document.getElementById('dnaCount').textContent = state.dna;
+      document.getElementById('passiveIncome').textContent = `+${state.passiveBiomass}/с`;
+      document.getElementById('clickPowerText').textContent = `+${state.clickPower} биомассы`;
+      
+      document.getElementById('bodyCostText').textContent = `Цена: ${state.bodyCellCost} биом.`;
+      document.getElementById('dnaCostText').textContent = `Цена: ${state.dnaCost} биом.`;
+      document.getElementById('eraOverlay').textContent = getEra();
+
+      document.getElementById('growBodyBtn').disabled = state.biomass < state.bodyCellCost;
+      document.getElementById('synthDnaBtn').disabled = state.biomass < state.dnaCost;
+
+      upgradesData.forEach(upg => {
+        if (!upg.bought) {
+          const btn = document.getElementById(`btn-${upg.id}`);
+          if (btn) {
+            btn.disabled = upg.type === 'biomass' ? state.biomass < upg.cost : state.dna < upg.cost;
+          }
+        }
+      });
+    }
+
+    setInterval(() => {
+      if (state.passiveBiomass > 0) {
+        state.biomass += state.passiveBiomass / 10;
+        updateUI();
+      }
+    }, 100);
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (confirm('Сбросить весь эволюционный прогресс?')) location.reload();
+    });
+
+    // ==============================================================
+    // --- ПЛАВАЮЩИЙ ПЛАНКТОН / ЕДА ДЛЯ ОХОТЫ И УПРАВЛЕНИЕ ---
+    // ==============================================================
+    const canvas = document.getElementById('bioCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const foodParticles = [];
+    for (let i = 0; i < 18; i++) {
+      foodParticles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: 3 + Math.random() * 3,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5
+      });
+    }
+
+    // Позвоночник для IK (Инверсной кинематики)
+    const spine = [];
+    const segmentLength = 14;
+
+    function initSpineSegments() {
+      const count = Math.max(1, state.bodyCells);
+      while (spine.length < count) {
+        const last = spine[spine.length - 1] || { x: canvas.width / 2, y: canvas.height / 2, angle: 0 };
+        spine.push({ x: last.x - segmentLength, y: last.y, angle: 0 });
+      }
+    }
+
+    const playerCreature = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      targetX: canvas.width / 2,
+      targetY: canvas.height / 2,
+      vx: 0,
+      vy: 0,
+      angle: 0,
+      pulse: 1,
+      speed: 3.5
+    };
+
+    // Управление мышью
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      playerCreature.targetX = (e.clientX - rect.left) * (canvas.width / rect.width);
+      playerCreature.targetY = (e.clientY - rect.top) * (canvas.height / rect.height);
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      feedCreature(e.clientX, e.clientY);
+    });
+
+    // Управление WASD
+    const keys = {};
+    window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+    window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+    // ==============================================================
+    // --- ГЛАВНЫЙ РЕНДЕР ОРГАНИЧЕСКОГО ТЕЛА (SKIN MESHING) ---
+    // ==============================================================
+    function render(time) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const t = time * 0.002;
+
+      // 1. WASD перемещение цели
+      if (keys['w'] || keys['arrowup']) playerCreature.targetY -= playerCreature.speed * 1.5;
+      if (keys['s'] || keys['arrowdown']) playerCreature.targetY += playerCreature.speed * 1.5;
+      if (keys['a'] || keys['arrowleft']) playerCreature.targetX -= playerCreature.speed * 1.5;
+      if (keys['d'] || keys['arrowright']) playerCreature.targetX += playerCreature.speed * 1.5;
+
+      // Ограничение границ
+      playerCreature.targetX = Math.max(30, Math.min(canvas.width - 30, playerCreature.targetX));
+      playerCreature.targetY = Math.max(30, Math.min(canvas.height - 30, playerCreature.targetY));
+
+      // 2. Движение головы к цели
+      const dx = playerCreature.targetX - playerCreature.x;
+      const dy = playerCreature.targetY - playerCreature.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist > 4) {
+        playerCreature.angle = Math.atan2(dy, dx);
+        playerCreature.x += Math.cos(playerCreature.angle) * Math.min(dist * 0.08, playerCreature.speed);
+        playerCreature.y += Math.sin(playerCreature.angle) * Math.min(dist * 0.08, playerCreature.speed);
+      }
+      playerCreature.pulse += (1 - playerCreature.pulse) * 0.08;
+
+      // 3. Обновление планктона (еды)
+      foodParticles.forEach((f) => {
+        f.x += f.vx; f.y += f.vy;
+        if (f.x < 10 || f.x > canvas.width - 10) f.vx *= -1;
+        if (f.y < 10 || f.y > canvas.height - 10) f.vy *= -1;
+
+        // Поедание
+        const foodDist = Math.hypot(playerCreature.x - f.x, playerCreature.y - f.y);
+        if (foodDist < 25) {
+          f.x = Math.random() * canvas.width;
+          f.y = Math.random() * canvas.height;
+          state.biomass += state.clickPower * 0.5;
+          playerCreature.pulse = 1.2;
+          updateUI();
+        }
+
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.6)';
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // 4. Расчет позвоночника (Инверсная кинематика тела)
+      spine[0] = { x: playerCreature.x, y: playerCreature.y, angle: playerCreature.angle };
+      for (let i = 1; i < spine.length; i++) {
+        const prev = spine[i - 1];
+        const cur = spine[i];
+        const segDx = cur.x - prev.x;
+        const segDy = cur.y - prev.y;
+        const segAngle = Math.atan2(segDy, segDx);
+        cur.angle = segAngle;
+        cur.x = prev.x + Math.cos(segAngle) * segmentLength;
+        cur.y = prev.y + Math.sin(segAngle) * segmentLength;
+      }
+
+      // 5. Определение цвета и текстуры кожи по Архетипу
+      let skinColor = '#0ea5e9';
+      let skinStroke = '#38bdf8';
+      let eyeColor = '#ffffff';
+
+      const archColors = {
+        insect: { fill: '#d97706', stroke: '#fbbf24', eye: '#ef4444' },
+        reptile: { fill: '#16a34a', stroke: '#4ade80', eye: '#facc15' },
+        beast: { fill: '#92400e', stroke: '#f59e0b', eye: '#38bdf8' },
+        aquatic: { fill: '#7c3aed', stroke: '#c084fc', eye: '#a855f7' },
+        avian: { fill: '#dc2626', stroke: '#f87171', eye: '#ffffff' },
+        alien: { fill: '#059669', stroke: '#34d399', eye: '#a855f7' }
+      };
+
+      if (archColors[state.archetype]) {
+        skinColor = archColors[state.archetype].fill;
+        skinStroke = archColors[state.archetype].stroke;
+        eyeColor = archColors[state.archetype].eye;
+      }
+
+      if (hasTrait('chloroplast')) {
+        skinColor = '#15803d';
+        skinStroke = '#86efac';
+      }
+
+      // ==============================================================
+      // --- РЕНДЕР: МИКРОБ (1-3 КЛЕТКИ) vs ОРГАНИЧЕСКАЯ КОЖА (4+ КЛЕТОК) ---
+      // ==============================================================
+      const numCells = state.bodyCells;
+
+      if (numCells < 4) {
+        // РЕЖИМ 1: Одноклеточное / Первичные отдельные клетки
+        spine.forEach((seg, idx) => {
+          const r = (24 - idx * 4) * playerCreature.pulse;
+          ctx.save();
+          ctx.translate(seg.x, seg.y);
+          ctx.beginPath();
+          ctx.arc(0, 0, Math.max(10, r), 0, Math.PI * 2);
+          ctx.fillStyle = skinColor + 'bb';
+          ctx.strokeStyle = skinStroke;
+          ctx.lineWidth = 3;
+          ctx.fill();
+          ctx.stroke();
+
+          // Ядро
+          ctx.beginPath();
+          ctx.arc(-2, -2, r * 0.35, 0, Math.PI * 2);
+          ctx.fillStyle = '#0f172a';
+          ctx.fill();
+          ctx.restore();
+        });
+      } else {
+        // РЕЖИМ 2: СПЛОШНАЯ ОРГАНИЧЕСКАЯ КОЖА (Smooth Skin Polygon Mesh)
+        // Строим огибающий контур по левой и правой стороне позвоночника
+        const leftPoints = [];
+        const rightPoints = [];
+
+        for (let i = 0; i < spine.length; i++) {
+          const seg = spine[i];
+          // Радиус тела плавно сужается от груди к хвосту
+          let radius = 18;
+          if (i === 0) radius = 22; // Голова
+          else if (i < spine.length * 0.4) radius = 24; // Грудная клетка
+          else radius = Math.max(6, 24 * (1 - (i / spine.length))); // Сужение к хвосту
+
+          radius *= playerCreature.pulse;
+
+          // Перпендикулярные векторы к позвоночнику для построения кожи
+          const normalAngle = seg.angle + Math.PI / 2;
+          leftPoints.push({
+            x: seg.x + Math.cos(normalAngle) * radius,
+            y: seg.y + Math.sin(normalAngle) * radius
+          });
+          rightPoints.push({
+            x: seg.x - Math.cos(normalAngle) * radius,
+            y: seg.y - Math.sin(normalAngle) * radius
+          });
+        }
+
+        // --- ЛАПЫ / ПЕРЕДВИЖЕНИЕ (Рисуются под телом) ---
+        if (hasTrait('legs') && spine.length >= 3) {
+          ctx.strokeStyle = skinStroke;
+          ctx.lineWidth = state.skin === 'chitin' ? 4 : 3;
+
+          for (let i = 2; i < spine.length - 1; i += 2) {
+            const seg = spine[i];
+            const legWalk = Math.sin(t * 8 + i) * 14;
+            const norm = seg.angle + Math.PI / 2;
+
+            // Левая лапа
+            ctx.beginPath();
+            ctx.moveTo(seg.x, seg.y);
+            const lx1 = seg.x + Math.cos(norm) * 25 + legWalk;
+            const ly1 = seg.y + Math.sin(norm) * 25;
+            ctx.lineTo(lx1, ly1);
+            ctx.lineTo(lx1 + Math.cos(norm) * 15, ly1 + Math.sin(norm) * 15);
+            ctx.stroke();
+
+            // Правая лапа
+            ctx.beginPath();
+            ctx.moveTo(seg.x, seg.y);
+            const rx1 = seg.x - Math.cos(norm) * 25 - legWalk;
+            const ry1 = seg.y - Math.sin(norm) * 25;
+            ctx.lineTo(rx1, ry1);
+            ctx.lineTo(rx1 - Math.cos(norm) * 15, ry1 - Math.sin(norm) * 15);
+            ctx.stroke();
+          }
+        }
+
+        // --- ОТРИСОВКА ОРГАНИЧЕСКОЙ КОЖИ (Контур) ---
+        ctx.beginPath();
+        // Начинаем с носа головы
+        const head = spine[0];
+        const headNose = {
+          x: head.x + Math.cos(head.angle) * 24,
+          y: head.y + Math.sin(head.angle) * 24
+        };
+        ctx.moveTo(headNose.x, headNose.y);
+
+        // Левая сторона
+        for (let i = 0; i < leftPoints.length; i++) {
+          ctx.lineTo(leftPoints[i].x, leftPoints[i].y);
+        }
+
+        // Хвост (кончик)
+        const tail = spine[spine.length - 1];
+        ctx.lineTo(tail.x, tail.y);
+
+        // Правая сторона в обратном порядке
+        for (let i = rightPoints.length - 1; i >= 0; i--) {
+          ctx.lineTo(rightPoints[i].x, rightPoints[i].y);
+        }
+
+        ctx.closePath();
+
+        // Наложение текстуры кожи
+        ctx.fillStyle = skinColor;
+        ctx.fill();
+
+        ctx.strokeStyle = skinStroke;
+        ctx.lineWidth = state.skin === 'chitin' ? 4 : (state.skin === 'scales' ? 3 : 2);
+        if (state.skin === 'fur') {
+          ctx.setLineDash([4, 3]); // Эффект шерсти
+        } else {
+          ctx.setLineDash([]);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]); // reset
+
+        // Сегментные полосы панциря/чешуи по хребту
+        if (state.skin === 'chitin' || state.skin === 'scales') {
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+          ctx.lineWidth = 2;
+          for (let i = 1; i < leftPoints.length; i += 2) {
+            ctx.beginPath();
+            ctx.moveTo(leftPoints[i].x, leftPoints[i].y);
+            ctx.lineTo(rightPoints[i].x, rightPoints[i].y);
+            ctx.stroke();
+          }
+        }
+
+        // Биолюминесцентная полоса вдоль позвоночника
+        if (hasTrait('glow')) {
+          ctx.strokeStyle = '#d8b4fe';
+          ctx.lineWidth = 4;
+          ctx.shadowColor = '#c084fc';
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          for (let i = 0; i < spine.length; i++) {
+            if (i === 0) ctx.moveTo(spine[i].x, spine[i].y);
+            else ctx.lineTo(spine[i].x, spine[i].y);
+          }
+          ctx.stroke();
+          ctx.shadowBlur = 0; // reset
+        }
+      }
+
+      // ==============================================================
+      // --- ГОЛОВА, КРЫЛЬЯ, ХВОСТ И ОРГАНЫ ---
+      // ==============================================================
+      const headSeg = spine[0];
+      ctx.save();
+      ctx.translate(headSeg.x, headSeg.y);
+      ctx.rotate(headSeg.angle);
+
+      // 1. Глаза на голове
+      if (hasTrait('eyes') || numCells >= 2) {
+        ctx.fillStyle = eyeColor;
+        ctx.beginPath();
+        ctx.arc(8, -10, 5, 0, Math.PI * 2);
+        ctx.arc(8, 10, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Зрачки
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(10, -10, 2.5, 0, Math.PI * 2);
+        ctx.arc(10, 10, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 2. Усики / Рога
+      if (hasTrait('antennae')) {
+        ctx.strokeStyle = skinStroke;
+        ctx.lineWidth = 2.5;
+        const antWiggle = Math.sin(t * 6) * 6;
+        ctx.beginPath();
+        ctx.moveTo(12, -6);
+        ctx.quadraticCurveTo(24, -22 + antWiggle, 36, -26);
+        ctx.moveTo(12, 6);
+        ctx.quadraticCurveTo(24, 22 - antWiggle, 36, 26);
+        ctx.stroke();
+      }
+
+      // 3. Челюсти / Клыки
+      if (hasTrait('mandibles')) {
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 3;
+        const bite = Math.sin(t * 6) * 5;
+        ctx.beginPath();
+        ctx.moveTo(14, -8); ctx.lineTo(26, -14 + bite);
+        ctx.moveTo(14, 8); ctx.lineTo(26, 14 - bite);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+
+      // 4. Крылья (На грудном отделе)
+      if (hasTrait('wings') && spine.length >= 2) {
+        const wingSeg = spine[1];
+        const wingFlap = Math.sin(t * 10) * 0.4;
+
+        ctx.save();
+        ctx.translate(wingSeg.x, wingSeg.y);
+        ctx.rotate(wingSeg.angle);
+
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+        ctx.strokeStyle = skinStroke;
+        ctx.lineWidth = 2;
+
+        // Верхнее крыло
+        ctx.beginPath();
+        ctx.ellipse(0, -32, 14, 34, wingFlap, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+
+        // Нижнее крыло
+        ctx.beginPath();
+        ctx.ellipse(0, 32, 14, 34, -wingFlap, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+
+        ctx.restore();
+      }
+
+      // 5. Хвостовое жало / Плавник
+      if (hasTrait('tail') && spine.length >= 2) {
+        const tailSeg = spine[spine.length - 1];
+        ctx.save();
+        ctx.translate(tailSeg.x, tailSeg.y);
+        ctx.rotate(tailSeg.angle);
+
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-20, -10);
+        ctx.lineTo(-28, 0);
+        ctx.lineTo(-20, 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    initSpineSegments();
+    initShop();
+    updateUI();
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>
