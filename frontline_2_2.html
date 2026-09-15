@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Frontline: Tactical Operations</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0a0e0b;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      user-select: none;
+    }
+    #gameCanvas {
+      display: block;
+      cursor: crosshair;
+    }
+
+    #menu-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: radial-gradient(circle, #18221b 0%, #070a08 90%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      color: #e0ece3;
+    }
+    .menu-title {
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: 5px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.8);
+    }
+    .menu-sub {
+      font-size: 15px;
+      color: #7b9684;
+      margin-bottom: 30px;
+      letter-spacing: 1px;
+    }
+    .class-selection {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 30px;
+    }
+    .class-card {
+      background: rgba(255,255,255,0.03);
+      border: 2px solid #283a2d;
+      border-radius: 8px;
+      padding: 16px;
+      width: 170px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    .class-card:hover, .class-card.active {
+      border-color: #44bd32;
+      background: rgba(68, 189, 50, 0.12);
+      transform: translateY(-3px);
+    }
+    .class-name { font-weight: bold; font-size: 15px; margin-bottom: 6px; color: #fff; }
+    .class-desc { font-size: 12px; color: #8fa895; line-height: 1.4; }
+    .btn-action {
+      background: #2e7d32;
+      color: #fff;
+      border: none;
+      padding: 14px 48px;
+      font-size: 17px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-action:hover { background: #388e3c; transform: scale(1.02); }
+
+    #hud {
+      position: absolute;
+      top: 15px; left: 15px;
+      background: rgba(14, 20, 16, 0.92);
+      backdrop-filter: blur(6px);
+      padding: 14px 18px;
+      border: 1px solid #3d4f40;
+      border-radius: 8px;
+      color: #e0e8e2;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+      z-index: 10;
+      display: none;
+      width: 230px;
+    }
+    .hud-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+      color: #8fa895;
+      text-transform: uppercase;
+    }
+    #minimap {
+      border: 1px solid #4a6350;
+      border-radius: 4px;
+      background: #111713;
+      display: block;
+      margin-bottom: 10px;
+    }
+    .stats { font-size: 12px; display: flex; flex-direction: column; gap: 4px; }
+    .bar-bg { width: 100%; height: 7px; background: #232d26; border-radius: 3px; overflow: hidden; }
+    #hp-bar-fill { height: 100%; width: 100%; background: #4cd137; transition: width 0.1s; }
+    #stamina-bar-fill { height: 100%; width: 100%; background: #e1b12c; transition: width 0.05s; }
+    .tickets-row { display: flex; justify-content: space-between; font-weight: bold; margin-top: 4px; }
+
+    #respawn-screen, #gameover-screen {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      backdrop-filter: blur(5px);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      z-index: 150;
+    }
+    #respawn-screen { background: rgba(100, 15, 15, 0.5); }
+    #gameover-screen { background: rgba(10, 15, 12, 0.9); }
+    .end-title { font-size: 46px; font-weight: 900; letter-spacing: 3px; margin-bottom: 10px; }
+    .stats-summary { font-size: 16px; color: #a4b0be; margin-bottom: 25px; text-align: center; line-height: 1.6; }
+
+    #controls-hint {
+      position: absolute;
+      bottom: 15px; left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 12px;
+      pointer-events: none;
+      background: rgba(0,0,0,0.8);
+      padding: 6px 16px;
+      border-radius: 4px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="menu-overlay">
+  <div class="menu-title">FRONTLINE 1944</div>
+  <div class="menu-sub">ТАКТИКА: УКРЫТИЯ, ИСТОЩЕНИЕ И ФЛАНГОВЫЕ ОБХОДЫ</div>
+
+  <div class="class-selection">
+    <div class="class-card active" onclick="selectClass('assault', this)">
+      <div class="class-name">ШТУРМОВИК</div>
+      <div class="class-desc">Высокая выносливость, 3 гранаты, быстрый рывок.</div>
+    </div>
+    <div class="class-card" onclick="selectClass('sniper', this)">
+      <div class="class-name">СНАЙПЕР</div>
+      <div class="class-desc">Смертоносный выстрел, медленно устает в засаде.</div>
+    </div>
+    <div class="class-card" onclick="selectClass('gunner', this)">
+      <div class="class-name">ПУЛЕМЕТЧИК</div>
+      <div class="class-desc">Подавляющий огонь, но быстро выдыхается на бегу.</div>
+    </div>
+  </div>
+
+  <button class="btn-action" onclick="startGame()">В БОЙ</button>
+</div>
+
+<div id="hud">
+  <div class="hud-title">Оперативная Карта Фронта</div>
+  <canvas id="minimap" width="230" height="130"></canvas>
+  <div class="stats">
+    <div>ЗДОРОВЬЕ: <span id="hp-val">100</span>%</div>
+    <div class="bar-bg"><div id="hp-bar-fill"></div></div>
+    <div>ВЫНОСЛИВОСТЬ: <span id="stamina-val">100</span>%</div>
+    <div class="bar-bg"><div id="stamina-bar-fill"></div></div>
+    <div style="margin-top:2px;">СТАТУС: <b id="tactical-status" style="color:#4cd137">ГОТОВ</b></div>
+    <div>ГРАНАТЫ [G]: <span id="grenades-val" style="color:#f5cd79">3 шт.</span></div>
+    <div>ОТРЯД [F]: <span id="squad-status" style="color: #4cd137;">0 бойцов</span></div>
+    <div class="tickets-row">
+      <span style="color:#3880ff">СИНИЕ: <span id="blue-tickets">100</span></span>
+      <span style="color:#eb445a">КРАСНЫЕ: <span id="red-tickets">100</span></span>
+    </div>
+  </div>
+</div>
+
+<div id="respawn-screen">
+  <h1 style="font-size: 38px; margin: 0 0 10px 0;">ВЫ ПАЛИ В СРАЖЕНИИ</h1>
+  <div id="respawn-timer" style="font-size: 18px; color: #f5cd79;">Эвакуация на опорный пункт: 3 сек...</div>
+</div>
+
+<div id="gameover-screen">
+  <div class="end-title" id="end-status">ПОБЕДА!</div>
+  <div class="stats-summary" id="end-details"></div>
+  <button class="btn-action" onclick="returnToMenu()">В ГЛАВНОЕ МЕНЮ</button>
+</div>
+
+<div id="controls-hint">WASD — марш | Мышь — огонь | [G] — граната | [F] — свисток | Стоя за деревом/в окопе получаешь бафф защиты!</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+// --- АУДИО ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+  if (type === 'shot') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(300, now);
+    osc.frequency.exponentialRampToValueAtTime(35, now + 0.08);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.08);
+  } else if (type === 'explosion') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(90, now);
+    osc.frequency.exponentialRampToValueAtTime(20, now + 0.35);
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.35);
+  } else if (type === 'whistle') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1700, now);
+    osc.frequency.linearRampToValueAtTime(2300, now + 0.15);
+    osc.frequency.linearRampToValueAtTime(1800, now + 0.3);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  }
+}
+
+// --- ДВИЖОК ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const mCanvas = document.getElementById('minimap');
+const mCtx = mCanvas.getContext('2d');
+
+let screenW = canvas.width = window.innerWidth;
+let screenH = canvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+  screenW = canvas.width = window.innerWidth;
+  screenH = canvas.height = window.innerHeight;
+});
+
+const WORLD_W = 4200;
+const WORLD_H = 2400;
+const camera = { x: 0, y: 0 };
+
+let blueTickets = 100;
+let redTickets = 100;
+let playerStats = { kills: 0, caps: 0 };
+
+const bases = [
+  { id: 1, name: "Лесопилка", x: 700, y: 600, owner: 1, capProgress: 1.0, radius: 170 },
+  { id: 2, name: "Окопы у Ручья", x: 900, y: 1700, owner: 1, capProgress: 1.0, radius: 170 },
+  { id: 3, name: "Высота 104", x: 2100, y: 1200, owner: 0, capProgress: 0.0, radius: 210 },
+  { id: 4, name: "Восточная Роща", x: 3100, y: 700, owner: 2, capProgress: -1.0, radius: 170 },
+  { id: 5, name: "Главный Штаб (ДОТ)", x: 3450, y: 1750, owner: 2, capProgress: -1.0, radius: 200 }
+];
+
+const FRONT_SECTIONS = 7;
+const frontlineNodes = [];
+for (let i = 0; i < FRONT_SECTIONS; i++) {
+  frontlineNodes.push({
+    y: (WORLD_H / (FRONT_SECTIONS - 1)) * i,
+    x: WORLD_W * 0.5,
+    targetX: WORLD_W * 0.5
+  });
+}
+
+const trees = [];
+for (let i = 0; i < 260; i++) {
+  const tx = 350 + Math.random() * (WORLD_W - 700);
+  const ty = Math.random() * WORLD_H;
+  const insideBase = bases.some(b => Math.hypot(b.x - tx, b.y - ty) < b.radius + 40);
+  if (!insideBase) {
+    trees.push({
+      x: tx, y: ty,
+      r: 16 + Math.random() * 14,
+      foliageR: 28 + Math.random() * 18
+    });
+  }
+}
+
+const trenches = [
+  { x: 640, y: 480, w: 120, h: 40 },
+  { x: 840, y: 1580, w: 120, h: 40 },
+  { x: 2040, y: 1080, w: 120, h: 40 },
+  { x: 3040, y: 580, w: 120, h: 40 },
+  { x: 3390, y: 1630, w: 120, h: 40 }
+];
+
+const keys = { w: false, a: false, s: false, d: false };
+const mouse = { x: 0, y: 0, isDown: false };
+let selectedClass = 'assault';
+
+function selectClass(type, el) {
+  selectedClass = type;
+  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (k === 'w' || k === 'ц' || e.key === 'ArrowUp') keys.w = true;
+  if (k === 'a' || k === 'ф' || e.key === 'ArrowLeft') keys.a = true;
+  if (k === 's' || k === 'ы' || e.key === 'ArrowDown') keys.s = true;
+  if (k === 'd' || k === 'в' || e.key === 'ArrowRight') keys.d = true;
+  if (k === 'f' || k === 'а') commandWhistle();
+  if (k === 'g' || k === 'п') throwGrenade();
+});
+
+window.addEventListener('keyup', e => {
+  const k = e.key.toLowerCase();
+  if (k === 'w' || k === 'ц' || e.key === 'ArrowUp') keys.w = false;
+  if (k === 'a' || k === 'ф' || e.key === 'ArrowLeft') keys.a = false;
+  if (k === 's' || k === 'ы' || e.key === 'ArrowDown') keys.s = false;
+  if (k === 'd' || k === 'в' || e.key === 'ArrowRight') keys.d = false;
+});
+
+window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+window.addEventListener('mousedown', e => { if (e.button === 0) mouse.isDown = true; });
+window.addEventListener('mouseup', e => { if (e.button === 0) mouse.isDown = false; });
+
+// --- КЛАСС СОЛДАТА С ТАКТИКАМИ И ВЫНОСЛИВОСТЬЮ ---
+class Unit {
+  constructor(x, y, team, isPlayer = false, classType = 'assault') {
+    this.x = x;
+    this.y = y;
+    this.radius = 10;
+    this.team = team;
+    this.isPlayer = isPlayer;
+    this.hp = 100;
+    this.maxHp = 100;
+    this.stamina = 100;
+    this.angle = 0;
+    this.lastShot = 0;
+    this.followingPlayer = false;
+    this.grenades = 3;
+
+    // Тактическое состояние: 'normal', 'entrenched' (в укрытии), 'flanking' (обход), 'suppressed' (подавлен)
+    this.tactic = 'normal';
+    this.suppressionTimer = 0;
+    this.flankOffset = (Math.random() - 0.5) * 600; // индивидуальный коридор наступления
+
+    if (classType === 'sniper') {
+      this.baseSpeed = isPlayer ? 3.3 : 1.6;
+      this.fireRate = 950;
+      this.bulletDamage = 110;
+      this.bulletSpeed = 17;
+    } else if (classType === 'gunner') {
+      this.baseSpeed = isPlayer ? 2.8 : 1.4;
+      this.fireRate = 120;
+      this.bulletDamage = 26;
+      this.bulletSpeed = 11;
+      this.hp = 140;
+      this.maxHp = 140;
+    } else {
+      this.baseSpeed = isPlayer ? 3.6 : 1.8;
+      this.fireRate = 190;
+      this.bulletDamage = 35;
+      this.bulletSpeed = 12;
+    }
+  }
+
+  update(now) {
+    // 1. Проверка укрытия (Окоп или дерево рядом)
+    const inTrench = trenches.some(t => this.x > t.x && this.x < t.x + t.w && this.y > t.y && this.y < t.y + t.h);
+    const nearTree = trees.some(t => Math.hypot(t.x - this.x, t.y - this.y) < t.foliageR);
+    
+    if (inTrench || nearTree) {
+      this.tactic = 'entrenched'; // Бафф: защита
+    } else if (this.suppressionTimer > 0) {
+      this.tactic = 'suppressed'; // Дебафф: паника
+      this.suppressionTimer--;
+    } else {
+      this.tactic = 'normal';
+    }
+
+    // 2. Расчет выносливости (Истощение)
+    let isMoving = false;
+    let speedMult = 1.0;
+
+    // Дебафф от истощения
+    if (this.stamina < 20) {
+      speedMult *= 0.6; // Еле плетется
+    }
+
+    if (this.isPlayer) {
+      let dx = 0, dy = 0;
+      if (keys.w) dy -= 1;
+      if (keys.s) dy += 1;
+      if (keys.a) dx -= 1;
+      if (keys.d) dx += 1;
+
+      if (dx !== 0 || dy !== 0) {
+        isMoving = true;
+        this.stamina = Math.max(0, this.stamina - 0.25); // Тратит стамину при беге
+        if (dx !== 0 && dy !== 0) { dx *= 0.7071; dy *= 0.7071; }
+        this.move(dx * this.baseSpeed * speedMult, dy * this.baseSpeed * speedMult);
+      } else {
+        // Отдых восстанавливает силы
+        this.stamina = Math.min(100, this.stamina + 0.4);
+      }
+
+      const worldMouseX = mouse.x + camera.x;
+      const worldMouseY = mouse.y + camera.y;
+      this.angle = Math.atan2(worldMouseY - this.y, worldMouseX - this.x);
+
+      // Разброс от усталости и подавления
+      if (mouse.isDown && now - this.lastShot > this.fireRate) {
+        let spread = 0;
+        if (this.stamina < 30) spread += (Math.random() - 0.5) * 0.15;
+        if (this.tactic === 'suppressed') spread += (Math.random() - 0.5) * 0.25;
+        shoot(this.x, this.y, this.angle + spread, this.team, this.bulletDamage, this.bulletSpeed, true);
+        this.lastShot = now;
+      }
+
+      // Лут ящиков
+      for (let i = crates.length - 1; i >= 0; i--) {
+        if (Math.hypot(crates[i].x - this.x, crates[i].y - this.y) < 25) {
+          this.hp = Math.min(this.maxHp, this.hp + 40);
+          this.grenades = Math.min(5, this.grenades + 1);
+          document.getElementById('grenades-val').innerText = `${this.grenades} шт.`;
+          crates.splice(i, 1);
+        }
+      }
+    } else {
+      this.ai(now, speedMult);
+    }
+  }
+
+  move(vx, vy) {
+    let nx = Math.max(20, Math.min(WORLD_W - 20, this.x + vx));
+    let ny = Math.max(20, Math.min(WORLD_H - 20, this.y + vy));
+
+    // Проверка коллизий с деревьями
+    for (let t of trees) {
+      if (Math.hypot(t.x - nx, t.y - ny) < t.r + this.radius) return;
+    }
+
+    // Рассредоточение: отталкивание от союзников, чтобы не кучковаться
+    for (let u of units) {
+      if (u !== this && u.hp > 0) {
+        const d = Math.hypot(u.x - nx, u.y - ny);
+        if (d < 30) { // Дистанция строя
+          const pushAngle = Math.atan2(ny - u.y, nx - u.x);
+          nx += Math.cos(pushAngle) * 1.5;
+          ny += Math.sin(pushAngle) * 1.5;
+        }
+      }
+    }
+
+    this.x = nx;
+    this.y = ny;
+  }
+
+  ai(now, speedMult) {
+    let nearest = null;
+    let minD = 420;
+
+    for (let u of units) {
+      if (u.team !== this.team && u.hp > 0) {
+        let d = Math.hypot(u.x - this.x, u.y - this.y);
+        if (d < minD) {
+          minD = d;
+          nearest = u;
+        }
+      }
+    }
+
+    if (nearest) {
+      this.angle = Math.atan2(nearest.y - this.y, nearest.x - this.x);
+
+      // Тактика: если бот в укрытии, он не лезет на рожон, а держит позицию!
+      if (this.tactic === 'entrenched') {
+        // Стоит на месте, точно отстреливаясь
+        if (now - this.lastShot > this.fireRate) {
+          shoot(this.x, this.y, this.angle + (Math.random() - 0.5) * 0.08, this.team, this.bulletDamage, this.bulletSpeed, false);
+          this.lastShot = now;
+        }
+      } else {
+        // Пытается найти ближайшее укрытие или пятиться при сближении
+        if (minD < 140) {
+          // Отход назад при сильном давлении
+          const backAngle = this.angle + Math.PI;
+          this.move(Math.cos(backAngle) * this.baseSpeed * speedMult * 0.5, Math.sin(backAngle) * this.baseSpeed * speedMult * 0.5);
+        } else {
+          // Стрельба с разбросом на ходу
+          const dirX = this.team === 1 ? 1 : -1;
+          this.move(dirX * this.baseSpeed * speedMult * 0.3, (Math.random() - 0.5) * 0.8);
+        }
+
+        if (now - this.lastShot > this.fireRate) {
+          shoot(this.x, this.y, this.angle + (Math.random() - 0.5) * 0.2, this.team, this.bulletDamage, this.bulletSpeed, false);
+          this.lastShot = now;
+        }
+      }
+    } else if (this.followingPlayer && player && player.hp > 0) {
+      const dToP = Math.hypot(player.x - this.x, player.y - this.y);
+      if (dToP > 80) {
+        this.angle = Math.atan2(player.y - this.y, player.x - this.x);
+        this.move(Math.cos(this.angle) * this.baseSpeed * speedMult, Math.sin(this.angle) * this.baseSpeed * speedMult);
+      }
+    } else {
+      // Тактический марш веером: каждый взвод идет по своей высоте Y
+      const targetBase = bases.find(b => b.owner !== this.team) || bases[2];
+      const targetY = Math.max(100, Math.min(WORLD_H - 100, targetBase.y + this.flankOffset));
+      const angle = Math.atan2(targetY - this.y, targetBase.x - this.x);
+      this.angle = angle;
+      this.move(Math.cos(angle) * this.baseSpeed * speedMult * 0.6, Math.sin(angle) * this.baseSpeed * speedMult * 0.6);
+    }
+  }
+
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+
+    // Ствол
+    ctx.fillStyle = '#111';
+    ctx.fillRect(5, -2, 14, 4);
+
+    // Тело солдата
+    ctx.beginPath();
+    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.team === 1 ? (this.isPlayer ? '#2ecc71' : '#3880ff') : '#eb445a';
+    ctx.fill();
+    ctx.strokeStyle = '#0e1410';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Визуализация тактики (иконка/щит над бойцом)
+    if (this.tactic === 'entrenched') {
+      ctx.beginPath();
+      ctx.arc(0, 0, this.radius + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = '#f5cd79'; // Золотая обводка: в обороне
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    if (this.followingPlayer) {
+      ctx.beginPath();
+      ctx.arc(0, 0, this.radius + 6, 0, Math.PI * 2);
+      ctx.strokeStyle = '#4cd137';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+// --- ПУЛИ И ВЗРЫВЫ ---
+const bullets = [];
+const grenades = [];
+const explosions = [];
+const crates = [];
+
+function shoot(x, y, angle, team, dmg, spd, isAudible = false) {
+  bullets.push({
+    x: x + Math.cos(angle) * 15,
+    y: y + Math.sin(angle) * 15,
+    vx: Math.cos(angle) * spd,
+    vy: Math.sin(angle) * spd,
+    damage: dmg,
+    team: team,
+    life: 55
+  });
+  if (isAudible) playSound('shot');
+}
+
+function throwGrenade() {
+  if (!player || player.hp <= 0 || player.grenades <= 0) return;
+  player.grenades--;
+  document.getElementById('grenades-val').innerText = `${player.grenades} шт.`;
+
+  const worldMouseX = mouse.x + camera.x;
+  const worldMouseY = mouse.y + camera.y;
+  const angle = Math.atan2(worldMouseY - player.y, worldMouseX - player.x);
+  const dist = Math.min(260, Math.hypot(worldMouseX - player.x, worldMouseY - player.y));
+
+  grenades.push({
+    x: player.x,
+    y: player.y,
+    tx: player.x + Math.cos(angle) * dist,
+    ty: player.y + Math.sin(angle) * dist,
+    timer: 65
+  });
+}
+
+function commandWhistle() {
+  if (!player || player.hp <= 0) return;
+  playSound('whistle');
+  let count = 0;
+  units.forEach(u => {
+    if (u.team === 1 && !u.isPlayer && u.hp > 0) {
+      if (Math.hypot(u.x - player.x, u.y - player.y) < 420) {
+        u.followingPlayer = true;
+        count++;
+      }
+    }
+  });
+  document.getElementById('squad-status').innerText = `${count} бойцов`;
+}
+
+// --- ЦИКЛ ИГРЫ ---
+let units = [];
+let player = null;
+let gameRunning = false;
+let isRespawning = false;
+
+function startGame() {
+  document.getElementById('menu-overlay').style.display = 'none';
+  document.getElementById('hud').style.display = 'block';
+  document.getElementById('controls-hint').style.display = 'block';
+  document.getElementById('gameover-screen').style.display = 'none';
+
+  blueTickets = 100;
+  redTickets = 100;
+  playerStats = { kills: 0, caps: 0 };
+
+  units = [];
+  player = new Unit(bases[0].x, bases[0].y, 1, true, selectedClass);
+  units.push(player);
+
+  // Рассредоточенный спавн армий
+  for (let i = 0; i < 24; i++) {
+    units.push(new Unit(bases[0].x + (Math.random() - 0.5) * 160, bases[0].y + (Math.random() - 0.5) * 250, 1));
+    units.push(new Unit(bases[4].x + (Math.random() - 0.5) * 160, bases[4].y + (Math.random() - 0.5) * 250, 2));
+  }
+
+  gameRunning = true;
+  requestAnimationFrame(loop);
+}
+
+function returnToMenu() {
+  gameRunning = false;
+  document.getElementById('gameover-screen').style.display = 'none';
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('controls-hint').style.display = 'none';
+  document.getElementById('menu-overlay').style.display = 'flex';
+}
+
+function checkEndGame() {
+  const blueBases = bases.filter(b => b.owner === 1).length;
+  const redBases = bases.filter(b => b.owner === 2).length;
+
+  if (blueBases === 5 || redTickets <= 0) endGame(true, "ПОБЕДА!");
+  else if (redBases === 5 || blueTickets <= 0) endGame(false, "ПОРАЖЕНИЕ");
+}
+
+function endGame(won, title) {
+  gameRunning = false;
+  const endScreen = document.getElementById('gameover-screen');
+  const endStatus = document.getElementById('end-status');
+  const endDetails = document.getElementById('end-details');
+
+  endStatus.innerText = title;
+  endStatus.style.color = won ? '#4cd137' : '#e84118';
+  endDetails.innerHTML = `
+    ${won ? "Штаб врага взят штурмом, линия фронта прорвана!" : "Ваша армия понесла критические потери и отступила."}<br><br>
+    Уничтожено солдат врага: <b>${playerStats.kills}</b><br>
+    Захвачено опорных баз: <b>${playerStats.caps}</b><br>
+    Остаток подкреплений Синих: <b>${blueTickets}</b>
+  `;
+  endScreen.style.display = 'flex';
+}
+
+function triggerRespawn() {
+  if (isRespawning) return;
+  isRespawning = true;
+  const screen = document.getElementById('respawn-screen');
+  const timerEl = document.getElementById('respawn-timer');
+  screen.style.display = 'flex';
+
+  let timeLeft = 3;
+  timerEl.innerText = `Эвакуация на опорный пункт: ${timeLeft} сек...`;
+
+  const intv = setInterval(() => {
+    timeLeft--;
+    if (timeLeft > 0) {
+      timerEl.innerText = `Эвакуация на опорный пункт: ${timeLeft} сек...`;
+    } else {
+      clearInterval(intv);
+      screen.style.display = 'none';
+
+      const blueBases = bases.filter(b => b.owner === 1);
+      const spawnBase = blueBases.length > 0 ? blueBases.reduce((prev, curr) => curr.x > prev.x ? curr : prev) : bases[0];
+
+      let safeX = spawnBase.x;
+      let safeY = spawnBase.y;
+
+      for (let attempt = 0; attempt < 30; attempt++) {
+        const testX = spawnBase.x + (Math.random() - 0.5) * 100;
+        const testY = spawnBase.y + (Math.random() - 0.5) * 100;
+        const inTree = trees.some(t => Math.hypot(t.x - testX, t.y - testY) < t.r + player.radius + 6);
+        if (!inTree) {
+          safeX = testX;
+          safeY = testY;
+          break;
+        }
+      }
+
+      player.x = safeX;
+      player.y = safeY;
+      player.hp = player.maxHp;
+      player.stamina = 100;
+      isRespawning = false;
+    }
+  }, 1000);
+}
+
+// Подкрепления
+setInterval(() => {
+  if (!gameRunning) return;
+  const blueB = bases.filter(b => b.owner === 1);
+  const redB = bases.filter(b => b.owner === 2);
+
+  if (units.filter(u => u.team === 1 && u.hp > 0).length < 26 && blueB.length > 0) {
+    const sb = blueB[Math.floor(Math.random() * blueB.length)];
+    units.push(new Unit(sb.x + (Math.random() - 0.5) * 80, sb.y + (Math.random() - 0.5) * 80, 1));
+  }
+  if (units.filter(u => u.team === 2 && u.hp > 0).length < 26 && redB.length > 0) {
+    const sb = redB[Math.floor(Math.random() * redB.length)];
+    units.push(new Unit(sb.x + (Math.random() - 0.5) * 80, sb.y + (Math.random() - 0.5) * 80, 2));
+  }
+}, 3000);
+
+// --- ГЛАВНЫЙ ЦИКЛ ---
+function loop(now) {
+  if (!gameRunning) return;
+
+  // 1. АПДЕЙТ ЮНИТОВ
+  for (let i = units.length - 1; i >= 0; i--) {
+    const u = units[i];
+    if (u.hp <= 0) {
+      if (Math.random() < 0.35) crates.push({ x: u.x, y: u.y });
+
+      if (u.team === 1) blueTickets = Math.max(0, blueTickets - 1);
+      else {
+        redTickets = Math.max(0, redTickets - 1);
+        playerStats.kills++;
+      }
+
+      if (u.isPlayer) triggerRespawn();
+      else units.splice(i, 1);
+      continue;
+    }
+    u.update(now);
+  }
+
+  // 2. ПУЛИ
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    const b = bullets[i];
+    b.x += b.vx;
+    b.y += b.vy;
+    b.life--;
+
+    let hit = false;
+    for (let t of trees) {
+      if (Math.hypot(t.x - b.x, t.y - b.y) < t.r) { hit = true; break; }
+    }
+
+    if (!hit) {
+      for (let u of units) {
+        // Эффект подавления: пули, пролетающие вблизи (до 35px), вызывают стресс
+        if (u.team !== b.team && u.hp > 0) {
+          const dist = Math.hypot(u.x - b.x, u.y - b.y);
+          if (dist < 35) u.suppressionTimer = 40; // Подавлен огнем
+
+          if (dist < u.radius + 2) {
+            // Бафф защиты в укрытии: -50% урона
+            const dmg = u.tactic === 'entrenched' ? b.damage * 0.5 : b.damage;
+            u.hp -= dmg;
+            hit = true;
+            break;
+          }
+        }
+      }
+    }
+    if (b.life <= 0 || hit) bullets.splice(i, 1);
+  }
+
+  // 3. ГРАНАТЫ И ВЗРЫВЫ
+  for (let i = grenades.length - 1; i >= 0; i--) {
+    const g = grenades[i];
+    g.x += (g.tx - g.x) * 0.08;
+    g.y += (g.ty - g.y) * 0.08;
+    g.timer--;
+
+    if (g.timer <= 0) {
+      playSound('explosion');
+      explosions.push({ x: g.x, y: g.y, radius: 10, maxRadius: 75, alpha: 1.0 });
+
+      units.forEach(u => {
+        const d = Math.hypot(u.x - g.x, u.y - g.y);
+        if (d < 85) u.hp -= Math.floor((1 - d / 85) * 160);
+      });
+
+      grenades.splice(i, 1);
+    }
+  }
+
+  for (let i = explosions.length - 1; i >= 0; i--) {
+    const exp = explosions[i];
+    exp.radius += 4;
+    exp.alpha -= 0.04;
+    if (exp.alpha <= 0) explosions.splice(i, 1);
+  }
+
+  // 4. ЗАХВАТ БАЗ
+  bases.forEach(b => {
+    let blueNear = 0, redNear = 0;
+    units.forEach(u => {
+      if (u.hp > 0 && Math.hypot(u.x - b.x, u.y - b.y) < b.radius) {
+        if (u.team === 1) blueNear++;
+        else redNear++;
+      }
+    });
+
+    const diff = blueNear - redNear;
+    const oldOwner = b.owner;
+    if (diff > 0) b.capProgress = Math.min(1.0, b.capProgress + 0.004);
+    else if (diff < 0) b.capProgress = Math.max(-1.0, b.capProgress - 0.004);
+
+    if (b.capProgress > 0.6) b.owner = 1;
+    else if (b.capProgress < -0.6) b.owner = 2;
+    else if (Math.abs(b.capProgress) < 0.2) b.owner = 0;
+
+    if (oldOwner !== 1 && b.owner === 1) playerStats.caps++;
+  });
+
+  // 5. ВЕКТОРНАЯ ЛИНИЯ ФРОНТА
+  for (let i = 0; i < FRONT_SECTIONS; i++) {
+    const nodeY = frontlineNodes[i].y;
+    let weightSum = 0, weightedX = 0;
+
+    bases.forEach(b => {
+      const distY = Math.abs(b.y - nodeY);
+      const w = 1 / (1 + (distY * distY) * 0.000003);
+      const baseXTarget = b.owner === 1 ? b.x + 350 : (b.owner === 2 ? b.x - 350 : b.x);
+      weightedX += baseXTarget * w;
+      weightSum += w;
+    });
+
+    frontlineNodes[i].targetX = weightSum > 0 ? (weightedX / weightSum) : (WORLD_W * 0.5);
+    frontlineNodes[i].x += (frontlineNodes[i].targetX - frontlineNodes[i].x) * 0.04;
+  }
+
+  // Камера
+  camera.x = Math.max(0, Math.min(WORLD_W - screenW, player.x - screenW / 2));
+  camera.y = Math.max(0, Math.min(WORLD_H - screenH, player.y - screenH / 2));
+
+  // 6. ОТРИСОВКА МИРА
+  ctx.clearRect(0, 0, screenW, screenH);
+  ctx.save();
+  ctx.translate(-camera.x, -camera.y);
+
+  ctx.fillStyle = '#141c16';
+  ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+
+  // Окопы
+  ctx.fillStyle = '#0b0f0c';
+  trenches.forEach(t => {
+    ctx.fillRect(t.x, t.y, t.w, t.h);
+    ctx.strokeStyle = '#27382c';
+    ctx.strokeRect(t.x, t.y, t.w, t.h);
+  });
+
+  // Векторная линия фронта
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(frontlineNodes[0].x, frontlineNodes[0].y);
+  for (let i = 0; i < FRONT_SECTIONS - 1; i++) {
+    const xc = (frontlineNodes[i].x + frontlineNodes[i + 1].x) / 2;
+    const yc = (frontlineNodes[i].y + frontlineNodes[i + 1].y) / 2;
+    ctx.quadraticCurveTo(frontlineNodes[i].x, frontlineNodes[i].y, xc, yc);
+  }
+  ctx.lineTo(frontlineNodes[FRONT_SECTIONS - 1].x, frontlineNodes[FRONT_SECTIONS - 1].y);
+  ctx.strokeStyle = 'rgba(245, 205, 121, 0.45)';
+  ctx.lineWidth = 4;
+  ctx.setLineDash([12, 10]);
+  ctx.stroke();
+  ctx.restore();
+
+  // Базы
+  bases.forEach(b => {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+    ctx.fillStyle = b.owner === 1 ? 'rgba(56, 128, 255, 0.05)' : b.owner === 2 ? 'rgba(235, 68, 90, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+    ctx.fill();
+    ctx.strokeStyle = b.owner === 1 ? '#3880ff' : b.owner === 2 ? '#eb445a' : '#555';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 14, 0, Math.PI * 2);
+    ctx.fillStyle = '#222';
+    ctx.fill();
+
+    ctx.fillStyle = b.owner === 1 ? '#3880ff' : b.owner === 2 ? '#eb445a' : '#f5cd79';
+    ctx.fillRect(b.x, b.y - 18, 24, 15);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(b.x, b.y - 18, 24, 15);
+
+    ctx.fillStyle = '#dcdde1';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillText(b.name, b.x - 45, b.y + 32);
+  });
+
+  // Ящики
+  crates.forEach(cr => {
+    ctx.fillStyle = '#27ae60';
+    ctx.fillRect(cr.x - 7, cr.y - 7, 14, 14);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(cr.x - 5, cr.y - 2, 10, 4);
+    ctx.fillRect(cr.x - 2, cr.y - 5, 4, 10);
+  });
+
+  // Гранаты
+  grenades.forEach(g => {
+    ctx.beginPath();
+    ctx.arc(g.x, g.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#2f3640';
+    ctx.fill();
+    ctx.strokeStyle = '#f5cd79';
+    ctx.stroke();
+  });
+
+  // Взрывы
+  explosions.forEach(exp => {
+    ctx.beginPath();
+    ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(243, 156, 18, ${exp.alpha})`;
+    ctx.fill();
+  });
+
+  // Пули
+  ctx.fillStyle = '#f5cd79';
+  bullets.forEach(b => {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Юниты
+  units.forEach(u => { if (u.hp > 0) u.draw(); });
+
+  // Деревья
+  trees.forEach(t => {
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
+    ctx.fillStyle = '#3e2723';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, t.foliageR, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(32, 68, 41, 0.8)';
+    ctx.fill();
+  });
+
+  ctx.restore();
+
+  // 7. МИНИКАРТА
+  mCtx.clearRect(0, 0, mCanvas.width, mCanvas.height);
+  const sx = mCanvas.width / WORLD_W;
+  const sy = mCanvas.height / WORLD_H;
+
+  // Окрас зон оккупации
+  mCtx.save();
+  mCtx.fillStyle = 'rgba(41, 128, 185, 0.4)';
+  mCtx.beginPath();
+  mCtx.moveTo(0, 0);
+  for (let i = 0; i < FRONT_SECTIONS - 1; i++) {
+    const x1 = frontlineNodes[i].x * sx, y1 = frontlineNodes[i].y * sy;
+    const x2 = frontlineNodes[i + 1].x * sx, y2 = frontlineNodes[i + 1].y * sy;
+    mCtx.quadraticCurveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2);
+  }
+  mCtx.lineTo(frontlineNodes[FRONT_SECTIONS - 1].x * sx, mCanvas.height);
+  mCtx.lineTo(0, mCanvas.height);
+  mCtx.closePath();
+  mCtx.fill();
+
+  mCtx.fillStyle = 'rgba(192, 57, 43, 0.4)';
+  mCtx.beginPath();
+  mCtx.moveTo(mCanvas.width, 0);
+  for (let i = 0; i < FRONT_SECTIONS - 1; i++) {
+    const x1 = frontlineNodes[i].x * sx, y1 = frontlineNodes[i].y * sy;
+    const x2 = frontlineNodes[i + 1].x * sx, y2 = frontlineNodes[i + 1].y * sy;
+    mCtx.quadraticCurveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2);
+  }
+  mCtx.lineTo(frontlineNodes[FRONT_SECTIONS - 1].x * sx, mCanvas.height);
+  mCtx.lineTo(mCanvas.width, mCanvas.height);
+  mCtx.closePath();
+  mCtx.fill();
+
+  // Линия фронта
+  mCtx.beginPath();
+  mCtx.moveTo(frontlineNodes[0].x * sx, frontlineNodes[0].y * sy);
+  for (let i = 0; i < FRONT_SECTIONS - 1; i++) {
+    const x1 = frontlineNodes[i].x * sx, y1 = frontlineNodes[i].y * sy;
+    const x2 = frontlineNodes[i + 1].x * sx, y2 = frontlineNodes[i + 1].y * sy;
+    mCtx.quadraticCurveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2);
+  }
+  mCtx.strokeStyle = '#f5cd79';
+  mCtx.lineWidth = 2;
+  mCtx.stroke();
+  mCtx.restore();
+
+  // Базы
+  bases.forEach(b => {
+    mCtx.fillStyle = b.owner === 1 ? '#3880ff' : b.owner === 2 ? '#eb445a' : '#f5cd79';
+    mCtx.beginPath();
+    mCtx.arc(b.x * sx, b.y * sy, 4, 0, Math.PI * 2);
+    mCtx.fill();
+    mCtx.strokeStyle = '#fff';
+    mCtx.lineWidth = 1;
+    mCtx.stroke();
+  });
+
+  // Рамка экрана
+  mCtx.strokeStyle = '#ffffff';
+  mCtx.lineWidth = 1;
+  mCtx.strokeRect(camera.x * sx, camera.y * sy, screenW * sx, screenH * sy);
+
+  // Бойцы
+  units.forEach(u => {
+    if (u.hp <= 0) return;
+    mCtx.fillStyle = u.isPlayer ? '#2ecc71' : u.team === 1 ? '#fff' : '#e74c3c';
+    mCtx.fillRect(u.x * sx, u.y * sy, u.isPlayer ? 3 : 1.5, u.isPlayer ? 3 : 1.5);
+  });
+
+  // HUD
+  const hpP = Math.max(0, Math.round((player.hp / player.maxHp) * 100));
+  document.getElementById('hp-val').innerText = hpP;
+  document.getElementById('hp-bar-fill').style.width = hpP + '%';
+
+  const stP = Math.max(0, Math.round(player.stamina));
+  document.getElementById('stamina-val').innerText = stP;
+  document.getElementById('stamina-bar-fill').style.width = stP + '%';
+
+  const tacStatus = document.getElementById('tactical-status');
+  if (player.tactic === 'entrenched') {
+    tacStatus.innerText = "В УКРЫТИИ (-50% УРОНА)";
+    tacStatus.style.color = "#f5cd79";
+  } else if (player.tactic === 'suppressed') {
+    tacStatus.innerText = "ПОДАВЛЕН ОГНЕМ (РАЗБРОС)";
+    tacStatus.style.color = "#e84118";
+  } else if (player.stamina < 20) {
+    tacStatus.innerText = "ИСТОЩЕНИЕ (ЗАМЕДЛЕН)";
+    tacStatus.style.color = "#e1b12c";
+  } else {
+    tacStatus.innerText = "ГОТОВ К БОЮ";
+    tacStatus.style.color = "#4cd137";
+  }
+
+  document.getElementById('blue-tickets').innerText = blueTickets;
+  document.getElementById('red-tickets').innerText = redTickets;
+
+  checkEndGame();
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>

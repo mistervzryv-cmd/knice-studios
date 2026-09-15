@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Warfront 2D: Infantry & Tactics</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #111;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      user-select: none;
+    }
+    #gameCanvas {
+      display: block;
+      cursor: crosshair;
+    }
+    #hud {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: rgba(18, 22, 28, 0.85);
+      backdrop-filter: blur(4px);
+      padding: 12px 16px;
+      border: 1px solid #3a4454;
+      border-radius: 8px;
+      color: #eaeaea;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .hud-title {
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    #minimap {
+      border: 1px solid #4f5d73;
+      border-radius: 4px;
+      background: #181d24;
+      display: block;
+      margin-bottom: 8px;
+    }
+    .stats {
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .hp-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: #333;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 2px;
+    }
+    #hp-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: #2ecc71;
+      transition: width 0.1s linear;
+    }
+    #controls-hint {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 13px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="hud">
+  <div class="hud-title">Линия Фронта</div>
+  <canvas id="minimap" width="160" height="90"></canvas>
+  <div class="stats">
+    <div>ЗДОРОВЬЕ: <span id="hp-val">100</span>%</div>
+    <div class="hp-bar-bg"><div id="hp-bar-fill"></div></div>
+    <div style="margin-top: 4px;">СЕКТОР: <span id="sector-status" style="color: #f1c40f">ОСПАРИВАЕТСЯ</span></div>
+  </div>
+</div>
+
+<div id="controls-hint">WASD — перемещение | Мышь — прицел | ЛКМ — огонь</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const mCanvas = document.getElementById('minimap');
+const mCtx = mCanvas.getContext('2d');
+
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+  initSectors();
+});
+
+// --- СЕКТОРА ---
+let sectors = [];
+function initSectors() {
+  sectors = [
+    { id: 0, x: 0, width: width * 0.33, owner: 1, name: "Тыл (Синие)" },
+    { id: 1, x: width * 0.33, width: width * 0.34, owner: 0, name: "Передовая" },
+    { id: 2, x: width * 0.67, width: width * 0.33, owner: 2, name: "Штаб (Красные)" }
+  ];
+}
+initSectors();
+
+// --- УПРАВЛЕНИЕ ---
+const keys = { w: false, a: false, s: false, d: false };
+const mouse = { x: 0, y: 0, isDown: false };
+
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (k === 'w' || k === 'ц' || e.key === 'ArrowUp') keys.w = true;
+  if (k === 'a' || k === 'ф' || e.key === 'ArrowLeft') keys.a = true;
+  if (k === 's' || k === 'ы' || e.key === 'ArrowDown') keys.s = true;
+  if (k === 'd' || k === 'в' || e.key === 'ArrowRight') keys.d = true;
+});
+
+window.addEventListener('keyup', e => {
+  const k = e.key.toLowerCase();
+  if (k === 'w' || k === 'ц' || e.key === 'ArrowUp') keys.w = false;
+  if (k === 'a' || k === 'ф' || e.key === 'ArrowLeft') keys.a = false;
+  if (k === 's' || k === 'ы' || e.key === 'ArrowDown') keys.s = false;
+  if (k === 'd' || k === 'в' || e.key === 'ArrowRight') keys.d = false;
+});
+
+window.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
+
+window.addEventListener('mousedown', e => { if (e.button === 0) mouse.isDown = true; });
+window.addEventListener('mouseup', e => { if (e.button === 0) mouse.isDown = false; });
+
+// --- УРОВЕНЬ / УКРЫТИЯ ---
+const covers = [
+  // Центральные укрепления (мешки с песком)
+  { x: width * 0.5 - 20, y: height * 0.25, w: 40, h: 120 },
+  { x: width * 0.5 - 20, y: height * 0.65, w: 40, h: 120 },
+  // Фланговые редуты
+  { x: width * 0.38, y: height * 0.45, w: 80, h: 30 },
+  { x: width * 0.58, y: height * 0.45, w: 80, h: 30 }
+];
+
+// --- СУЩНОСТИ ---
+class Unit {
+  constructor(x, y, team, isPlayer = false) {
+    this.x = x;
+    this.y = y;
+    this.radius = 9;
+    this.team = team; // 1 = Синие, 2 = Красные
+    this.isPlayer = isPlayer;
+    this.hp = 100;
+    this.maxHp = 100;
+    this.speed = isPlayer ? 3.0 : 1.6 + Math.random() * 0.5;
+    this.angle = 0;
+    this.lastShot = 0;
+    this.fireRate = isPlayer ? 150 : 600 + Math.random() * 400; // задержка мс
+  }
+
+  update(now) {
+    if (this.isPlayer) {
+      let dx = 0;
+      let dy = 0;
+      if (keys.w) dy -= 1;
+      if (keys.s) dy += 1;
+      if (keys.a) dx -= 1;
+      if (keys.d) dx += 1;
+
+      // Нормализация вектора движения
+      if (dx !== 0 && dy !== 0) {
+        dx *= 0.7071;
+        dy *= 0.7071;
+      }
+
+      this.moveWithCollision(dx * this.speed, dy * this.speed);
+      this.angle = Math.atan2(mouse.y - this.y, mouse.x - this.x);
+
+      // Стрельба игрока
+      if (mouse.isDown && now - this.lastShot > this.fireRate) {
+        shoot(this.x, this.y, this.angle, this.team);
+        this.lastShot = now;
+      }
+    } else {
+      // ИИ Поведение
+      this.aiBehavior(now);
+    }
+  }
+
+  moveWithCollision(vx, vy) {
+    let newX = this.x + vx;
+    let newY = this.y + vy;
+
+    // Границы экрана
+    newX = Math.max(this.radius, Math.min(width - this.radius, newX));
+    newY = Math.max(this.radius, Math.min(height - this.radius, newY));
+
+    // Проверка коллизии с укрытиями
+    for (let c of covers) {
+      if (newX + this.radius > c.x && newX - this.radius < c.x + c.w &&
+          newY + this.radius > c.y && newY - this.radius < c.y + c.h) {
+        // Уперся в укрытие
+        return;
+      }
+    }
+
+    this.x = newX;
+    this.y = newY;
+  }
+
+  aiBehavior(now) {
+    // 1. Поиск ближайшего врага
+    let nearestEnemy = null;
+    let minDist = 350; // Дистанция агро
+
+    for (let u of units) {
+      if (u.team !== this.team && u.hp > 0) {
+        let d = Math.hypot(u.x - this.x, u.y - this.y);
+        if (d < minDist) {
+          minDist = d;
+          nearestEnemy = u;
+        }
+      }
+    }
+
+    if (nearestEnemy) {
+      this.angle = Math.atan2(nearestEnemy.y - this.y, nearestEnemy.x - this.x);
+      
+      // Стрельба по готовности
+      if (now - this.lastShot > this.fireRate) {
+        // Небольшой разброс ботов
+        const spread = (Math.random() - 0.5) * 0.25;
+        shoot(this.x, this.y, this.angle + spread, this.team);
+        this.lastShot = now;
+      }
+    } else {
+      // Движение к линии фронта
+      const targetX = this.team === 1 ? width * 0.55 : width * 0.45;
+      const dirX = this.x < targetX ? 1 : -1;
+      this.angle = dirX > 0 ? 0 : Math.PI;
+      this.moveWithCollision(dirX * this.speed * 0.6, (Math.random() - 0.5) * this.speed);
+    }
+  }
+
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+
+    // Ствол оружия
+    ctx.fillStyle = '#111';
+    ctx.fillRect(4, -2.5, 12, 5);
+
+    // Тело солдата
+    ctx.beginPath();
+    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.team === 1 ? (this.isPlayer ? '#2ecc71' : '#3498db') : '#e74c3c';
+    ctx.fill();
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Обозначение игрока
+    if (this.isPlayer) {
+      ctx.beginPath();
+      ctx.arc(0, 0, this.radius + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = '#2ecc71';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+}
+
+// --- ПУЛИ ---
+const bullets = [];
+function shoot(x, y, angle, team) {
+  bullets.push({
+    x: x + Math.cos(angle) * 12,
+    y: y + Math.sin(angle) * 12,
+    vx: Math.cos(angle) * 9,
+    vy: Math.sin(angle) * 9,
+    team: team,
+    life: 70
+  });
+}
+
+// --- СПАВН СИЛ ---
+const units = [];
+// Создаем игрока
+const player = new Unit(width * 0.15, height * 0.5, 1, true);
+units.push(player);
+
+// Создаем союзников и врагов
+for (let i = 0; i < 12; i++) {
+  units.push(new Unit(width * (0.05 + Math.random() * 0.2), Math.random() * height, 1));
+  units.push(new Unit(width * (0.75 + Math.random() * 0.2), Math.random() * height, 2));
+}
+
+// --- ГЛАВНЫЙ ЦИКЛ ---
+function loop(now) {
+  // 1. ОБНОВЛЕНИЕ
+  for (let i = units.length - 1; i >= 0; i--) {
+    const u = units[i];
+    if (u.hp <= 0) {
+      if (!u.isPlayer) units.splice(i, 1);
+      continue;
+    }
+    u.update(now);
+  }
+
+  // Обновление пуль
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    const b = bullets[i];
+    b.x += b.vx;
+    b.y += b.vy;
+    b.life--;
+
+    // Проверка попадания в укрытия
+    let hitCover = false;
+    for (let c of covers) {
+      if (b.x > c.x && b.x < c.x + c.w && b.y > c.y && b.y < c.y + c.h) {
+        hitCover = true;
+        break;
+      }
+    }
+
+    // Проверка попадания в бойцов
+    let hitUnit = false;
+    if (!hitCover) {
+      for (let u of units) {
+        if (u.team !== b.team && u.hp > 0) {
+          if (Math.hypot(u.x - b.x, u.y - b.y) < u.radius + 3) {
+            u.hp -= 34; // 3 попадания = смерть
+            hitUnit = true;
+            break;
+          }
+        }
+      }
+    }
+
+    if (b.life <= 0 || hitCover || hitUnit) {
+      bullets.splice(i, 1);
+    }
+  }
+
+  // Расчет захвата центрального сектора
+  const blueInFront = units.filter(u => u.team === 1 && u.hp > 0 && u.x > sectors[1].x && u.x < sectors[1].x + sectors[1].width).length;
+  const redInFront = units.filter(u => u.team === 2 && u.hp > 0 && u.x > sectors[1].x && u.x < sectors[1].x + sectors[1].width).length;
+
+  const statusEl = document.getElementById('sector-status');
+  if (blueInFront > redInFront + 1) {
+    sectors[1].owner = 1;
+    statusEl.innerText = "ПОД КОНТРОЛЕМ АЛЬЯНСА";
+    statusEl.style.color = "#3498db";
+  } else if (redInFront > blueInFront + 1) {
+    sectors[1].owner = 2;
+    statusEl.innerText = "ОККУПИРОВАН ВРАГОМ";
+    statusEl.style.color = "#e74c3c";
+  } else {
+    statusEl.innerText = "ОСПАРИВАЕТСЯ";
+    statusEl.style.color = "#f1c40f";
+  }
+
+  // Обновление HUD игрока
+  const hpPercent = Math.max(0, player.hp);
+  document.getElementById('hp-val').innerText = hpPercent;
+  document.getElementById('hp-bar-fill').style.width = hpPercent + '%';
+
+  // 2. ОТРИСОВКА
+  ctx.clearRect(0, 0, width, height);
+
+  // Сектора
+  sectors.forEach(s => {
+    ctx.fillStyle = s.owner === 1 ? 'rgba(52, 152, 219, 0.08)' : s.owner === 2 ? 'rgba(231, 76, 60, 0.08)' : 'rgba(255, 255, 255, 0.02)';
+    ctx.fillRect(s.x, 0, s.width, height);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.setLineDash([8, 8]);
+    ctx.strokeRect(s.x, 0, s.width, height);
+    ctx.setLineDash([]);
+  });
+
+  // Укрытия
+  covers.forEach(c => {
+    ctx.fillStyle = '#5a5043'; // Цвет мешков с песком
+    ctx.fillRect(c.x, c.y, c.w, c.h);
+    ctx.strokeStyle = '#383129';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(c.x, c.y, c.w, c.h);
+  });
+
+  // Пули
+  ctx.fillStyle = '#ffd32a';
+  bullets.forEach(b => {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Юниты
+  units.forEach(u => {
+    if (u.hp > 0) u.draw();
+  });
+
+  // 3. ОТРИСОВКА МИНИКАРТЫ
+  mCtx.clearRect(0, 0, mCanvas.width, mCanvas.height);
+  const scaleX = mCanvas.width / width;
+  const scaleY = mCanvas.height / height;
+
+  // Зоны на миникарте
+  sectors.forEach(s => {
+    mCtx.fillStyle = s.owner === 1 ? '#2980b9' : s.owner === 2 ? '#c0392b' : '#34495e';
+    mCtx.fillRect(s.x * scaleX, 0, s.width * scaleX, mCanvas.height);
+  });
+
+  // Укрытия на миникарте
+  mCtx.fillStyle = '#111';
+  covers.forEach(c => {
+    mCtx.fillRect(c.x * scaleX, c.y * scaleY, c.w * scaleX, c.h * scaleY);
+  });
+
+  // Точки бойцов
+  units.forEach(u => {
+    if (u.hp <= 0) return;
+    mCtx.fillStyle = u.isPlayer ? '#2ecc71' : u.team === 1 ? '#fff' : '#e74c3c';
+    mCtx.beginPath();
+    mCtx.arc(u.x * scaleX, u.y * scaleY, u.isPlayer ? 3 : 1.5, 0, Math.PI * 2);
+    mCtx.fill();
+  });
+
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

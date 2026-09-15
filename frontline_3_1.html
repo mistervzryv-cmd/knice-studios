@@ -1,0 +1,2310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Frontline: Total War 1944 (Tactical RTS Update)</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #080b09;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      user-select: none;
+    }
+    #gameCanvas {
+      display: block;
+      cursor: crosshair;
+    }
+
+    #menu-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: radial-gradient(circle, #162019 0%, #060807 90%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      color: #e0ece3;
+    }
+    .menu-title {
+      font-size: 54px;
+      font-weight: 900;
+      letter-spacing: 6px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      text-shadow: 0 4px 25px rgba(0,0,0,0.9);
+    }
+    .menu-sub {
+      font-size: 15px;
+      color: #7b9684;
+      margin-bottom: 25px;
+      letter-spacing: 1px;
+    }
+    .class-selection {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+    .class-card {
+      background: rgba(255,255,255,0.03);
+      border: 2px solid #283a2d;
+      border-radius: 8px;
+      padding: 16px;
+      width: 175px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    .class-card:hover, .class-card.active {
+      border-color: #44bd32;
+      background: rgba(68, 189, 50, 0.12);
+      transform: translateY(-3px);
+    }
+    .class-name { font-weight: bold; font-size: 15px; margin-bottom: 6px; color: #fff; }
+    .class-desc { font-size: 12px; color: #8fa895; line-height: 1.4; }
+
+    .difficulty-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 25px;
+    }
+    .diff-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid #3d4f40;
+      color: #a4b0be;
+      padding: 8px 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 12px;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+    }
+    .diff-btn:hover, .diff-btn.active-diff {
+      border-color: #44bd32;
+      background: rgba(68, 189, 50, 0.18);
+      color: #fff;
+    }
+
+    .btn-action {
+      background: #2e7d32;
+      color: #fff;
+      border: none;
+      padding: 14px 48px;
+      font-size: 17px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-action:hover { background: #388e3c; transform: scale(1.02); }
+
+    #hud {
+      position: absolute;
+      top: 15px; left: 15px;
+      background: rgba(14, 20, 16, 0.94);
+      backdrop-filter: blur(6px);
+      padding: 14px 18px;
+      border: 1px solid #3d4f40;
+      border-radius: 8px;
+      color: #e0e8e2;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+      z-index: 10;
+      display: none;
+      width: 235px;
+    }
+    .hud-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+      color: #8fa895;
+      text-transform: uppercase;
+    }
+    #minimap {
+      border: 1px solid #4a6350;
+      border-radius: 4px;
+      background: #111713;
+      display: block;
+      margin-bottom: 10px;
+    }
+    .stats { font-size: 12px; display: flex; flex-direction: column; gap: 4px; }
+    .bar-bg { width: 100%; height: 7px; background: #232d26; border-radius: 3px; overflow: hidden; }
+    #hp-bar-fill { height: 100%; width: 100%; background: #4cd137; transition: width 0.1s; }
+    #stamina-bar-fill { height: 100%; width: 100%; background: #e1b12c; transition: width 0.05s; }
+    .score-row { display: flex; justify-content: space-between; font-weight: bold; margin-top: 4px; }
+
+    #capture-hud {
+      display: none;
+      position: absolute;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(14, 20, 16, 0.9);
+      border: 1px solid #3d4f40;
+      border-radius: 8px;
+      padding: 10px 24px;
+      text-align: center;
+      color: #fff;
+      z-index: 12;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+    }
+    #capture-title { font-size: 14px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+    #capture-bar-bg { width: 220px; height: 9px; background: #222; border-radius: 4px; overflow: hidden; }
+    #capture-bar-fill { height: 100%; width: 50%; background: #f5cd79; transition: width 0.1s; }
+
+    #pause-screen, #respawn-screen, #gameover-screen {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      backdrop-filter: blur(6px);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      z-index: 150;
+    }
+    #pause-screen { background: rgba(8, 12, 10, 0.85); }
+    #respawn-screen { background: rgba(90, 12, 12, 0.55); }
+    #gameover-screen { background: rgba(10, 15, 12, 0.94); }
+    .end-title { font-size: 48px; font-weight: 900; letter-spacing: 4px; margin-bottom: 10px; }
+    .stats-summary { font-size: 16px; color: #a4b0be; margin-bottom: 25px; text-align: center; line-height: 1.6; }
+
+    #binocular-overlay {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      box-shadow: inset 0 0 140px rgba(0,0,0,0.9), inset 0 0 300px rgba(0,0,0,0.85);
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    #controls-hint {
+      position: absolute;
+      bottom: 15px; left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 12px;
+      pointer-events: none;
+      background: rgba(0,0,0,0.85);
+      padding: 7px 18px;
+      border-radius: 4px;
+      display: none;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div id="menu-overlay">
+  <div class="menu-title">FRONTLINE 1944</div>
+  <div class="menu-sub">ТАКТИКА И АРТИЛЛЕРИЯ: RTS-ОБНОВЛЕНИЕ</div>
+
+  <div class="class-selection">
+    <div class="class-card active" onclick="selectClass('assault', this)">
+      <div class="class-name">ШТУРМОВИК</div>
+      <div class="class-desc">Высокая скорость, 3 гранаты, быстрый захват точек.</div>
+    </div>
+    <div class="class-card" onclick="selectClass('sniper', this)">
+      <div class="class-name">СНАЙПЕР</div>
+      <div class="class-desc">Ваншот, дальнобойный прицел, отстрел гарнизонов.</div>
+    </div>
+    <div class="class-card" onclick="selectClass('gunner', this)">
+      <div class="class-name">ПУЛЕМЕТЧИК</div>
+      <div class="class-desc">Броня, тяжелый огонь подавления, повышенное HP.</div>
+    </div>
+  </div>
+
+  <div class="difficulty-row">
+    <span style="font-size: 13px; color: #8fa895; font-weight: bold; margin-right: 5px;">СЛОЖНОСТЬ:</span>
+    <button type="button" class="diff-btn" onclick="setDifficulty('easy', this)">НОВОБРАНЕЦ</button>
+    <button type="button" class="diff-btn active-diff" onclick="setDifficulty('normal', this)">РЯДОВОЙ</button>
+    <button type="button" class="diff-btn" onclick="setDifficulty('hard', this)">ВЕТЕРАН</button>
+  </div>
+
+  <button class="btn-action" onclick="startGame()">В БОЙ</button>
+</div>
+
+<div id="hud">
+  <div class="hud-title">Оперативная Карта Фронта</div>
+  <canvas id="minimap" width="235" height="135"></canvas>
+  <div class="stats">
+    <div>СОСТОЯНИЕ: <span id="hp-val">100</span>%</div>
+    <div class="bar-bg"><div id="hp-bar-fill"></div></div>
+    <div>ВЫНОСЛИВОСТЬ: <span id="stamina-val">100</span>%</div>
+    <div class="bar-bg"><div id="stamina-bar-fill"></div></div>
+    <div style="margin-top:2px;">ТАКТИКА: <b id="tactical-status" style="color:#4cd137">ГОТОВ</b></div>
+    <div>ЛИКВИДИРОВАНО: <span id="kills-val" style="color: #e84118; font-weight: bold;">0</span></div>
+    <div>АРТИЛЛЕРИЯ [B]: <span id="radio-val" style="color:#4cd137">ГОТОВА</span></div>
+    <div>ГРАНАТЫ [G]: <span id="grenades-val" style="color:#f5cd79">3 шт.</span></div>
+    <div>ОТРЯД [F]: <span id="squad-status" style="color: #4cd137;">0 бойцов</span></div>
+    <div class="score-row">
+      <span style="color:#3880ff">СИНИЕ: <span id="blue-bases-count">2</span>/5</span>
+      <span style="color:#eb445a">ВРАГ: <span id="red-bases-count">2</span>/5</span>
+    </div>
+  </div>
+</div>
+
+<div id="capture-hud">
+  <div id="capture-title">Высота 104</div>
+  <div id="capture-bar-bg"><div id="capture-bar-fill"></div></div>
+</div>
+
+<div id="binocular-overlay"></div>
+
+<div id="pause-screen">
+  <h1 style="font-size: 40px; margin-bottom: 12px; letter-spacing: 3px;">ОПЕРАЦИЯ ПРИОСТАНОВЛЕНА</h1>
+  <div style="color: #a4b0be; font-size: 16px; margin-bottom: 25px;">Нажмите [Esc] или [P], чтобы вернуться к бою</div>
+  <button class="btn-action" onclick="togglePause()">ПРОДОЛЖИТЬ</button>
+</div>
+
+<div id="respawn-screen">
+  <h1 style="font-size: 38px; margin: 0 0 10px 0;">ВЫ ПАЛИ В СРАЖЕНИИ</h1>
+  <div id="respawn-timer" style="font-size: 18px; color: #f5cd79;">Эвакуация на опорный пункт: 3 сек...</div>
+</div>
+
+<div id="gameover-screen">
+  <div class="end-title" id="end-status">ПОБЕДА!</div>
+  <div class="stats-summary" id="end-details"></div>
+  <button class="btn-action" onclick="returnToMenu()">В ГЛАВНОЕ МЕНЮ</button>
+</div>
+
+<div id="controls-hint">
+  WASD — марш | Мышь — огонь | ПКМ — выбор/приказ | [E] — танк | [B] — бинокль | [G] — граната | [F] — свисток
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+
+  if (type === 'shot') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(35, now + 0.08);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.08);
+  } else if (type === 'sniper_shot') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(450, now);
+    osc.frequency.exponentialRampToValueAtTime(20, now + 0.18);
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.18);
+  } else if (type === 'cannon') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(25, now + 0.3);
+    gain.gain.setValueAtTime(0.6, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  } else if (type === 'hit') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.setValueAtTime(1200, now + 0.03);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.05);
+  } else if (type === 'explosion') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(90, now);
+    osc.frequency.exponentialRampToValueAtTime(18, now + 0.45);
+    gain.gain.setValueAtTime(0.5, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.45);
+  } else if (type === 'whistle') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1700, now);
+    osc.frequency.linearRampToValueAtTime(2300, now + 0.15);
+    osc.frequency.linearRampToValueAtTime(1800, now + 0.3);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  } else if (type === 'mortar_in') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(900, now);
+    osc.frequency.exponentialRampToValueAtTime(250, now + 0.6);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.6);
+  } else if (type === 'tinnitus') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(6000, now);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 4.0);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 4.0);
+  }
+}
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const mCanvas = document.getElementById('minimap');
+const mCtx = mCanvas.getContext('2d');
+
+let screenW = canvas.width = window.innerWidth;
+let screenH = canvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+  screenW = canvas.width = window.innerWidth;
+  screenH = canvas.height = window.innerHeight;
+});
+
+const WORLD_W = 4400;
+const WORLD_H = 2500;
+const camera = { x: 0, y: 0, shake: 0 };
+
+let playerStats = { kills: 0, caps: 0, deaths: 0 };
+let artilleryCooldown = 0;
+let inBinoculars = false;
+let isPaused = false;
+let hitmarkerTimer = 0;
+let floatingTexts = []; 
+let damageIndicators = [];
+let respawnInterval = null;
+let playerConcussionAlpha = 0;
+
+// RTS-Управление
+let rmbDown = false;
+let rmbStartX = 0, rmbStartY = 0;
+let rmbCurrentX = 0, rmbCurrentY = 0;
+let selectedUnits = new Set();
+let orderPings = [];
+
+let currentDifficulty = 'normal';
+const difficultySettings = {
+  easy: { spread: 0.36, fireRateMult: 1.45, reactionDist: 360, tankAccuracy: 0.18 },
+  normal: { spread: 0.20, fireRateMult: 1.0, reactionDist: 450, tankAccuracy: 0.08 },
+  hard: { spread: 0.07, fireRateMult: 0.8, reactionDist: 540, tankAccuracy: 0.03 }
+};
+
+function setDifficulty(level, el) {
+  currentDifficulty = level;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active-diff'));
+  el.classList.add('active-diff');
+}
+
+function getRandomClass() {
+  const roll = Math.random();
+  if (roll < 0.65) return 'assault';
+  if (roll < 0.85) return 'gunner';
+  return 'sniper';
+}
+
+let bases = [];
+function initBases() {
+  bases = [
+    { id: 1, name: "Лесопилка", x: 700, y: 650, owner: 1, capProgress: 1.0, radius: 170 },
+    { id: 2, name: "Окопы у Ручья", x: 950, y: 1750, owner: 1, capProgress: 1.0, radius: 170 },
+    { id: 3, name: "Высота 104", x: 2200, y: 1250, owner: 0, capProgress: 0.0, radius: 220 },
+    { id: 4, name: "Восточная Роща", x: 3250, y: 750, owner: 2, capProgress: -1.0, radius: 170 },
+    { id: 5, name: "Штабной Редут", x: 3650, y: 1800, owner: 2, capProgress: -1.0, radius: 210 }
+  ];
+}
+initBases();
+
+const FRONT_SECTIONS = 7;
+const frontlineNodes = [];
+for (let i = 0; i < FRONT_SECTIONS; i++) {
+  frontlineNodes.push({
+    y: (WORLD_H / (FRONT_SECTIONS - 1)) * i,
+    x: WORLD_W * 0.5,
+    targetX: WORLD_W * 0.5
+  });
+}
+
+const trees = [];
+for (let i = 0; i < 280; i++) {
+  const tx = 350 + Math.random() * (WORLD_W - 700);
+  const ty = Math.random() * WORLD_H;
+  const inBase = bases.some(b => Math.hypot(b.x - tx, b.y - ty) < b.radius + 50);
+  if (!inBase) {
+    trees.push({
+      x: tx, y: ty,
+      r: 16 + Math.random() * 14,
+      foliageR: 28 + Math.random() * 20,
+      alive: true
+    });
+  }
+}
+
+let trenches = [];
+function initTrenches() {
+  trenches = [
+    { x: 640, y: 530, w: 120, h: 40 },
+    { x: 890, y: 1630, w: 120, h: 40 },
+    { x: 2140, y: 1130, w: 120, h: 40 },
+    { x: 3190, y: 630, w: 120, h: 40 },
+    { x: 3590, y: 1680, w: 120, h: 40 }
+  ];
+}
+initTrenches();
+
+// Логика разрушения окопов при взрывах
+function subtractRect(R, B) {
+  let res = [];
+  if (R.x >= B.x + B.w || R.x + R.w <= B.x || R.y >= B.y + B.h || R.y + R.h <= B.y) {
+    return [R];
+  }
+  if (R.y < B.y) res.push({x: R.x, y: R.y, w: R.w, h: B.y - R.y});
+  if (R.y + R.h > B.y + B.h) res.push({x: R.x, y: B.y + B.h, w: R.w, h: (R.y + R.h) - (B.y + B.h)});
+  let midY1 = Math.max(R.y, B.y);
+  let midY2 = Math.min(R.y + R.h, B.y + B.h);
+  if (midY1 < midY2) {
+    if (R.x < B.x) res.push({x: R.x, y: midY1, w: B.x - R.x, h: midY2 - midY1});
+    if (R.x + R.w > B.x + B.w) res.push({x: B.x + B.w, y: midY1, w: (R.x + R.w) - (B.x + B.w), h: midY2 - midY1});
+  }
+  return res.filter(r => r.w > 4 && r.h > 4); 
+}
+
+function destroyTrenchArea(x, y, radius) {
+  const B = { x: x - radius, y: y - radius, w: radius * 2, h: radius * 2 };
+  let newTrenches = [];
+  trenches.forEach(t => { newTrenches.push(...subtractRect(t, B)); });
+  trenches = newTrenches;
+}
+
+let craters = [];
+let smokes = [];
+let incomingMortars = [];
+let tanks = [];
+let particles = [];
+let flyingTurrets = [];
+
+// --- ТАНКИ И ЗОНАЛЬНАЯ БРОНЯ ---
+class Tank {
+  constructor(x, y, team) {
+    this.x = x;
+    this.y = y;
+    this.team = team;
+    this.hp = 550;
+    this.maxHp = 550;
+    this.hullAngle = team === 1 ? 0 : Math.PI;
+    this.turretAngle = team === 1 ? 0 : Math.PI;
+    this.driver = null;
+    this.radius = 24;
+    this.speed = 2.0;
+    this.lastShot = 0;
+    this.fireRate = 1300;
+    this.fireTimer = 0;
+    this.trackTimer = 0;
+    this.deadTimer = 0;
+  }
+
+  update(now) {
+    if (this.hp <= 0) return;
+
+    if (this.fireTimer > 0) {
+      this.fireTimer--;
+      if (this.fireTimer % 10 === 0) {
+        this.hp -= 5;
+        if (this.hp <= 0) applyTankDamage(this, this.x, this.y, 999, 'fire');
+      }
+      particles.push({
+        x: this.x - Math.cos(this.hullAngle)*15 + (Math.random()-0.5)*10,
+        y: this.y - Math.sin(this.hullAngle)*15 + (Math.random()-0.5)*10,
+        vx: (Math.random()-0.5)*1, vy: -1 - Math.random(),
+        life: 30, maxLife: 30, type: 'fire'
+      });
+    }
+
+    if (this.hp > 0 && this.hp < this.maxHp * 0.4) {
+      if (Math.random() < 0.3) {
+        particles.push({
+          x: this.x + (Math.random()-0.5)*10,
+          y: this.y + (Math.random()-0.5)*10,
+          vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5,
+          life: 50, maxLife: 50, type: 'smoke'
+        });
+      }
+    }
+
+    let canMove = true;
+    if (this.trackTimer > 0) {
+      this.trackTimer--;
+      canMove = false;
+      if (Math.random() < 0.1) {
+         particles.push({
+          x: this.x + (Math.random()-0.5)*20, y: this.y + (Math.random()-0.5)*20,
+          vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2,
+          life: 10, maxLife: 10, type: 'spark'
+        });
+      }
+    }
+
+    if (this.driver && this.driver.isPlayer) {
+      if (canMove) {
+        let vx = 0, vy = 0;
+        if (keys.w) vy -= 1;
+        if (keys.s) vy += 1;
+        if (keys.a) vx -= 1;
+        if (keys.d) vx += 1;
+
+        if (vx !== 0 || vy !== 0) {
+          const moveAngle = Math.atan2(vy, vx);
+          this.hullAngle = moveAngle;
+          const nx = this.x + Math.cos(moveAngle) * this.speed;
+          const ny = this.y + Math.sin(moveAngle) * this.speed;
+          this.x = Math.max(30, Math.min(WORLD_W - 30, nx));
+          this.y = Math.max(30, Math.min(WORLD_H - 30, ny));
+
+          trees.forEach(t => {
+            if (t.alive && Math.hypot(t.x - this.x, t.y - this.y) < t.r + this.radius) {
+              t.alive = false;
+              playSound('explosion');
+              craters.push({ x: t.x, y: t.y, r: 18 });
+            }
+          });
+        }
+      }
+
+      const worldMouseX = mouse.x + camera.x;
+      const worldMouseY = mouse.y + camera.y;
+      this.turretAngle = Math.atan2(worldMouseY - this.y, worldMouseX - this.x);
+
+      if (mouse.isDown && now - this.lastShot > this.fireRate && !inBinoculars) {
+        shootCannon(this.x, this.y, this.turretAngle, this.team, true);
+        this.lastShot = now;
+        camera.shake = Math.max(camera.shake, 8);
+      }
+    } else {
+      this.ai(now, canMove);
+    }
+  }
+
+  ai(now, canMove) {
+    let nearest = null;
+    let minD = 650;
+    const diffCfg = difficultySettings[currentDifficulty];
+
+    tanks.forEach(tk => {
+      if (tk !== this && tk.team !== this.team && tk.hp > 0) {
+        const d = Math.hypot(tk.x - this.x, tk.y - this.y);
+        if (d < minD) { minD = d; nearest = tk; }
+      }
+    });
+
+    units.forEach(u => {
+      if (u.team !== this.team && u.hp > 0) {
+        const d = Math.hypot(u.x - this.x, u.y - this.y);
+        if (d < minD) { minD = d; nearest = u; }
+      }
+    });
+
+    let targetX, targetY;
+    if (this.hp < 160) {
+      const homeBase = this.team === 1 ? bases[0] : bases[4];
+      targetX = homeBase.x;
+      targetY = homeBase.y;
+    } else if (nearest) {
+      if (minD > 320) {
+        targetX = nearest.x;
+        targetY = nearest.y;
+      } else if (minD < 180) {
+        const backAngle = Math.atan2(this.y - nearest.y, this.x - nearest.x);
+        targetX = this.x + Math.cos(backAngle) * 100;
+        targetY = this.y + Math.sin(backAngle) * 100;
+      }
+    } else {
+      const targetBase = bases.find(b => b.owner !== this.team) || bases[2];
+      targetX = targetBase.x;
+      targetY = targetBase.y;
+    }
+
+    if (canMove && targetX !== undefined && targetY !== undefined) {
+      const moveAngle = Math.atan2(targetY - this.y, targetX - this.x);
+      this.hullAngle = moveAngle;
+      const nx = this.x + Math.cos(moveAngle) * (this.speed * 0.7);
+      const ny = this.y + Math.sin(moveAngle) * (this.speed * 0.7);
+      this.x = Math.max(40, Math.min(WORLD_W - 40, nx));
+      this.y = Math.max(40, Math.min(WORLD_H - 40, ny));
+
+      trees.forEach(t => {
+        if (t.alive && Math.hypot(t.x - this.x, t.y - this.y) < t.r + this.radius) {
+          t.alive = false;
+          playSound('explosion');
+          craters.push({ x: t.x, y: t.y, r: 18 });
+        }
+      });
+    }
+
+    if (nearest) {
+      const targetTurretAngle = Math.atan2(nearest.y - this.y, nearest.x - this.x);
+      let diff = targetTurretAngle - this.turretAngle;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      this.turretAngle += diff * 0.08;
+
+      const effectiveFireRate = this.team === 2 ? this.fireRate * diffCfg.fireRateMult : this.fireRate;
+      if (now - this.lastShot > effectiveFireRate && Math.abs(diff) < 0.25) {
+        const spread = this.team === 2 ? (Math.random() - 0.5) * diffCfg.tankAccuracy : (Math.random() - 0.5) * 0.08;
+        shootCannon(this.x, this.y, this.turretAngle + spread, this.team, false);
+        this.lastShot = now;
+      }
+    }
+  }
+
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.hullAngle);
+
+    if (this.hp <= 0) {
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillRect(-22, -15, 44, 30);
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(-24, -18, 48, 6);
+      ctx.fillRect(-24, 12, 48, 6);
+      ctx.restore();
+      return;
+    }
+
+    ctx.fillStyle = this.team === 1 ? '#27496d' : '#8b2635';
+    ctx.fillRect(-22, -15, 44, 30);
+    ctx.fillStyle = '#141414';
+    ctx.fillRect(-24, -18, 48, 6);
+    ctx.fillRect(-24, 12, 48, 6);
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.turretAngle);
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, -3, 30, 6);
+    ctx.beginPath();
+    ctx.arc(0, 0, 13, 0, Math.PI * 2);
+    ctx.fillStyle = this.team === 1 ? '#3880ff' : '#eb445a';
+    ctx.fill();
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function applyTankDamage(tk, srcX, srcY, baseDmg, type) {
+  if (tk.hp <= 0) return;
+
+  let angleToHit = Math.atan2(srcY - tk.y, srcX - tk.x);
+  let relAngle = angleToHit - tk.hullAngle;
+  while (relAngle > Math.PI) relAngle -= Math.PI * 2;
+  while (relAngle < -Math.PI) relAngle += Math.PI * 2;
+  let absAngle = Math.abs(relAngle);
+
+  let finalDmg = baseDmg;
+  let hitZone = 'side';
+
+  if (absAngle < Math.PI / 4) hitZone = 'front';
+  else if (absAngle > 3 * Math.PI / 4) hitZone = 'rear';
+
+  if (hitZone === 'front') {
+    if (type === 'bullet' || type === 'shell') {
+      finalDmg = Math.floor(baseDmg * 0.1); 
+      playSound('hit');
+      for(let i=0; i<8; i++) {
+        particles.push({
+          x: tk.x + Math.cos(angleToHit)*tk.radius,
+          y: tk.y + Math.sin(angleToHit)*tk.radius,
+          vx: Math.cos(angleToHit + (Math.random()-0.5)) * (Math.random()*4+2),
+          vy: Math.sin(angleToHit + (Math.random()-0.5)) * (Math.random()*4+2),
+          life: 15, maxLife: 15, type: 'spark'
+        });
+      }
+    }
+  }
+  
+  if (hitZone === 'rear') {
+    finalDmg = Math.floor(baseDmg * 2.5);
+    if (Math.random() < 0.4 && type !== 'bullet') tk.fireTimer = 180;
+  }
+
+  if (hitZone === 'side' && (type === 'shell' || type === 'grenade' || type === 'mortar')) {
+    if (Math.random() < 0.6) tk.trackTimer = 300;
+  }
+
+  tk.hp -= finalDmg;
+
+  if (tk.hp <= 0) {
+    tk.hp = 0;
+    if (tk.driver && tk.driver.isPlayer) {
+       tk.driver.hp = 0;
+       triggerRespawn();
+    }
+    if (tk.driver && !tk.driver.isPlayer) tk.driver.hp = 0;
+    tk.driver = null;
+
+    playSound('explosion');
+    camera.shake = Math.max(camera.shake, 15);
+    explosions.push({ x: tk.x, y: tk.y, radius: 20, maxRadius: 130, alpha: 1.0 });
+    craters.push({ x: tk.x, y: tk.y, r: 28 });
+    destroyTrenchArea(tk.x, tk.y, 30);
+    
+    flyingTurrets.push({
+      x: tk.x, y: tk.y,
+      vx: (Math.random()-0.5)*8, vy: (Math.random()-0.5)*8,
+      z: 5, vz: 10,
+      angle: tk.turretAngle, va: (Math.random()-0.5)*0.4,
+      team: tk.team, life: 1000
+    });
+  }
+}
+
+function initTanks() {
+  tanks = [
+    new Tank(bases[0].x + 40, bases[0].y + 40, 1),
+    new Tank(bases[4].x - 40, bases[4].y - 40, 2)
+  ];
+}
+
+const keys = { w: false, a: false, s: false, d: false };
+const mouse = { x: 0, y: 0, isDown: false };
+let selectedClass = 'assault';
+
+function resetKeys() {
+  keys.w = false;
+  keys.a = false;
+  keys.s = false;
+  keys.d = false;
+  mouse.isDown = false;
+  rmbDown = false;
+}
+
+function selectClass(type, el) {
+  selectedClass = type;
+  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (k === 'escape' || k === 'p' || k === 'з') togglePause();
+  if (isPaused) return;
+
+  if (k === 'w' || k === 'ц' || e.key === 'ArrowUp') keys.w = true;
+  if (k === 'a' || k === 'ф' || e.key === 'ArrowLeft') keys.a = true;
+  if (k === 's' || k === 'ы' || e.key === 'ArrowDown') keys.s = true;
+  if (k === 'd' || k === 'в' || e.key === 'ArrowRight') keys.d = true;
+  if (k === 'f' || k === 'а') commandWhistle();
+  if (k === 'g' || k === 'п') throwGrenade();
+  if (k === 'e' || k === 'у') toggleTank();
+  if (k === 'b' || k === 'и') toggleBinoculars();
+});
+
+window.addEventListener('keyup', e => {
+  const k = e.key.toLowerCase();
+  if (k === 'w' || k === 'ц' || e.key === 'ArrowUp') keys.w = false;
+  if (k === 'a' || k === 'ф' || e.key === 'ArrowLeft') keys.a = false;
+  if (k === 's' || k === 'ы' || e.key === 'ArrowDown') keys.s = false;
+  if (k === 'd' || k === 'в' || e.key === 'ArrowRight') keys.d = false;
+});
+
+window.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  if (rmbDown) {
+    rmbCurrentX = e.clientX + camera.x;
+    rmbCurrentY = e.clientY + camera.y;
+  }
+});
+
+window.addEventListener('mousedown', e => {
+  if (isPaused) return;
+  if (inBinoculars) {
+    if (e.button === 0) callArtillery('mortar');
+    else if (e.button === 2) callArtillery('smoke');
+    return;
+  }
+
+  if (e.button === 2) {
+    rmbDown = true;
+    rmbStartX = e.clientX + camera.x;
+    rmbStartY = e.clientY + camera.y;
+    rmbCurrentX = rmbStartX;
+    rmbCurrentY = rmbStartY;
+  } else if (e.button === 0) {
+    mouse.isDown = true;
+    selectedUnits.clear(); // Клик по пустой области (без зажатия ПКМ) сбрасывает выделение
+  }
+});
+
+window.addEventListener('mouseup', e => {
+  if (e.button === 0) mouse.isDown = false;
+  if (e.button === 2 && rmbDown) {
+    rmbDown = false;
+    const dx = rmbCurrentX - rmbStartX;
+    const dy = rmbCurrentY - rmbStartY;
+
+    if (Math.hypot(dx, dy) > 15) {
+      // Это было выделение рамкой
+      selectedUnits.clear();
+      const minX = Math.min(rmbStartX, rmbCurrentX);
+      const maxX = Math.max(rmbStartX, rmbCurrentX);
+      const minY = Math.min(rmbStartY, rmbCurrentY);
+      const maxY = Math.max(rmbStartY, rmbCurrentY);
+
+      units.forEach(u => {
+        if (u.team === 1 && !u.isPlayer && !u.inTank && u.hp > 0) {
+          if (u.x >= minX && u.x <= maxX && u.y >= minY && u.y <= maxY) {
+            selectedUnits.add(u);
+            u.followingPlayer = false;
+          }
+        }
+      });
+    } else {
+      // Это был одиночный клик ПКМ - отдача приказа
+      if (selectedUnits.size > 0) {
+        let targetEntity = null;
+        
+        tanks.forEach(tk => {
+          if (tk.team === 2 && tk.hp > 0 && Math.hypot(tk.x - rmbCurrentX, tk.y - rmbCurrentY) < tk.radius * 2) {
+            targetEntity = tk;
+          }
+        });
+
+        if (!targetEntity) {
+          units.forEach(u => {
+            if (u.team === 2 && u.hp > 0 && Math.hypot(u.x - rmbCurrentX, u.y - rmbCurrentY) < u.radius * 2) {
+              targetEntity = u;
+            }
+          });
+        }
+
+        const order = { x: rmbCurrentX, y: rmbCurrentY, target: targetEntity };
+        selectedUnits.forEach(u => {
+          u.rtsOrder = order;
+          u.aiState = 'run';
+          u.stateTimer = 0;
+        });
+
+        orderPings.push({ x: rmbCurrentX, y: rmbCurrentY, radius: 0, alpha: 1, isAttack: !!targetEntity });
+        playSound('whistle');
+      }
+    }
+  }
+});
+
+window.addEventListener('contextmenu', e => e.preventDefault());
+
+function togglePause() {
+  if (!gameRunning) return;
+  isPaused = !isPaused;
+  resetKeys();
+  document.getElementById('pause-screen').style.display = isPaused ? 'flex' : 'none';
+  if (!isPaused) requestAnimationFrame(loop);
+}
+
+function toggleBinoculars() {
+  if (!player || player.hp <= 0 || player.inTank) return;
+  inBinoculars = !inBinoculars;
+  document.getElementById('binocular-overlay').style.display = inBinoculars ? 'block' : 'none';
+}
+
+function callArtillery(type) {
+  if (artilleryCooldown > 0) return;
+  artilleryCooldown = 600;
+  playSound('whistle');
+
+  const targetX = mouse.x + camera.x;
+  const targetY = mouse.y + camera.y;
+
+  if (type === 'mortar') {
+    for (let i = 0; i < 8; i++) {
+      incomingMortars.push({
+        x: targetX + (Math.random() - 0.5) * 280,
+        y: targetY + (Math.random() - 0.5) * 280,
+        delay: 40 + i * 30 + (Math.random() * 15),
+        type: 'explosive'
+      });
+    }
+  } else {
+    for (let i = 0; i < 3; i++) {
+      incomingMortars.push({
+        x: targetX + (Math.random() - 0.5) * 120,
+        y: targetY + (Math.random() - 0.5) * 120,
+        delay: 45 + i * 20,
+        type: 'smoke'
+      });
+    }
+  }
+  toggleBinoculars();
+}
+
+function toggleTank() {
+  if (!player || player.hp <= 0) return;
+  if (player.inTank) {
+    player.inTank.driver = null;
+    player.x = player.inTank.x + 38;
+    player.y = player.inTank.y;
+    player.inTank = null;
+  } else {
+    const nearTank = tanks.find(t => t.hp > 0 && Math.hypot(t.x - player.x, t.y - player.y) < 55 && !t.driver);
+    if (nearTank && nearTank.team === player.team) {
+      nearTank.driver = player;
+      player.inTank = nearTank;
+    }
+  }
+}
+
+class Unit {
+  constructor(x, y, team, isPlayer = false, classType = 'assault') {
+    this.x = x;
+    this.y = y;
+    this.radius = 10;
+    this.team = team;
+    this.isPlayer = isPlayer;
+    this.classType = classType;
+    this.stamina = 100;
+    this.angle = 0;
+    this.lastShot = 0;
+    this.followingPlayer = false;
+    this.grenades = 3;
+    this.inTank = null;
+    this.tactic = 'normal';
+    this.suppressionTimer = 0;
+    this.concussionTimer = 0;
+    this.flankOffset = (Math.random() - 0.5) * 600;
+
+    // RTS и Тактический ИИ
+    this.aiState = 'run';
+    this.stateTimer = 0;
+    this.tacticalTarget = null;
+    this.rtsOrder = null;
+
+    if (classType === 'sniper') {
+      this.baseSpeed = isPlayer ? 3.3 : 1.5;
+      this.fireRate = 950;
+      this.bulletDamage = 110;
+      this.bulletSpeed = 18;
+      this.hp = 85;
+      this.maxHp = 85;
+    } else if (classType === 'gunner') {
+      this.baseSpeed = isPlayer ? 2.8 : 1.35;
+      this.fireRate = 120;
+      this.bulletDamage = 26;
+      this.bulletSpeed = 11;
+      this.hp = 140;
+      this.maxHp = 140;
+    } else {
+      this.baseSpeed = isPlayer ? 3.6 : 1.8;
+      this.fireRate = 190;
+      this.bulletDamage = 35;
+      this.bulletSpeed = 12;
+      this.hp = 100;
+      this.maxHp = 100;
+    }
+  }
+
+  update(now) {
+    if (this.inTank) {
+      this.x = this.inTank.x;
+      this.y = this.inTank.y;
+      this.hp = Math.round((this.inTank.hp / this.inTank.maxHp) * 100);
+      if (this.inTank.hp <= 0) {
+        this.inTank = null;
+        this.hp = 0;
+      }
+      return;
+    }
+
+    const inTrench = trenches.some(t => this.x > t.x && this.x < t.x + t.w && this.y > t.y && this.y < t.y + t.h);
+    const inCrater = craters.some(c => Math.hypot(c.x - this.x, c.y - this.y) < c.r);
+    const nearTree = trees.some(t => t.alive && Math.hypot(t.x - this.x, t.y - this.y) < t.foliageR);
+
+    if (inTrench || inCrater || nearTree) {
+      this.tactic = 'entrenched';
+    } else if (this.suppressionTimer > 0) {
+      this.tactic = 'suppressed';
+      this.suppressionTimer--;
+    } else {
+      this.tactic = 'normal';
+    }
+
+    let speedMult = 1.0;
+    if (this.stamina < 20) speedMult *= 0.6;
+    
+    if (this.concussionTimer > 0) {
+      this.concussionTimer--;
+      this.tactic = 'suppressed';
+      speedMult *= 0.4;
+    }
+
+    if (this.isPlayer) {
+      let dx = 0, dy = 0;
+      if (keys.w) dy -= 1;
+      if (keys.s) dy += 1;
+      if (keys.a) dx -= 1;
+      if (keys.d) dx += 1;
+
+      if (dx !== 0 || dy !== 0) {
+        this.stamina = Math.max(0, this.stamina - 0.25);
+        if (dx !== 0 && dy !== 0) { dx *= 0.7071; dy *= 0.7071; }
+        this.move(dx * this.baseSpeed * speedMult, dy * this.baseSpeed * speedMult);
+      } else {
+        this.stamina = Math.min(100, this.stamina + 0.4);
+      }
+
+      const worldMouseX = mouse.x + camera.x;
+      const worldMouseY = mouse.y + camera.y;
+      this.angle = Math.atan2(worldMouseY - this.y, worldMouseX - this.x);
+
+      if (mouse.isDown && now - this.lastShot > this.fireRate && !inBinoculars) {
+        let spread = 0;
+        if (this.stamina < 30) spread += (Math.random() - 0.5) * 0.15;
+        if (this.tactic === 'suppressed') spread += (Math.random() - 0.5) * 0.25;
+        if (this.concussionTimer > 0) spread += (Math.random() - 0.5) * 0.50;
+        
+        shoot(this.x, this.y, this.angle + spread, this.team, this.bulletDamage, this.bulletSpeed, true, this.classType === 'sniper');
+        this.lastShot = now;
+      }
+
+      for (let i = crates.length - 1; i >= 0; i--) {
+        if (Math.hypot(crates[i].x - this.x, crates[i].y - this.y) < 25) {
+          this.hp = Math.min(this.maxHp, this.hp + 40);
+          this.grenades = Math.min(5, this.grenades + 1);
+          document.getElementById('grenades-val').innerText = `${this.grenades} шт.`;
+          crates.splice(i, 1);
+        }
+      }
+    } else {
+      this.ai(now, speedMult);
+    }
+  }
+
+  move(vx, vy) {
+    let nx = this.x + vx;
+    let ny = this.y + vy;
+
+    for (let t of trees) {
+      if (!t.alive) continue;
+      const minDist = t.r + this.radius;
+
+      if (Math.hypot(t.x - nx, t.y - this.y) < minDist) nx = this.x;
+      if (Math.hypot(t.x - this.x, t.y - ny) < minDist) ny = this.y;
+
+      const curDist = Math.hypot(t.x - nx, t.y - ny);
+      if (curDist < minDist && curDist > 0) {
+        const pushAngle = Math.atan2(ny - t.y, nx - t.x);
+        nx = t.x + Math.cos(pushAngle) * (minDist + 1);
+        ny = t.y + Math.sin(pushAngle) * (minDist + 1);
+      }
+    }
+
+    for (let u of units) {
+      if (u !== this && u.hp > 0 && !u.inTank) {
+        const d = Math.hypot(u.x - nx, u.y - ny);
+        if (d < 24 && d > 0) {
+          const push = Math.atan2(ny - u.y, nx - u.x);
+          nx += Math.cos(push) * 1.5;
+          ny += Math.sin(push) * 1.5;
+        }
+      }
+    }
+
+    this.x = Math.max(20, Math.min(WORLD_W - 20, nx));
+    this.y = Math.max(20, Math.min(WORLD_H - 20, ny));
+  }
+
+  findNearestCover(cx, cy, radius) {
+    let bestCover = null;
+    let bestDist = radius;
+    const check = (x, y) => {
+        const d = Math.hypot(x - cx, y - cy);
+        if (d < bestDist && d > 10) { bestDist = d; bestCover = {x, y}; }
+    };
+    craters.forEach(c => check(c.x, c.y));
+    trenches.forEach(t => check(t.x + t.w/2, t.y + t.h/2));
+    return bestCover;
+  }
+
+  findNextCoverTowards(cx, cy, tx, ty, radius) {
+    let bestCover = null;
+    let bestScore = -Infinity;
+    const baseDist = Math.hypot(tx - cx, ty - cy);
+    if (baseDist < 100) return {x: tx, y: ty};
+
+    const check = (x, y) => {
+        const distToMe = Math.hypot(x - cx, y - cy);
+        if (distToMe > radius || distToMe < 30) return;
+        const distToTarget = Math.hypot(tx - x, ty - y);
+        if (distToTarget < baseDist) {
+            const score = -distToTarget;
+            if (score > bestScore) {
+                bestScore = score;
+                bestCover = {x, y};
+            }
+        }
+    };
+    craters.forEach(c => check(c.x, c.y));
+    trenches.forEach(t => check(t.x + t.w/2, t.y + t.h/2));
+    trees.forEach(t => { if (t.alive) check(t.x, t.y); });
+    return bestCover || {x: tx, y: ty};
+  }
+
+  ai(now, speedMult) {
+    let nearestEnemy = null;
+    let minD = 650;
+    const diffCfg = difficultySettings[currentDifficulty];
+    let baseReaction = this.team === 2 ? diffCfg.reactionDist : 450;
+    let reactDist = this.classType === 'sniper' ? baseReaction * 1.4 : baseReaction;
+
+    tanks.forEach(tk => {
+      if (tk.team !== this.team && tk.hp > 0) {
+        const d = Math.hypot(tk.x - this.x, tk.y - this.y);
+        if (d < minD) { minD = d; nearestEnemy = tk; }
+      }
+    });
+
+    units.forEach(u => {
+      if (u.team !== this.team && u.hp > 0 && !u.inTank) {
+        const inSmoke = smokes.some(s => Math.hypot(s.x - u.x, s.y - u.y) < s.r || Math.hypot(s.x - this.x, s.y - this.y) < s.r);
+        if (!inSmoke) {
+          let d = Math.hypot(u.x - this.x, u.y - this.y);
+          if (this.rtsOrder && this.rtsOrder.target === u) d *= 0.1; 
+          if (d < minD) { minD = d; nearestEnemy = u; }
+        }
+      }
+    });
+
+    if (this.rtsOrder && this.rtsOrder.target && this.rtsOrder.target.hp <= 0) {
+        this.rtsOrder = null;
+    }
+
+    let goalX, goalY;
+    let isDefendOrder = false;
+
+    if (this.rtsOrder) {
+        if (this.rtsOrder.target && this.rtsOrder.target.hp > 0) {
+            goalX = this.rtsOrder.target.x;
+            goalY = this.rtsOrder.target.y;
+        } else {
+            goalX = this.rtsOrder.x;
+            goalY = this.rtsOrder.y;
+            isDefendOrder = true;
+        }
+    } else if (this.followingPlayer && player && player.hp > 0) {
+        goalX = player.x;
+        goalY = player.y;
+    } else {
+        const targetBase = bases.find(b => b.owner !== this.team) || bases[2];
+        goalX = targetBase.x;
+        goalY = Math.max(100, Math.min(WORLD_H - 100, targetBase.y + this.flankOffset));
+    }
+
+    const distToGoal = Math.hypot(goalX - this.x, goalY - this.y);
+
+    if (isDefendOrder && distToGoal < 50) {
+        this.aiState = 'cover';
+        this.stateTimer = 100;
+        this.tacticalTarget = null;
+    }
+
+    if (this.suppressionTimer > 0 && this.tactic !== 'entrenched') {
+        this.aiState = 'run';
+        this.stateTimer = 60;
+        if (!this.tacticalTarget || Math.random() < 0.1) {
+            this.tacticalTarget = this.findNearestCover(this.x, this.y, 300) || {x: goalX, y: goalY};
+        }
+    } else {
+        this.stateTimer--;
+        if (this.stateTimer <= 0) {
+            if (this.aiState === 'run') {
+                this.aiState = 'cover';
+                this.stateTimer = 60 + Math.random() * 60; 
+            } else {
+                this.aiState = 'run';
+                this.stateTimer = 120 + Math.random() * 120;
+                this.tacticalTarget = this.findNextCoverTowards(this.x, this.y, goalX, goalY, 350);
+            }
+        }
+    }
+
+    if (this.aiState === 'run' && !(isDefendOrder && distToGoal < 50)) {
+        let tx = this.tacticalTarget ? this.tacticalTarget.x : goalX;
+        let ty = this.tacticalTarget ? this.tacticalTarget.y : goalY;
+        let moveAngle = Math.atan2(ty - this.y, tx - this.x);
+
+        if (nearestEnemy && this.classType === 'sniper' && minD < 320 && !this.rtsOrder) {
+            moveAngle = Math.atan2(this.y - nearestEnemy.y, this.x - nearestEnemy.x);
+        } else if (this.classType === 'gunner' && nearestEnemy && minD < 150 && this.tactic !== 'entrenched' && !this.rtsOrder) {
+            moveAngle = Math.atan2(this.y - nearestEnemy.y, this.x - nearestEnemy.x);
+        }
+
+        this.move(Math.cos(moveAngle) * this.baseSpeed * speedMult * 0.7, Math.sin(moveAngle) * this.baseSpeed * speedMult * 0.7);
+        if (!nearestEnemy) this.angle = moveAngle;
+    }
+
+    if (nearestEnemy) {
+        this.angle = Math.atan2(nearestEnemy.y - this.y, nearestEnemy.x - this.x);
+
+        if ((nearestEnemy instanceof Tank) && minD < 220 && this.classType === 'assault' && Math.random() < 0.007) {
+            grenades.push({ x: this.x, y: this.y, tx: nearestEnemy.x, ty: nearestEnemy.y, timer: 60, isPlayerShot: false });
+        }
+
+        const effectiveFireRate = this.team === 2 ? this.fireRate * diffCfg.fireRateMult : this.fireRate;
+        let baseSpread = this.team === 2 ? diffCfg.spread : 0.2;
+        if (this.classType === 'sniper') baseSpread *= 0.3;
+        if (this.classType === 'gunner') baseSpread *= 1.3;
+
+        if (now - this.lastShot > effectiveFireRate) {
+            let finalSpread = (this.tactic === 'entrenched' || this.aiState === 'cover') ? baseSpread * 0.5 : baseSpread;
+            if (this.concussionTimer > 0) finalSpread *= 3;
+            shoot(this.x, this.y, this.angle + (Math.random() - 0.5) * finalSpread, this.team, this.bulletDamage, this.bulletSpeed, false, this.classType === 'sniper');
+            this.lastShot = now;
+        }
+    }
+  }
+
+  draw() {
+    if (this.inTank) return;
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+
+    ctx.fillStyle = '#111';
+    if (this.classType === 'sniper') {
+      ctx.fillRect(4, -1.5, 19, 3);
+      ctx.fillStyle = '#2d3436';
+      ctx.fillRect(8, -3.5, 7, 2);
+    } else if (this.classType === 'gunner') {
+      ctx.fillRect(4, -3.5, 15, 7);
+      ctx.fillStyle = '#636e72';
+      ctx.fillRect(16, -5, 3, 10);
+    } else {
+      ctx.fillRect(5, -2, 14, 4);
+    }
+
+    ctx.beginPath();
+    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.team === 1 ? (this.isPlayer ? '#2ecc71' : '#3880ff') : '#eb445a';
+    ctx.fill();
+    ctx.strokeStyle = '#0e1410';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    if (this.classType === 'sniper') {
+      ctx.fillStyle = '#2d3436';
+      ctx.beginPath();
+      ctx.arc(0, 0, 4, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (this.classType === 'gunner') {
+      ctx.fillStyle = '#ffeaa7';
+      ctx.fillRect(-4, -4, 8, 8);
+    }
+
+    if (this.tactic === 'entrenched') {
+      ctx.beginPath();
+      ctx.arc(0, 0, this.radius + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = '#f5cd79';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    if (selectedUnits.has(this)) {
+      ctx.beginPath();
+      ctx.arc(0, 0, this.radius + 7, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(46, 204, 113, 0.9)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (this.followingPlayer) {
+      ctx.beginPath();
+      ctx.arc(0, 0, this.radius + 6, 0, Math.PI * 2);
+      ctx.strokeStyle = '#4cd137';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+let bullets = [];
+let cannonShells = [];
+let grenades = [];
+let explosions = [];
+let crates = [];
+
+function shoot(x, y, angle, team, dmg, spd, isPlayerShot = false, isSniper = false) {
+  bullets.push({
+    x: x + Math.cos(angle) * 15,
+    y: y + Math.sin(angle) * 15,
+    vx: Math.cos(angle) * spd,
+    vy: Math.sin(angle) * spd,
+    damage: dmg,
+    team: team,
+    life: isSniper ? 75 : 55,
+    isPlayerShot: isPlayerShot
+  });
+  if (isPlayerShot) {
+    if (isSniper) playSound('sniper_shot');
+    else playSound('shot');
+  }
+}
+
+function shootCannon(x, y, angle, team, isPlayerShot = false) {
+  playSound('cannon');
+  cannonShells.push({
+    x: x + Math.cos(angle) * 32,
+    y: y + Math.sin(angle) * 32,
+    vx: Math.cos(angle) * 18,
+    vy: Math.sin(angle) * 18,
+    team: team,
+    life: 60,
+    isPlayerShot: isPlayerShot
+  });
+}
+
+function throwGrenade() {
+  if (!player || player.hp <= 0 || player.grenades <= 0 || player.inTank) return;
+  player.grenades--;
+  document.getElementById('grenades-val').innerText = `${player.grenades} шт.`;
+
+  const worldMouseX = mouse.x + camera.x;
+  const worldMouseY = mouse.y + camera.y;
+  const angle = Math.atan2(worldMouseY - player.y, worldMouseX - player.x);
+  const dist = Math.min(260, Math.hypot(worldMouseX - player.x, worldMouseY - player.y));
+
+  grenades.push({
+    x: player.x,
+    y: player.y,
+    tx: player.x + Math.cos(angle) * dist,
+    ty: player.y + Math.sin(angle) * dist,
+    timer: 65,
+    isPlayerShot: true
+  });
+}
+
+function commandWhistle() {
+  if (!player || player.hp <= 0 || player.inTank) return;
+  playSound('whistle');
+  let count = 0;
+  units.forEach(u => {
+    if (u.team === 1 && !u.isPlayer && u.hp > 0 && !u.inTank) {
+      if (Math.hypot(u.x - player.x, u.y - player.y) < 420) {
+        u.followingPlayer = true;
+        u.rtsOrder = null;
+        selectedUnits.delete(u);
+        count++;
+      }
+    }
+  });
+  document.getElementById('squad-status').innerText = `${count} бойцов`;
+}
+
+let units = [];
+let player = null;
+let gameRunning = false;
+let isRespawning = false;
+
+function startGame() {
+  if (respawnInterval) clearInterval(respawnInterval);
+
+  document.getElementById('menu-overlay').style.display = 'none';
+  document.getElementById('hud').style.display = 'block';
+  document.getElementById('controls-hint').style.display = 'block';
+  document.getElementById('gameover-screen').style.display = 'none';
+  document.getElementById('pause-screen').style.display = 'none';
+  document.getElementById('respawn-screen').style.display = 'none';
+
+  initBases();
+  initTrenches();
+  initTanks();
+
+  playerStats = { kills: 0, caps: 0, deaths: 0 };
+  artilleryCooldown = 0;
+  inBinoculars = false;
+  isPaused = false;
+  isRespawning = false;
+  playerConcussionAlpha = 0;
+
+  bullets = []; cannonShells = []; grenades = []; explosions = [];
+  crates = []; craters = []; smokes = []; incomingMortars = [];
+  floatingTexts = []; damageIndicators = []; particles = [];
+  flyingTurrets = []; selectedUnits.clear(); orderPings = [];
+  resetKeys();
+
+  units = [];
+  player = new Unit(bases[0].x, bases[0].y, 1, true, selectedClass);
+  units.push(player);
+
+  for (let i = 0; i < 24; i++) {
+    units.push(new Unit(bases[0].x + (Math.random() - 0.5) * 160, bases[0].y + (Math.random() - 0.5) * 250, 1, false, getRandomClass()));
+    units.push(new Unit(bases[4].x + (Math.random() - 0.5) * 160, bases[4].y + (Math.random() - 0.5) * 250, 2, false, getRandomClass()));
+  }
+
+  gameRunning = true;
+  requestAnimationFrame(loop);
+}
+
+function returnToMenu() {
+  gameRunning = false;
+  if (respawnInterval) clearInterval(respawnInterval);
+  document.getElementById('gameover-screen').style.display = 'none';
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('capture-hud').style.display = 'none';
+  document.getElementById('controls-hint').style.display = 'none';
+  document.getElementById('binocular-overlay').style.display = 'none';
+  document.getElementById('pause-screen').style.display = 'none';
+  document.getElementById('respawn-screen').style.display = 'none';
+  document.getElementById('menu-overlay').style.display = 'flex';
+}
+
+function checkEndGame() {
+  if (!gameRunning) return;
+  const blueBases = bases.filter(b => b.owner === 1).length;
+  const redBases = bases.filter(b => b.owner === 2).length;
+
+  if (blueBases === bases.length) {
+    endGame(true, "ПОБЕДА!");
+  } else if (redBases === bases.length) {
+    endGame(false, "ПОРАЖЕНИЕ");
+  }
+}
+
+function endGame(won, title) {
+  gameRunning = false;
+  resetKeys();
+  if (respawnInterval) clearInterval(respawnInterval);
+
+  const endScreen = document.getElementById('gameover-screen');
+  const endStatus = document.getElementById('end-status');
+  const endDetails = document.getElementById('end-details');
+
+  endStatus.innerText = title;
+  endStatus.style.color = won ? '#4cd137' : '#e84118';
+  endDetails.innerHTML = `
+    ${won ? "Все 5 опорных пунктов взяты! Полный разгром врага!" : "Противник полностью вытеснил вас с театра военных действий."}<br><br>
+    Лично ликвидировано: <b>${playerStats.kills}</b> бойцов<br>
+    Захвачено высот: <b>${playerStats.caps}</b><br>
+    Ваших смертей: <b>${playerStats.deaths}</b>
+  `;
+  endScreen.style.display = 'flex';
+}
+
+function triggerRespawn() {
+  if (isRespawning) return;
+  isRespawning = true;
+  playerStats.deaths++;
+  const screen = document.getElementById('respawn-screen');
+  const timerEl = document.getElementById('respawn-timer');
+  screen.style.display = 'flex';
+
+  let timeLeft = 3;
+  timerEl.innerText = `Эвакуация на опорный пункт: ${timeLeft} сек...`;
+
+  if (respawnInterval) clearInterval(respawnInterval);
+  respawnInterval = setInterval(() => {
+    timeLeft--;
+    if (timeLeft > 0) {
+      timerEl.innerText = `Эвакуация на опорный пункт: ${timeLeft} сек...`;
+    } else {
+      clearInterval(respawnInterval);
+      screen.style.display = 'none';
+
+      const blueBases = bases.filter(b => b.owner === 1);
+      const spawnBase = blueBases.length > 0 ? blueBases.reduce((prev, curr) => curr.x > prev.x ? curr : prev) : bases[0];
+
+      let safeX = spawnBase.x;
+      let safeY = spawnBase.y;
+
+      for (let attempt = 0; attempt < 30; attempt++) {
+        const testX = spawnBase.x + (Math.random() - 0.5) * 100;
+        const testY = spawnBase.y + (Math.random() - 0.5) * 100;
+        const inTree = trees.some(t => t.alive && Math.hypot(t.x - testX, t.y - testY) < t.r + player.radius + 6);
+        if (!inTree) {
+          safeX = testX;
+          safeY = testY;
+          break;
+        }
+      }
+
+      player.x = safeX;
+      player.y = safeY;
+      player.hp = player.maxHp;
+      player.stamina = 100;
+      player.inTank = null;
+      player.concussionTimer = 0;
+      playerConcussionAlpha = 0;
+      isRespawning = false;
+    }
+  }, 1000);
+}
+
+setInterval(() => {
+  if (!gameRunning || isPaused) return;
+  const blueB = bases.filter(b => b.owner === 1);
+  const redB = bases.filter(b => b.owner === 2);
+
+  if (units.filter(u => u.team === 1 && u.hp > 0).length < 26 && blueB.length > 0) {
+    const sb = blueB[Math.floor(Math.random() * blueB.length)];
+    units.push(new Unit(sb.x + (Math.random() - 0.5) * 80, sb.y + (Math.random() - 0.5) * 80, 1, false, getRandomClass()));
+  }
+  if (units.filter(u => u.team === 2 && u.hp > 0).length < 26 && redB.length > 0) {
+    const sb = redB[Math.floor(Math.random() * redB.length)];
+    units.push(new Unit(sb.x + (Math.random() - 0.5) * 80, sb.y + (Math.random() - 0.5) * 80, 2, false, getRandomClass()));
+  }
+}, 3000);
+
+function loop(now) {
+  if (!gameRunning || isPaused) return;
+
+  if (artilleryCooldown > 0) artilleryCooldown--;
+  document.getElementById('radio-val').innerText = artilleryCooldown > 0 ? `НАВОДКА (${Math.ceil(artilleryCooldown / 60)}с)` : "ГОТОВА";
+  document.getElementById('radio-val').style.color = artilleryCooldown > 0 ? "#e1b12c" : "#4cd137";
+
+  for (let i = units.length - 1; i >= 0; i--) {
+    const u = units[i];
+    if (u.hp <= 0) {
+      if (Math.random() < 0.35) crates.push({ x: u.x, y: u.y });
+      if (selectedUnits.has(u)) selectedUnits.delete(u);
+      
+      if (u.isPlayer) triggerRespawn();
+      else units.splice(i, 1);
+      continue;
+    }
+    u.update(now);
+  }
+
+  tanks.forEach(t => {
+    if (t.hp > 0) t.update(now);
+  });
+  
+  tanks.forEach(tk => {
+    if (tk.hp <= 0) {
+      tk.deadTimer = (tk.deadTimer || 0) + 1;
+      if (tk.deadTimer > 1200) { 
+        tk.hp = tk.maxHp;
+        tk.deadTimer = 0;
+        let homeBase = tk.team === 1 ? bases[0] : bases[4];
+        tk.x = homeBase.x + (Math.random()-0.5)*50;
+        tk.y = homeBase.y + (Math.random()-0.5)*50;
+        tk.hullAngle = tk.team === 1 ? 0 : Math.PI;
+        tk.turretAngle = tk.hullAngle;
+      }
+    }
+  });
+
+  for (let i = incomingMortars.length - 1; i >= 0; i--) {
+    const m = incomingMortars[i];
+    m.delay--;
+    if (m.delay === 30) playSound('mortar_in');
+    if (m.delay <= 0) {
+      if (m.type === 'explosive') {
+        playSound('explosion');
+        explosions.push({ x: m.x, y: m.y, radius: 15, maxRadius: 110, alpha: 1.0 });
+        craters.push({ x: m.x, y: m.y, r: 24 });
+        camera.shake = Math.max(camera.shake, 16);
+        destroyTrenchArea(m.x, m.y, 25);
+
+        trees.forEach(t => {
+          if (t.alive && Math.hypot(t.x - m.x, t.y - m.y) < 80) t.alive = false;
+        });
+
+        units.forEach(u => {
+          const d = Math.hypot(u.x - m.x, u.y - m.y);
+          if (d < 130) {
+            u.hp -= Math.floor((1 - d / 130) * 200);
+            if (u.team === 2 && u.hp <= 0) {
+              playerStats.kills++;
+              floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 });
+              hitmarkerTimer = 8;
+              playSound('hit');
+            }
+            if (u.hp > 0) {
+              u.concussionTimer = 210;
+              if (u.isPlayer) { playSound('tinnitus'); playerConcussionAlpha = 1.0; }
+            }
+          }
+        });
+
+        tanks.forEach(t => {
+          const d = Math.hypot(t.x - m.x, t.y - m.y);
+          if (d < 100) applyTankDamage(t, m.x, m.y, 120, 'mortar');
+        });
+      } else {
+        smokes.push({ x: m.x, y: m.y, r: 130, timer: 700 });
+      }
+      incomingMortars.splice(i, 1);
+    }
+  }
+
+  for (let i = smokes.length - 1; i >= 0; i--) {
+    smokes[i].timer--;
+    if (smokes[i].timer <= 0) smokes.splice(i, 1);
+  }
+
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    const b = bullets[i];
+    b.x += b.vx;
+    b.y += b.vy;
+    b.life--;
+
+    let hit = false;
+    for (let t of trees) {
+      if (t.alive && Math.hypot(t.x - b.x, t.y - b.y) < t.r) { hit = true; break; }
+    }
+
+    if (!hit) {
+      for (let tk of tanks) {
+        if (tk.hp > 0 && Math.hypot(tk.x - b.x, tk.y - b.y) < tk.radius) {
+          if (tk.team !== b.team) {
+            applyTankDamage(tk, b.x, b.y, b.damage * 0.15, 'bullet');
+            if (b.isPlayerShot && hitmarkerTimer === 0) { hitmarkerTimer = 5; playSound('hit'); }
+          }
+          hit = true;
+          break;
+        }
+      }
+    }
+
+    if (!hit) {
+      for (let u of units) {
+        if (u.team !== b.team && u.hp > 0 && !u.inTank) {
+          const dist = Math.hypot(u.x - b.x, u.y - b.y);
+          if (dist < 35) u.suppressionTimer = 40;
+
+          if (dist < u.radius + 2) {
+            const dmg = u.tactic === 'entrenched' ? b.damage * 0.5 : b.damage;
+            u.hp -= dmg;
+            hit = true;
+
+            if (b.isPlayerShot) {
+              hitmarkerTimer = 7;
+              playSound('hit');
+              if (u.hp <= 0) {
+                playerStats.kills++;
+                floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 });
+              }
+            }
+
+            if (u.isPlayer) {
+              damageIndicators.push({
+                angle: Math.atan2(b.y - u.y, b.x - u.x),
+                alpha: 1.0
+              });
+            }
+            break;
+          }
+        }
+      }
+    }
+    if (b.life <= 0 || hit) bullets.splice(i, 1);
+  }
+
+  for (let i = cannonShells.length - 1; i >= 0; i--) {
+    const s = cannonShells[i];
+    s.x += s.vx;
+    s.y += s.vy;
+    s.life--;
+
+    let explode = false;
+    for (let t of trees) {
+      if (t.alive && Math.hypot(t.x - s.x, t.y - s.y) < t.r + 5) {
+        t.alive = false;
+        explode = true;
+        break;
+      }
+    }
+
+    for (let tk of tanks) {
+      if (tk.team !== s.team && tk.hp > 0 && Math.hypot(tk.x - s.x, tk.y - s.y) < tk.radius + 5) {
+        applyTankDamage(tk, s.x, s.y, 150, 'shell');
+        explode = true;
+        if (s.isPlayerShot) { hitmarkerTimer = 8; playSound('hit'); }
+        break;
+      }
+    }
+
+    for (let u of units) {
+      if (u.team !== s.team && u.hp > 0 && !u.inTank && Math.hypot(u.x - s.x, u.y - s.y) < u.radius + 6) {
+        explode = true;
+        break;
+      }
+    }
+
+    if (s.life <= 0 || explode) {
+      playSound('explosion');
+      explosions.push({ x: s.x, y: s.y, radius: 10, maxRadius: 85, alpha: 1.0 });
+      craters.push({ x: s.x, y: s.y, r: 20 });
+      camera.shake = Math.max(camera.shake, 6);
+      destroyTrenchArea(s.x, s.y, 25);
+
+      units.forEach(u => {
+        const d = Math.hypot(u.x - s.x, u.y - s.y);
+        if (d < 100) {
+          u.hp -= Math.floor((1 - d / 100) * 180);
+          if (s.isPlayerShot && u.team === 2 && u.hp <= 0) {
+            playerStats.kills++;
+            floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 });
+            hitmarkerTimer = 8; playSound('hit');
+          }
+          if (u.hp > 0) {
+             u.concussionTimer = 210;
+             if (u.isPlayer) { playSound('tinnitus'); playerConcussionAlpha = 1.0; }
+          }
+        }
+      });
+      cannonShells.splice(i, 1);
+    }
+  }
+
+  for (let i = grenades.length - 1; i >= 0; i--) {
+    const g = grenades[i];
+    g.x += (g.tx - g.x) * 0.08;
+    g.y += (g.ty - g.y) * 0.08;
+    g.timer--;
+
+    if (g.timer <= 0) {
+      playSound('explosion');
+      explosions.push({ x: g.x, y: g.y, radius: 10, maxRadius: 75, alpha: 1.0 });
+      craters.push({ x: g.x, y: g.y, r: 18 });
+      camera.shake = Math.max(camera.shake, 7);
+      destroyTrenchArea(g.x, g.y, 20);
+
+      trees.forEach(t => {
+        if (t.alive && Math.hypot(t.x - g.x, t.y - g.y) < 50) t.alive = false;
+      });
+
+      units.forEach(u => {
+        const d = Math.hypot(u.x - g.x, u.y - g.y);
+        if (d < 95) {
+          u.hp -= Math.floor((1 - d / 95) * 160);
+          if (g.isPlayerShot && u.team === 2 && u.hp <= 0) {
+            playerStats.kills++;
+            floatingTexts.push({ x: u.x, y: u.y, text: "+1 ФРАГ", alpha: 1.0 });
+            hitmarkerTimer = 8; playSound('hit');
+          }
+          if (u.hp > 0) {
+             u.concussionTimer = 180;
+             if (u.isPlayer) { playSound('tinnitus'); playerConcussionAlpha = 1.0; }
+          }
+        }
+      });
+
+      tanks.forEach(t => {
+        const d = Math.hypot(t.x - g.x, t.y - g.y);
+        if (d < 70) applyTankDamage(t, g.x, g.y, 120, 'grenade');
+      });
+
+      grenades.splice(i, 1);
+    }
+  }
+
+  for (let i = explosions.length - 1; i >= 0; i--) {
+    const exp = explosions[i];
+    exp.radius += 4;
+    exp.alpha -= 0.05;
+    if (exp.alpha <= 0) explosions.splice(i, 1);
+  }
+  
+  for (let i = particles.length - 1; i >= 0; i--) {
+    let p = particles[i];
+    p.x += p.vx; p.y += p.vy;
+    p.life--;
+    if (p.type === 'smoke') { p.r = (p.maxLife - p.life) * 0.2; p.alpha = p.life / p.maxLife; }
+    if (p.type === 'fire') { p.r = (p.life / p.maxLife) * 8; p.alpha = p.life / p.maxLife; }
+    if (p.type === 'spark') { p.alpha = p.life / p.maxLife; }
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  for (let i = orderPings.length - 1; i >= 0; i--) {
+    let p = orderPings[i];
+    p.radius += 1.5; p.alpha -= 0.03;
+    if (p.alpha <= 0) orderPings.splice(i, 1);
+  }
+
+  let playerAtBase = null;
+  bases.forEach(b => {
+    let blueNear = 0, redNear = 0;
+    units.forEach(u => {
+      if (u.hp > 0 && Math.hypot(u.x - b.x, u.y - b.y) < b.radius) {
+        if (u.team === 1) blueNear++;
+        else redNear++;
+      }
+    });
+
+    const diff = blueNear - redNear;
+    const oldOwner = b.owner;
+    if (diff > 0) b.capProgress = Math.min(1.0, b.capProgress + 0.004);
+    else if (diff < 0) b.capProgress = Math.max(-1.0, b.capProgress - 0.004);
+
+    if (b.capProgress > 0.6) b.owner = 1;
+    else if (b.capProgress < -0.6) b.owner = 2;
+    else if (Math.abs(b.capProgress) < 0.2) b.owner = 0;
+
+    if (oldOwner !== 1 && b.owner === 1) playerStats.caps++;
+
+    if (player && Math.hypot(player.x - b.x, player.y - b.y) < b.radius) {
+      playerAtBase = b;
+    }
+  });
+
+  const capHud = document.getElementById('capture-hud');
+  if (playerAtBase) {
+    capHud.style.display = 'block';
+    document.getElementById('capture-title').innerText = `${playerAtBase.name} (${playerAtBase.owner === 1 ? 'АЛЬЯНС' : playerAtBase.owner === 2 ? 'ВРАГ' : 'НЕЙТРАЛ'})`;
+    const pct = Math.round(((playerAtBase.capProgress + 1) / 2) * 100);
+    const fillEl = document.getElementById('capture-bar-fill');
+    fillEl.style.width = pct + '%';
+    fillEl.style.background = playerAtBase.owner === 1 ? '#3880ff' : playerAtBase.owner === 2 ? '#eb445a' : '#f5cd79';
+  } else {
+    capHud.style.display = 'none';
+  }
+
+  for (let i = 0; i < FRONT_SECTIONS; i++) {
+    const nodeY = frontlineNodes[i].y;
+    let weightSum = 0, weightedX = 0;
+
+    bases.forEach(b => {
+      const distY = Math.abs(b.y - nodeY);
+      const w = 1 / (1 + (distY * distY) * 0.000003);
+      const baseXTarget = b.owner === 1 ? b.x + 350 : (b.owner === 2 ? b.x - 350 : b.x);
+      weightedX += baseXTarget * w;
+      weightSum += w;
+    });
+
+    frontlineNodes[i].targetX = weightSum > 0 ? (weightedX / weightSum) : (WORLD_W * 0.5);
+    frontlineNodes[i].x += (frontlineNodes[i].targetX - frontlineNodes[i].x) * 0.04;
+  }
+
+  let shakeX = 0, shakeY = 0;
+  if (camera.shake > 0) {
+    shakeX = (Math.random() - 0.5) * camera.shake;
+    shakeY = (Math.random() - 0.5) * camera.shake;
+    camera.shake = Math.max(0, camera.shake - 0.5);
+  }
+
+  camera.x = Math.max(0, Math.min(WORLD_W - screenW, player.x - screenW / 2)) + shakeX;
+  camera.y = Math.max(0, Math.min(WORLD_H - screenH, player.y - screenH / 2)) + shakeY;
+
+  const visibleUnits = new Set();
+  units.forEach(u => {
+    if (u.team === 1) {
+      visibleUnits.add(u);
+    } else {
+      const seen = units.some(blue => blue.team === 1 && Math.hypot(blue.x - u.x, blue.y - u.y) < 450);
+      if (seen) visibleUnits.add(u);
+    }
+  });
+
+  ctx.clearRect(0, 0, screenW, screenH);
+  ctx.save();
+  ctx.translate(-camera.x, -camera.y);
+
+  ctx.fillStyle = '#141c16';
+  ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+
+  craters.forEach(c => {
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+    ctx.fillStyle = '#0a0d0b';
+    ctx.fill();
+    ctx.strokeStyle = '#232b25';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+
+  ctx.fillStyle = '#0b0f0c';
+  trenches.forEach(t => {
+    ctx.fillRect(t.x, t.y, t.w, t.h);
+    ctx.strokeStyle = '#27382c';
+    ctx.strokeRect(t.x, t.y, t.w, t.h);
+  });
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(frontlineNodes[0].x, frontlineNodes[0].y);
+  for (let i = 0; i < FRONT_SECTIONS - 1; i++) {
+    const xc = (frontlineNodes[i].x + frontlineNodes[i + 1].x) / 2;
+    const yc = (frontlineNodes[i].y + frontlineNodes[i + 1].y) / 2;
+    ctx.quadraticCurveTo(frontlineNodes[i].x, frontlineNodes[i].y, xc, yc);
+  }
+  ctx.lineTo(frontlineNodes[FRONT_SECTIONS - 1].x, frontlineNodes[FRONT_SECTIONS - 1].y);
+  ctx.strokeStyle = 'rgba(245, 205, 121, 0.45)';
+  ctx.lineWidth = 4;
+  ctx.setLineDash([12, 10]);
+  ctx.stroke();
+  ctx.restore();
+
+  bases.forEach(b => {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+    ctx.fillStyle = b.owner === 1 ? 'rgba(56, 128, 255, 0.05)' : b.owner === 2 ? 'rgba(235, 68, 90, 0.05)' : 'rgba(255, 255, 255, 0.03)';
+    ctx.fill();
+    ctx.strokeStyle = b.owner === 1 ? '#3880ff' : b.owner === 2 ? '#eb445a' : '#555';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 14, 0, Math.PI * 2);
+    ctx.fillStyle = '#222';
+    ctx.fill();
+
+    ctx.fillStyle = b.owner === 1 ? '#3880ff' : b.owner === 2 ? '#eb445a' : '#f5cd79';
+    ctx.fillRect(b.x, b.y - 18, 24, 15);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(b.x, b.y - 18, 24, 15);
+
+    ctx.fillStyle = '#dcdde1';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillText(b.name, b.x - 45, b.y + 32);
+  });
+
+  tanks.forEach(tk => { tk.draw(); });
+
+  crates.forEach(cr => {
+    ctx.fillStyle = '#27ae60';
+    ctx.fillRect(cr.x - 7, cr.y - 7, 14, 14);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(cr.x - 5, cr.y - 2, 10, 4);
+    ctx.fillRect(cr.x - 2, cr.y - 5, 4, 10);
+  });
+
+  grenades.forEach(g => {
+    ctx.beginPath();
+    ctx.arc(g.x, g.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#2f3640';
+    ctx.fill();
+    ctx.strokeStyle = '#f5cd79';
+    ctx.stroke();
+  });
+
+  cannonShells.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff9f43';
+    ctx.fill();
+  });
+  
+  particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.alpha;
+    if (p.type === 'spark') {
+        ctx.fillStyle = '#feca57';
+        ctx.fillRect(p.x - 1, p.y - 1, 3, 3);
+    } else if (p.type === 'smoke') {
+        ctx.fillStyle = '#111';
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    } else if (p.type === 'fire') {
+        ctx.fillStyle = '#ff9f43';
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  });
+
+  explosions.forEach(exp => {
+    ctx.beginPath();
+    ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(243, 156, 18, ${exp.alpha})`;
+    ctx.fill();
+  });
+
+  smokes.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(220, 225, 222, 0.45)';
+    ctx.fill();
+  });
+
+  ctx.fillStyle = '#f5cd79';
+  bullets.forEach(b => {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  units.forEach(u => {
+    if (u.hp > 0 && visibleUnits.has(u)) u.draw();
+  });
+
+  trees.forEach(t => {
+    if (!t.alive) return;
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
+    ctx.fillStyle = '#3e2723';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, t.foliageR, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(32, 68, 41, 0.8)';
+    ctx.fill();
+  });
+  
+  flyingTurrets.forEach(ft => {
+    ft.x += ft.vx; ft.y += ft.vy;
+    ft.z += ft.vz; ft.vz -= 0.5; 
+    ft.angle += ft.va;
+    if (ft.z < 0) { ft.z = 0; ft.vz = 0; ft.vx = 0; ft.vy = 0; ft.va = 0; }
+    
+    ctx.save();
+    ctx.translate(ft.x, ft.y - ft.z); 
+    ctx.rotate(ft.angle);
+    
+    if (ft.z > 0) {
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.beginPath(); ctx.arc(0, ft.z, 15, 0, Math.PI*2); ctx.fill();
+    }
+
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, -3, 30, 6);
+    ctx.beginPath();
+    ctx.arc(0, 0, 13, 0, Math.PI * 2);
+    ctx.fillStyle = ft.z === 0 ? '#1a1a1a' : (ft.team === 1 ? '#3880ff' : '#eb445a'); 
+    ctx.fill();
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // Отрисовка маркеров приказов (зеленый - идти, красный - атака)
+  orderPings.forEach(p => {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.beginPath();
+    ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
+    ctx.strokeStyle = p.isAttack ? `rgba(235, 68, 90, ${p.alpha})` : `rgba(46, 204, 113, ${p.alpha})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // Рамка выделения RTS
+  if (rmbDown) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(46, 204, 113, 0.8)';
+    ctx.fillStyle = 'rgba(46, 204, 113, 0.2)';
+    ctx.lineWidth = 1;
+    const x = Math.min(rmbStartX, rmbCurrentX);
+    const y = Math.min(rmbStartY, rmbCurrentY);
+    const w = Math.abs(rmbCurrentX - rmbStartX);
+    const h = Math.abs(rmbCurrentY - rmbStartY);
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeRect(x, y, w, h);
+    ctx.restore();
+  }
+
+  ctx.restore();
+  
+  // Эффект визуальной контузии для игрока
+  if (playerConcussionAlpha > 0) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0); 
+    ctx.fillStyle = `rgba(245, 255, 255, ${playerConcussionAlpha * 0.7})`;
+    ctx.fillRect(0, 0, screenW, screenH);
+    ctx.restore();
+    playerConcussionAlpha -= 0.005;
+    if (playerConcussionAlpha < 0) playerConcussionAlpha = 0;
+  }
+
+  for (let i = floatingTexts.length - 1; i >= 0; i--) {
+    const ft = floatingTexts[i];
+    ft.y -= 0.6;
+    ft.alpha -= 0.02;
+    if (ft.alpha <= 0) { floatingTexts.splice(i, 1); continue; }
+
+    ctx.save();
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillStyle = `rgba(232, 65, 24, ${ft.alpha})`;
+    ctx.fillText(ft.text, ft.x - camera.x, ft.y - camera.y);
+    ctx.restore();
+  }
+
+  if (hitmarkerTimer > 0) {
+    hitmarkerTimer--;
+    ctx.save();
+    ctx.translate(mouse.x, mouse.y);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-6, -6); ctx.lineTo(-2, -2);
+    ctx.moveTo(6, -6);  ctx.lineTo(2, -2);
+    ctx.moveTo(-6, 6);  ctx.lineTo(-2, 2);
+    ctx.moveTo(6, 6);   ctx.lineTo(2, 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  for (let i = damageIndicators.length - 1; i >= 0; i--) {
+    const di = damageIndicators[i];
+    di.alpha -= 0.025;
+    if (di.alpha <= 0) { damageIndicators.splice(i, 1); continue; }
+
+    ctx.save();
+    ctx.translate(screenW / 2, screenH / 2);
+    ctx.rotate(di.angle);
+    ctx.beginPath();
+    ctx.arc(0, 0, 90, -0.35, 0.35);
+    ctx.strokeStyle = `rgba(235, 68, 90, ${di.alpha})`;
+    ctx.lineWidth = 5;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  mCtx.clearRect(0, 0, mCanvas.width, mCanvas.height);
+  const sx = mCanvas.width / WORLD_W;
+  const sy = mCanvas.height / WORLD_H;
+
+  mCtx.save();
+  mCtx.fillStyle = 'rgba(41, 128, 185, 0.4)';
+  mCtx.beginPath();
+  mCtx.moveTo(0, 0);
+  for (let i = 0; i < FRONT_SECTIONS - 1; i++) {
+    const x1 = frontlineNodes[i].x * sx, y1 = frontlineNodes[i].y * sy;
+    const x2 = frontlineNodes[i + 1].x * sx, y2 = frontlineNodes[i + 1].y * sy;
+    mCtx.quadraticCurveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2);
+  }
+  mCtx.lineTo(frontlineNodes[FRONT_SECTIONS - 1].x * sx, mCanvas.height);
+  mCtx.lineTo(0, mCanvas.height);
+  mCtx.closePath();
+  mCtx.fill();
+
+  mCtx.fillStyle = 'rgba(192, 57, 43, 0.4)';
+  mCtx.beginPath();
+  mCtx.moveTo(mCanvas.width, 0);
+  for (let i = 0; i < FRONT_SECTIONS - 1; i++) {
+    const x1 = frontlineNodes[i].x * sx, y1 = frontlineNodes[i].y * sy;
+    const x2 = frontlineNodes[i + 1].x * sx, y2 = frontlineNodes[i + 1].y * sy;
+    mCtx.quadraticCurveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2);
+  }
+  mCtx.lineTo(frontlineNodes[FRONT_SECTIONS - 1].x * sx, mCanvas.height);
+  mCtx.lineTo(mCanvas.width, mCanvas.height);
+  mCtx.closePath();
+  mCtx.fill();
+
+  mCtx.beginPath();
+  mCtx.moveTo(frontlineNodes[0].x * sx, frontlineNodes[0].y * sy);
+  for (let i = 0; i < FRONT_SECTIONS - 1; i++) {
+    const x1 = frontlineNodes[i].x * sx, y1 = frontlineNodes[i].y * sy;
+    const x2 = frontlineNodes[i + 1].x * sx, y2 = frontlineNodes[i + 1].y * sy;
+    mCtx.quadraticCurveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2);
+  }
+  mCtx.strokeStyle = '#f5cd79';
+  mCtx.lineWidth = 2;
+  mCtx.stroke();
+  mCtx.restore();
+
+  bases.forEach(b => {
+    mCtx.fillStyle = b.owner === 1 ? '#3880ff' : b.owner === 2 ? '#eb445a' : '#f5cd79';
+    mCtx.beginPath();
+    mCtx.arc(b.x * sx, b.y * sy, 4, 0, Math.PI * 2);
+    mCtx.fill();
+    mCtx.strokeStyle = '#fff';
+    mCtx.lineWidth = 1;
+    mCtx.stroke();
+  });
+
+  tanks.forEach(tk => {
+    if (tk.hp <= 0) return;
+    mCtx.fillStyle = tk.team === 1 ? '#3880ff' : '#eb445a';
+    mCtx.fillRect(tk.x * sx - 3, tk.y * sy - 3, 6, 6);
+  });
+
+  mCtx.strokeStyle = '#ffffff';
+  mCtx.lineWidth = 1;
+  mCtx.strokeRect(camera.x * sx, camera.y * sy, screenW * sx, screenH * sy);
+
+  units.forEach(u => {
+    if (u.hp <= 0 || !visibleUnits.has(u)) return;
+    mCtx.fillStyle = u.isPlayer ? '#2ecc71' : u.team === 1 ? '#fff' : '#e74c3c';
+    mCtx.fillRect(u.x * sx, u.y * sy, u.isPlayer ? 3 : 1.5, u.isPlayer ? 3 : 1.5);
+  });
+
+  const hpP = Math.max(0, Math.round((player.hp / player.maxHp) * 100));
+  document.getElementById('hp-val').innerText = player.inTank ? `ТАНК: ${hpP}` : hpP;
+  document.getElementById('hp-bar-fill').style.width = hpP + '%';
+
+  const stP = Math.max(0, Math.round(player.stamina));
+  document.getElementById('stamina-val').innerText = player.inTank ? "100" : stP;
+  document.getElementById('stamina-bar-fill').style.width = (player.inTank ? 100 : stP) + '%';
+
+  document.getElementById('kills-val').innerText = playerStats.kills;
+
+  const tacStatus = document.getElementById('tactical-status');
+  if (player.inTank) {
+    if (player.inTank.trackTimer > 0) {
+      tacStatus.innerText = "ГУСЕНИЦА СБИТА!";
+      tacStatus.style.color = "#e84118";
+    } else if (player.inTank.fireTimer > 0) {
+      tacStatus.innerText = "ПОЖАР ДВИГАТЕЛЯ!";
+      tacStatus.style.color = "#ff9f43";
+    } else {
+      tacStatus.innerText = "В ТАНКЕ (БРОНЯ)";
+      tacStatus.style.color = "#3880ff";
+    }
+  } else if (player.tactic === 'entrenched') {
+    tacStatus.innerText = "В УКРЫТИИ (-50% УРОНА)";
+    tacStatus.style.color = "#f5cd79";
+  } else if (player.tactic === 'suppressed') {
+    tacStatus.innerText = "ПОДАВЛЕН ОГНЕМ";
+    tacStatus.style.color = "#e84118";
+  } else if (player.concussionTimer > 0) {
+    tacStatus.innerText = "КОНТУЗИЯ!";
+    tacStatus.style.color = "#fff200";
+  } else if (player.stamina < 20) {
+    tacStatus.innerText = "ИСТОЩЕНИЕ";
+    tacStatus.style.color = "#e1b12c";
+  } else {
+    tacStatus.innerText = "ГОТОВ К БОЮ";
+    tacStatus.style.color = "#4cd137";
+  }
+
+  const blueB = bases.filter(b => b.owner === 1).length;
+  const redB = bases.filter(b => b.owner === 2).length;
+  document.getElementById('blue-bases-count').innerText = blueB;
+  document.getElementById('red-bases-count').innerText = redB;
+
+  checkEndGame();
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>

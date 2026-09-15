@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>War Front Prototype</title>
+  <style>
+    body { margin: 0; background: #1a1a1a; overflow: hidden; font-family: monospace; }
+    #gameCanvas { display: block; }
+    #ui {
+      position: absolute; top: 10px; left: 10px;
+      background: rgba(0, 0, 0, 0.75); padding: 10px;
+      border: 2px solid #555; border-radius: 6px; color: #fff;
+    }
+    #minimap { border: 1px solid #777; margin-top: 5px; background: #222; }
+  </style>
+</head>
+<body>
+
+<div id="ui">
+  <div>ФРОНТ: <span style="color:#4fa3e3">СИНИЕ</span> vs <span style="color:#e34f4f">КРАСНЫЕ</span></div>
+  <canvas id="minimap" width="120" height="120"></canvas>
+  <div id="status" style="margin-top: 4px; font-size: 11px;">Сектор 2: Захват...</div>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const mCanvas = document.getElementById('minimap');
+const mCtx = mCanvas.getContext('2d');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// 3 Сектора фронта (0 = Нейтрал, 1 = Синие, 2 = Красные)
+const sectors = [
+  { id: 0, x: 0, width: canvas.width / 3, owner: 1, progress: 1.0 },
+  { id: 1, x: canvas.width / 3, width: canvas.width / 3, owner: 0, progress: 0.5 },
+  { id: 2, x: (canvas.width / 3) * 2, width: canvas.width / 3, owner: 2, progress: 1.0 }
+];
+
+// Игрок и боты
+const units = [];
+for (let i = 0; i < 40; i++) {
+  units.push({
+    x: Math.random() * (canvas.width * 0.3),
+    y: Math.random() * canvas.height,
+    team: 1, // Синие
+    hp: 100,
+    speed: 1.5 + Math.random()
+  });
+  units.push({
+    x: canvas.width - Math.random() * (canvas.width * 0.3),
+    y: Math.random() * canvas.height,
+    team: 2, // Красные
+    hp: 100,
+    speed: 1.5 + Math.random()
+  });
+}
+
+function update() {
+  // Движение к центру (спорному сектору)
+  units.forEach(u => {
+    const targetX = u.team === 1 ? canvas.width * 0.55 : canvas.width * 0.45;
+    if (Math.abs(u.x - targetX) > 10) {
+      u.x += u.team === 1 ? u.speed : -u.speed;
+    }
+  });
+
+  // Расчет контроля центрального сектора
+  const blueInCenter = units.filter(u => u.team === 1 && u.x > sectors[1].x && u.x < sectors[1].x + sectors[1].width).length;
+  const redInCenter = units.filter(u => u.team === 2 && u.x > sectors[1].x && u.x < sectors[1].x + sectors[1].width).length;
+  
+  if (blueInCenter > redInCenter) sectors[1].owner = 1;
+  else if (redInCenter > blueInCenter) sectors[1].owner = 2;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Отрисовка зон на основном экране
+  sectors.forEach(s => {
+    ctx.fillStyle = s.owner === 1 ? 'rgba(79, 163, 227, 0.15)' : s.owner === 2 ? 'rgba(227, 79, 79, 0.15)' : 'rgba(255,255,255,0.05)';
+    ctx.fillRect(s.x, 0, s.width, canvas.height);
+    ctx.strokeStyle = '#333';
+    ctx.strokeRect(s.x, 0, s.width, canvas.height);
+  });
+
+  // Отрисовка бойцов
+  units.forEach(u => {
+    ctx.fillStyle = u.team === 1 ? '#4fa3e3' : '#e34f4f';
+    ctx.beginPath();
+    ctx.arc(u.x, u.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Отрисовка миникарты слева сверху
+  mCtx.clearRect(0, 0, mCanvas.width, mCanvas.height);
+  const scale = mCanvas.width / canvas.width;
+  sectors.forEach(s => {
+    mCtx.fillStyle = s.owner === 1 ? '#4fa3e3' : s.owner === 2 ? '#e34f4f' : '#666';
+    mCtx.fillRect(s.x * scale, 0, s.width * scale, mCanvas.height);
+  });
+  
+  // Точки солдат на миникарте
+  units.forEach(u => {
+    mCtx.fillStyle = '#fff';
+    mCtx.fillRect(u.x * scale, u.y * (mCanvas.height / canvas.height), 2, 2);
+  });
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
