@@ -337,8 +337,9 @@
       </div>
     </div>
 
-    <!-- 2. Frontline 1944 (Unified) -->
-    <div class="card" onclick="launchGame('warfront.html', 'Frontline 1944')">
+    <!-- 2. Frontline 1944 -->
+    <div class="card" onclick="launchFrontlineLatest()">
+      <div class="btn-dots" title="All versions" onclick="event.stopPropagation(); openModal('frontlineModal')">•••</div>
       <div class="card-preview">
         <div class="preview-badge"><span></span>2D BATTLE</div>
         <svg viewBox="0 0 320 145" width="100%" height="100%">
@@ -362,7 +363,7 @@
       <div class="card-tags">
         <span class="tag">Shooter</span>
         <span class="tag">Tanks</span>
-        <span class="tag">Tactical RTS</span>
+        <span class="tag">Archive [19 versions]</span>
       </div>
     </div>
 
@@ -391,7 +392,7 @@
       </div>
     </div>
 
-    <!-- 4. Mega Evolution: Spore (Unified) -->
+    <!-- 4. Mega Evolution: Spore -->
     <div class="card" onclick="launchGame('kletka.html', 'Mega Evolution: Spore')">
       <div class="card-preview">
         <div class="preview-badge"><span></span>MICRO-ORGANISM</div>
@@ -421,7 +422,7 @@
       </div>
     </div>
 
-    <!-- 5. 3D Flight Simulator (Unified) -->
+    <!-- 5. 3D Flight Simulator -->
     <div class="card" onclick="launchGame('flightsim.html', '3D Flight Simulator')">
       <div class="card-preview">
         <div class="preview-badge"><span></span>THREE.JS 3D</div>
@@ -546,6 +547,75 @@
     </div>
   </div>
 
+  <!-- Modal: Frontline 1944 Archive -->
+  <div class="modal-overlay" id="frontlineModal">
+    <div class="choice-dialog">
+      <h3>🪖 Frontline 1944 — Full Archive</h3>
+      <p>Select a game version:</p>
+      <div class="version-btns">
+        <button class="btn-version primary" onclick="launchFrontlineLatest()">
+          <span>⚡ <b>3.2</b> (Tactical RTS, Artillery, Tanks)</span>
+          <small style="color:inherit">Latest</small>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_3_1.html', 'Frontline 3.1')">
+          <span>3.1.0 (Bugfixes & Polish)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_3_0.html', 'Frontline 3.0')">
+          <span>3.0.0 (Huge Engine Update)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_2_9.html', 'Frontline 2.9')">
+          <span>2.9.0 (Late Beta 2.x)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_2_8.html', 'Frontline 2.8')">
+          <span>2.8.0</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_2_7.html', 'Frontline 2.7')">
+          <span>2.7.0</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_2_6_1.html', 'Frontline 2.6.1')">
+          <span>2.6.1</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_2_6.html', 'Frontline 2.6')">
+          <span>2.6.0</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_2_5.html', 'Frontline 2.5')">
+          <span>2.5.0</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_2_4.html', 'Frontline 2.4')">
+          <span>2.4.0</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_2_3.html', 'Frontline 2.3')">
+          <span>2.3.0</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_2_2.html', 'Frontline 2.2')">
+          <span>2.2.0</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_2_1.html', 'Frontline 2.1')">
+          <span>2.1.0</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('frontline_2_0.html', 'Frontline 2.0')">
+          <span>2.0.0 (Frontline Reboot)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('warfront_1_2.html', 'Warfront 1.2')">
+          <span>1.2.0 (Early Base)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('warfront_1_1.html', 'Warfront 1.1')">
+          <span>1.1.0</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('warfront_1_0.html', 'Warfront 1.0')">
+          <span>1.0.0 (World Map & Woods)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('warfront_0_1.html', 'Warfront 0.1')">
+          <span>0.1.0 (Basic Infantry Action)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('warfront_prototype.html', 'Warfront Prototype')">
+          <span>Prototype (Auto-battler)</span>
+        </button>
+      </div>
+      <button class="btn-dialog-close" onclick="closeModal('frontlineModal')">Cancel</button>
+    </div>
+  </div>
+
   <!-- Game Runner Frame Modal -->
   <div id="frameModal">
     <div id="frameBar">
@@ -567,6 +637,11 @@
     function launchBankLatest() {
       const target = 'Knice_Bank_8_7_1.html';
       chooseVersion(target, 'Knice Bank 8.7.1');
+    }
+
+    function launchFrontlineLatest() {
+      const target = 'frontline_3_2.html';
+      chooseVersion(target, 'Frontline 1944 (v3.2)');
     }
 
     function launchGame(url, title) {
