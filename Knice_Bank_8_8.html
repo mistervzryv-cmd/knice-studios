@@ -1,0 +1,1178 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Knice Bank 8.7.1 - Futures & Tech Analysis Update</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f4f7fb;color:#182230}
+button,input,select{font:inherit}button{border:0;border-radius:12px;padding:11px 15px;background:#2457ff;color:#fff;font-weight:700;cursor:pointer;transition:0.2s;}
+button:hover{filter:brightness(.94)}button.gray{background:#eef2f7;color:#273244}button.red{background:#e5484d} button.primary{background:#8a2be2; color:#fff;} button.primary:hover{background:#7a1bd2;}
+input,select{width:100%;padding:11px;border:1px solid #d9dee8;border-radius:11px;background:#fff;margin:5px 0 10px}
+.login{min-height:100vh;display:grid;place-items:center;padding:20px}.loginbox{width:min(390px,100%);background:white;padding:32px;border-radius:26px;box-shadow:0 15px 50px #dce3ee;text-align:center}
+.app{display:none}.top{background:var(--primary);color:white;padding:20px;transition: background 0.3s;}
+.topin,main{max-width:1120px;margin:auto}.topin{display:flex;justify-content:space-between;align-items:center;gap:15px}
+main{padding:20px 16px 95px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.card{background:#fff;border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:0 4px 18px #e1e6ef}.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#f7f9fc;padding:14px;border-radius:14px}.big{font-size:32px;font-weight:800;transition: color 0.3s;}.muted{color:#6b7280}.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.actions{display:flex;gap:8px;flex-wrap:wrap}.section{display:none}.section.active{display:block}.nav{position:fixed;z-index:5;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;justify-content:center}.nav button{background:transparent;color:#667085;border-radius:0;padding:12px 17px}.nav button.active{color:var(--primary)}.price{font-size:27px;font-weight:800}.up{color:#169b50}.down{color:#dc3d4b}.badge{padding:5px 8px;background:#eef2ff;color:var(--primary);border-radius:8px;font-size:12px;font-weight:700}.history{max-height:320px;overflow:auto}.history div{padding:10px 0;border-bottom:1px solid #edf0f3}.news{padding:14px;border-radius:14px;background:#f7f9fc}.bar{height:9px;border-radius:99px;background:#e8ecf2;overflow:hidden}.bar i{display:block;height:100%;background:var(--primary)}.asset{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid #edf0f3}.achievement{padding:12px;border-radius:14px;background:var(--surface2);margin:8px 0;border:1px solid var(--line)}.cardnum{font-size:23px;letter-spacing:2px;font-weight:800;margin:22px 0}
+canvas{width:100%;height:380px;background:var(--surface2);border-radius:14px}
+
+@keyframes flashUp { 0% { color: #169b50; transform: scale(1.05); } 100% { color: inherit; transform: scale(1); } }
+@keyframes flashDown { 0% { color: #dc3d4b; transform: scale(1.05); } 100% { color: inherit; transform: scale(1); } }
+.flash-up { animation: flashUp 0.6s ease-out; }
+.flash-down { animation: flashDown 0.6s ease-out; }
+
+:root{
+ --bg:#f4f7fb;--surface:#fff;--surface2:#f7f9fc;--text:#182230;
+ --muted:#6b7280;--line:#e3e8f0;--primary:#2457ff;--shadow:#e1e6ef;
+}
+body.dark{
+ --bg:#0b1020;--surface:#151b2d;--surface2:#1d2538;--text:#edf2ff;
+ --muted:#9aa6bd;--line:#2c3650;--primary:#6d8cff;--shadow:#050812;
+}
+body.red-theme{
+ --bg:#1a0505;--surface:#2b0f0f;--surface2:#3d1616;--text:#ffe6e6;
+ --muted:#b57b7b;--line:#5c2424;--primary:#ff4444;--shadow:#0a0101;
+}
+body{background:var(--bg);color:var(--text);transition: background 0.3s, color 0.3s;}
+.loginbox,.card{background:var(--surface);box-shadow:0 4px 18px var(--shadow)}
+input,select{background:var(--surface);color:var(--text);border-color:var(--line)}
+.stat,.news{background:var(--surface2)}
+.history div,.asset{border-color:var(--line)}
+.nav{background:var(--surface);border-color:var(--line)}
+.muted{color:var(--muted)}
+button.gray{background:var(--surface2);color:var(--text)}
+canvas{background:var(--surface2)}
+.nav button.active{color:var(--primary)}
+
+@media(max-width:760px){.grid,.statgrid{grid-template-columns:1fr}.nav button{font-size:11px;padding:11px 8px}.topin{align-items:flex-start}}
+</style>
+
+<style id="mobile-nav-real-fix">
+@media (max-width:760px){
+  body{padding-bottom:72px!important}
+  .nav{
+    left:0!important;right:0!important;width:100vw!important;max-width:100vw!important;
+    box-sizing:border-box!important;justify-content:flex-start!important;align-items:stretch!important;
+    overflow-x:auto!important;overflow-y:hidden!important;flex-wrap:nowrap!important;
+    -webkit-overflow-scrolling:touch!important;scrollbar-width:none!important;padding:0 4px!important;
+  }
+  .nav::-webkit-scrollbar{display:none!important}
+  .nav button{
+    flex:0 0 66px!important;width:66px!important;min-width:66px!important;max-width:66px!important;
+    box-sizing:border-box!important;padding:9px 2px!important;margin:0!important;white-space:nowrap!important;
+    overflow:hidden!important;font-size:10px!important;line-height:1.25!important;touch-action:manipulation!important;
+  }
+}
+</style>
+
+</head>
+<body>
+
+<div id="login" class="login">
+ <div class="loginbox">
+  <div style="font-size:46px">🏦</div><h1>Knice Bank 8.7.1</h1>
+  <p class="muted" data-i18n="login_desc">Экономическая песочница</p>
+  <input id="user" value="Тифа" data-i18n-ph="login_user" placeholder="Логин">
+  <input id="pass" type="password" data-i18n-ph="login_pass" placeholder="Пароль">
+  <button style="width:100%" onclick="login()" data-i18n="login_btn">Войти</button>
+  <p class="muted" style="font-size:12px" data-i18n="login_demo">Демо: Тифа / eglot123</p>
+ </div>
+</div>
+
+<div id="app" class="app">
+<header class="top"><div class="topin">
+ <div><h1 style="margin:0">🏦 Knice Bank</h1><div id="welcomeText"><span data-i18n="app_welcome">Добро пожаловать,</span> <b>Тифа</b></div></div>
+ <div class="actions">
+   <button id="headerLangBtn" class="gray" onclick="toggleLang()" style="font-weight:bold;">EN</button>
+   <button class="gray" onclick="location.reload()" data-i18n="nav_logout">Выйти</button>
+ </div>
+</div></header>
+
+<main>
+<section id="home" class="section active">
+ <div class="grid">
+  <div class="card"><div class="muted" data-i18n="home_wealth">Общий капитал</div><div class="big" id="wealth"></div><div class="muted" data-i18n="eglot">Еглот</div></div>
+  <div class="card"><div class="muted" data-i18n="home_session">Изменение за сессию</div><div class="big" id="sessionChange"></div><div class="muted"><span data-i18n="home_level">Уровень</span> <span id="level"></span></div></div>
+ </div>
+ <div class="card">
+  <h2>💳 Knice Black</h2><div class="stat"><div class="muted" data-i18n="card_owner">Владелец</div><b>ТИФА</b><div class="cardnum" id="card"></div><div class="row"><span>11/30</span><span>VISA • KNICE</span></div></div>
+ </div>
+ <div class="card"><h2 data-i18n="home_assets">💰 Основные Активы</h2><div class="statgrid">
+  <div class="stat">💰 <span data-i18n="eglot">Еглот</span><br><b id="e"></b></div>
+  <div class="stat">🇦🇿 <span data-i18n="manat">Манат</span><br><b id="m"></b></div>
+  <div class="stat">⭐ <span data-i18n="vchedey">Вчедей</span><br><b id="v"></b></div>
+  <div class="stat">🟦 <span data-i18n="knice">Кнайс</span><br><b id="k"></b></div>
+  <div class="stat">🟥 <span data-i18n="kniger">Кнайгер</span><br><b id="g"></b></div>
+  <div class="stat">🟩 <span data-i18n="hildeharoy">Хилдехарой</span><br><b id="h"></b></div>
+ </div></div>
+ <div class="card"><h2 data-i18n="home_news">📰 Последняя новость</h2><div id="homeNews" class="news"></div></div>
+ <div class="card"><h2 data-i18n="home_ops">📜 Последние операции</h2><div id="homeHistory"></div></div>
+</section>
+
+<section id="exchange" class="section">
+ <div class="card"><div class="row"><h2 data-i18n="ex_title">📊 Knice Exchange</h2><span class="badge">LIVE</span></div><canvas id="chart" width="1000" height="340"></canvas></div>
+ <div class="card">
+  <h2 data-i18n="ex_mechanics">⚖️ Механика рынка</h2>
+  <div class="statgrid">
+   <div class="stat"><span data-i18n="ex_dem_k">Спрос Кнайс</span><br><b id="dK">0</b></div><div class="stat"><span data-i18n="ex_sup_k">Предложение Кнайс</span><br><b id="sK">0</b></div><div class="stat"><span data-i18n="ex_vol_k">Объём Кнайс</span><br><b id="volK">0</b></div>
+   <div class="stat"><span data-i18n="ex_dem_g">Спрос Кнайгер</span><br><b id="dG">0</b></div><div class="stat"><span data-i18n="ex_sup_g">Предложение Кнайгер</span><br><b id="sG">0</b></div><div class="stat"><span data-i18n="ex_vol_g">Объём Кнайгер</span><br><b id="volG">0</b></div>
+   <div class="stat"><span data-i18n="ex_dem_h">Спрос Хилдехарой</span><br><b id="dH">0</b></div><div class="stat"><span data-i18n="ex_sup_h">Предложение Хилдехарой</span><br><b id="sH">0</b></div><div class="stat"><span data-i18n="ex_vol_h">Объём Хилдехарой</span><br><b id="volH">0</b></div>
+  </div>
+ </div>
+ <div class="grid">
+  <div class="card"><h2>🟦 <span data-i18n="knice">Кнайс</span></h2><div id="kp" class="price"></div><div id="kc"></div><p><span data-i18n="ex_you_have">У тебя:</span> <b id="ka"></b></p><input id="kqty" type="number" min="1" value="1"><div class="actions"><button onclick="trade('k',1)" data-i18n="ex_buy">Купить</button><button class="gray" onclick="trade('k',-1)" data-i18n="ex_sell">Продать</button></div></div>
+  <div class="card"><h2>🟥 <span data-i18n="kniger">Кнайгер</span></h2><div id="gp" class="price"></div><div id="gc"></div><p><span data-i18n="ex_you_have">У тебя:</span> <b id="ga"></b></p><input id="gqty" type="number" min="1" value="1"><div class="actions"><button onclick="trade('g',1)" data-i18n="ex_buy">Купить</button><button class="gray" onclick="trade('g',-1)" data-i18n="ex_sell">Продать</button></div></div>
+ </div>
+ <div class="grid">
+  <div class="card"><h2>🟩 <span data-i18n="hildeharoy">Хилдехарой</span></h2><div id="hp" class="price"></div><div id="hc"></div><p><span data-i18n="ex_you_have">У тебя:</span> <b id="ha"></b></p><input id="hqty" type="number" min="1" value="1"><div class="actions"><button onclick="trade('h',1)" data-i18n="ex_buy">Купить</button><button class="gray" onclick="trade('h',-1)" data-i18n="ex_sell">Продать</button></div></div>
+ </div>
+ <div class="card"><h2 data-i18n="ex_market_news">📰 Новости рынка</h2><div id="news"></div></div>
+</section>
+
+<section id="banking" class="section">
+ <div class="grid">
+  <div class="card"><h2 data-i18n="bank_dep_title">🏦 Вклад</h2><p data-i18n="bank_dep_desc">Ставка: 5% за цикл.</p><input id="deposit" type="number" min="100" data-i18n-ph="eglots" placeholder="Сумма"><button onclick="bankDeposit()" data-i18n="bank_dep_btn">Открыть вклад</button><p><span data-i18n="bank_on_dep">На вкладе:</span> <b id="bd"></b> <span data-i18n="eglot">Еглот</span></p></div>
+  <div class="card">
+    <h2 data-i18n="stk_title">🔐 Стейкинг-пул</h2>
+    <p class="muted" data-i18n="stk_desc">Заблокируй крипту для пассивного дохода.</p>
+    <select id="stkAsset"><option value="k" data-i18n="knice">Кнайс</option><option value="g" data-i18n="kniger">Кнайгер</option></select>
+    <select id="stkDur"><option value="60" data-i18n="stk_60">60 циклов (+12%)</option><option value="180" data-i18n="stk_180">180 циклов (+35%)</option></select>
+    <input id="stkAmt" type="number" min="1" data-i18n-ph="stk_amt_ph" placeholder="Количество монет">
+    <button onclick="openStaking()" data-i18n="stk_btn">Застейкать</button>
+    <div id="activeStaking" style="margin-top:10px"></div>
+  </div>
+ </div>
+ <div class="grid">
+  <div class="card">
+    <h2 data-i18n="bank_loan_title">💳 Кредит</h2>
+    <p><span data-i18n="bank_loan_desc">Ставка:</span> <b class="down" data-i18n="bank_loan_rate">10% за цикл</b></p>
+    <p><span data-i18n="bank_loan_debt">Твой долг:</span> <b id="loanOwed" class="down">0</b> <span data-i18n="eglot">Еглот</span></p>
+    <input id="loanAmt" type="number" min="1000" data-i18n-ph="eglots" placeholder="Сумма (Еглот)">
+    <div class="actions"><button onclick="takeLoan()" data-i18n="bank_loan_btn1">Взять кредит</button><button class="gray" onclick="repayLoan()" data-i18n="bank_loan_btn2">Погасить</button></div>
+  </div>
+  <div class="card"><h2 data-i18n="bank_trans_title">💸 Перевод</h2><input id="to" data-i18n-ph="bank_trans_ph1" placeholder="Имя получателя"><input id="ta" type="number" min="1" data-i18n-ph="bank_trans_ph2" placeholder="Еглот"><button onclick="transfer()" data-i18n="bank_trans_btn">Отправить</button></div>
+ </div>
+ <div class="card"><h2 data-i18n="bank_hammam_title">🍓 Малиновый хамам</h2>
+   <p data-i18n="bank_hammam_desc">Элитный отдых. Дает бафф x2 к зарплате на 5 минут!</p>
+   <p><span data-i18n="hammam_cost">Цена входа:</span> <b id="hammamCostUI">100</b> <span data-i18n="hammam_dep">Еглот (зависит от инфляции)</span></p>
+   <button onclick="enterHammam()" data-i18n="bank_hammam_btn">Купить билет</button>
+ </div>
+</section>
+
+<section id="forex" class="section">
+ <div class="card">
+  <h2 data-i18n="fx_title">💱 Валютный Обменник (Knice Forex)</h2>
+  <div class="statgrid" style="margin-bottom: 15px;">
+   <div class="stat">🇦🇿 <span data-i18n="fx_manat_course">Курс Маната</span><br><b id="fxManatUI">10</b> ₲</div>
+   <div class="stat">⭐ <span data-i18n="fx_vch_course">Курс Вчедея</span><br><b id="fxVchedeyUI">50</b> ₲</div>
+  </div>
+  <p class="muted" style="font-size:12px" data-i18n="fx_desc">Курс плавающий и зависит от рыночной инфляции. Комиссия спреда: 3%</p>
+  <input id="fxAmt" type="number" min="1" data-i18n-ph="fx_ph" placeholder="Количество валюты">
+  <select id="fxType">
+   <option value="m" data-i18n="fx_opt_m">Манаты (🇦🇿)</option>
+   <option value="v" data-i18n="fx_opt_v">Вчедеи (⭐)</option>
+  </select>
+  <div class="actions">
+   <button onclick="buyFx()" data-i18n="fx_buy_btn">Купить валюту</button>
+   <button class="gray" onclick="sellFx()" data-i18n="fx_sell_btn">Продать валюту</button>
+  </div>
+ </div>
+</section>
+
+<section id="economy" class="section">
+ <div class="grid">
+  <div class="card"><h2 data-i18n="eco_cbe_title">🏛 ЦБЕ</h2><div class="statgrid"><div class="stat"><span data-i18n="eco_rate">Ставка</span><br><b id="rate"></b></div><div class="stat"><span data-i18n="eco_infl">Инфляция</span><br><b id="infl"></b></div><div class="stat"><span data-i18n="eco_index">Индекс рынка</span><br><b id="index"></b></div></div><p id="cbnews" class="news"></p></div>
+  <div class="card"><h2 data-i18n="eco_bots_title">🤖 Боты-трейдеры</h2><p>🐂 <span data-i18n="eco_bull">Бык:</span> <b id="bull"></b></p><div class="bar"><i id="bullbar"></i></div><p>🐻 <span data-i18n="eco_bear">Медведь:</span> <b id="bear"></b></p><div class="bar"><i id="bearbar"></i></div></div>
+ </div>
+ <div class="card"><h2 data-i18n="eco_job_title">💼 Работа</h2><p id="buffStatus" class="up" style="display:none; font-weight:bold;"></p><select id="job"><option value="worker" data-i18n="job_worker">Рабочий — 50–150</option><option value="coder" data-i18n="job_coder">Программист — 100–250</option><option value="banker" data-i18n="job_banker">Банкир — 150–350</option><option value="trader" data-i18n="job_trader">Трейдер — 100–450</option></select><button onclick="work()" data-i18n="eco_job_btn">Получить зарплату</button></div>
+ <div class="card"><h2 data-i18n="eco_inv_title">📈 Инвестиции</h2><input id="iv" type="number" min="1" data-i18n-ph="eglots" placeholder="Еглоты"><button onclick="invest()" data-i18n="eco_inv_btn">Инвестировать</button></div>
+</section>
+
+<section id="business" class="section">
+ <div class="card" style="background: linear-gradient(135deg, #2457ff, #7a3fff); color: white;">
+  <h2 style="color:white; margin-top:0;" data-i18n="biz_ipo_title">🚀 Венчурные инвестиции (IPO)</h2>
+  <p data-i18n="biz_ipo_desc">Вложи 50 000 Еглот в рискованный стартап. 70% шанс полного провала, но есть 30% шанс успешного выхода на IPO, что принесет тебе 500 000 Еглот!</p>
+  <button onclick="startVenture()" style="background: white; color: #2457ff; box-shadow: 0 4px 12px rgba(0,0,0,0.2);" data-i18n="biz_ipo_btn">Профинансировать (50 000 ₲)</button>
+  <div id="ventureHistoryBox" style="margin-top: 15px;"></div>
+ </div>
+ <div class="grid">
+  <div class="card">
+   <h2 data-i18n="biz_obj_title">🏢 Бизнес и Объекты</h2>
+   <div class="asset"><span>🛒 <span data-i18n="biz_shop">Магазин</span></span><b>200 000 ₲</b><button onclick="buyBusiness('Магазин',200000,12000)" data-i18n="biz_buy">Купить</button></div>
+   <div class="asset"><span>💻 <span data-i18n="biz_it">IT-компания</span></span><b>800 000 ₲</b><button onclick="buyBusiness('IT-компания',800000,50000)" data-i18n="biz_buy">Купить</button></div>
+   <div class="asset"><span>🏭 <span data-i18n="biz_factory">Фабрика</span></span><b>2 000 000 ₲</b><button onclick="buyBusiness('Фабрика',2000000,140000)" data-i18n="biz_buy">Купить</button></div>
+  </div>
+  <div class="card">
+   <h2 data-i18n="biz_prop_title">🏠 Недвижимость</h2>
+   <div class="asset"><span>🏠 <span data-i18n="biz_flat">Квартира</span></span><b>300 000 ₲</b><button onclick="buyProperty('Квартира',300000,10000)" data-i18n="biz_buy">Купить</button></div>
+   <div class="asset"><span>🏡 <span data-i18n="biz_house">Дом</span></span><b>700 000 ₲</b><button onclick="buyProperty('Дом',700000,25000)" data-i18n="biz_buy">Купить</button></div>
+  </div>
+ </div>
+ <div class="card"><h2 data-i18n="biz_my_title">📊 Твои предприятия</h2><div id="businesses"></div></div>
+</section>
+
+<section id="shop" class="section">
+ <div class="grid">
+  <div class="card"><h2 data-i18n="shop_title">🛒 Магазин (За Еглоты)</h2>
+   <p class="muted" data-i18n="shop_desc">Купленные вещи можно продать на вторичке за 70% от стоимости во вкладке "Имущество".</p>
+   <div class="asset"><span>📱 <span data-i18n="item_phone">Телефон</span></span><b>30 000 ₲</b><button onclick="buyItem('Телефон',30000)" data-i18n="shop_buy">Купить</button></div>
+   <div class="asset"><span>💻 <span data-i18n="item_pc">Компьютер</span></span><b>80 000 ₲</b><button onclick="buyItem('Компьютер',80000)" data-i18n="shop_buy">Купить</button></div>
+   <div class="asset"><span>🚗 <span data-i18n="item_car">Машина</span></span><b>250 000 ₲</b><button onclick="buyItem('Машина',250000)" data-i18n="shop_buy">Купить</button></div>
+  </div>
+  <div class="card"><h2 data-i18n="shop_ex_title">💎 Эксклюзив (За Манаты/Вчедеи)</h2>
+   <p class="muted" data-i18n="shop_ex_desc">На бычьем рынке (Индекс > 120) раритеты продаются с наценкой +25%!</p>
+   <div class="asset"><span>⌚ <span data-i18n="item_watch">Золотые часы</span></span><b>100 ⭐</b><button class="gray" onclick="buyItemVchedey('Золотые часы',100)" data-i18n="shop_buy">Купить</button></div>
+   <div class="asset"><span>🎩 <span data-i18n="item_suit">Элитный костюм</span></span><b>500 🇦🇿</b><button class="gray" onclick="buyItemManat('Элитный костюм',500)" data-i18n="shop_buy">Купить</button></div>
+   <div class="asset"><span>✈️ <span data-i18n="item_jet">Частный самолёт</span></span><b>10 000 🇦🇿</b><button class="gray" onclick="buyItemManat('Частный самолёт',10000)" data-i18n="shop_buy">Купить</button></div>
+  </div>
+ </div>
+ <div class="card"><h2 data-i18n="shop_inv_title">🎒 Имущество (Вторичный рынок)</h2><div id="inventory"></div></div>
+</section>
+
+<section id="goals" class="section">
+ <div class="grid">
+  <div class="card">
+   <h2 data-i18n="goal_title">🎯 Финансовые цели</h2>
+   <input id="goalName" data-i18n-ph="goal_ph_name" placeholder="Например: Купить дом">
+   <input id="goalTarget" type="number" min="1" data-i18n-ph="goal_ph_amt" placeholder="Сумма цели">
+   <button onclick="createGoal()" data-i18n="goal_btn">Создать цель</button>
+  </div>
+  <div class="card"><h2 data-i18n="goal_cur">📌 Текущая цель</h2><div id="goalBox" class="news"></div></div>
+ </div>
+ <div class="card"><h2 data-i18n="goal_daily">📅 Ежедневный бонус</h2><p id="dailyText"></p><button onclick="dailyBonus()" data-i18n="goal_daily_btn">Получить 500 Еглот</button></div>
+</section>
+
+<section id="casino" class="section">
+ <div class="card">
+  <h2 data-i18n="cas_pred_title">🎲 Рыночный прогноз</h2>
+  <select id="predictionAsset"><option value="k" data-i18n="knice">Кнайс</option><option value="g" data-i18n="kniger">Кнайгер</option><option value="h" data-i18n="hildeharoy">Хилдехарой</option></select>
+  <div class="actions"><button onclick="predict(1)">📈 <span data-i18n="cas_up">Рост</span></button><button class="gray" onclick="predict(-1)">📉 <span data-i18n="cas_down">Падение</span></button></div>
+  <p id="prediction" style="margin-top:14px; font-weight: bold;"></p>
+ </div>
+ <div class="card">
+  <h2 data-i18n="cas_rep_title">🏅 Репутация</h2>
+  <div class="statgrid"><div class="stat"><span data-i18n="cas_rep">Репутация</span><br><b id="reputation">0</b></div><div class="stat"><span data-i18n="cas_trades">Сделок</span><br><b id="trades">0</b></div><div class="stat"><span data-i18n="cas_best">Лучший результат</span><br><b id="bestTrade">0 ₲</b></div></div>
+ </div>
+</section>
+
+<section id="economy2" class="section"><div class="grid">
+<div class="card"><h2 data-i18n="eco2_title">🏛️ Экономика 2.0</h2><div class="statgrid">
+<div class="stat"><span data-i18n="eco2_gdp">ВВП</span><br><b id="gdpStat">1 000 000 000 ₲</b></div><div class="stat"><span data-i18n="eco2_unemp">Безработица</span><br><b id="unempStat">5%</b></div><div class="stat"><span data-i18n="eco2_money">Денежная масса</span><br><b id="moneyStat">500 000 000 ₲</b></div><div class="stat"><span data-i18n="eco2_budget">Бюджет</span><br><b id="budgetStat">50 000 000 ₲</b></div></div>
+<div class="asset"><span>💰 <span data-i18n="eco2_tax">Налог</span></span><b id="taxStat">5%</b></div></div>
+<div class="card"><h2 data-i18n="eco2_cbe_acts">🏛️ Действия ЦБЕ</h2>
+<button onclick="centralBankAction('raise')" data-i18n="eco2_raise">📈 Повысить ставку</button>
+<button onclick="centralBankAction('cut')" data-i18n="eco2_cut">📉 Снизить ставку</button>
+<button onclick="centralBankAction('money')" data-i18n="eco2_print">💵 Увеличить денежную масса</button></div></div></section>
+
+<section id="exchange2" class="section">
+ <div class="grid">
+  <div class="card"><h2 data-i18n="ord_title">💹 Биржа 2.0 (Спот)</h2>
+  <select id="orderAsset" onchange="renderOrderBook()"><option value="k" data-i18n="knice">Кнайс</option><option value="g" data-i18n="kniger">Кнайгер</option><option value="h" data-i18n="hildeharoy">Хилдехарой</option></select>
+  <div class="grid"><div><h3>🔴 <span data-i18n="ord_sell">Продажа</span></h3><div id="asks"></div></div><div><h3>🟢 <span data-i18n="ord_buy">Покупка</span></h3><div id="bids"></div></div></div>
+  <input id="orderQty" type="number" min="1" data-i18n-ph="ord_qty" placeholder="Количество"><input id="orderPrice" type="number" min="1" data-i18n-ph="ord_price" placeholder="Цена">
+  <select id="orderSide"><option value="buy" data-i18n="ord_buy_opt">Купить</option><option value="sell" data-i18n="ord_sell_opt">Продать</option></select>
+  <button onclick="placeLimitOrder()" data-i18n="ord_btn">Разместить лимитный ордер</button><div id="myOrders"></div></div>
+  
+  <div class="card"><h2 data-i18n="fut_title">📈 Фьючерсы (С плечом)</h2>
+  <select id="futAsset"><option value="k" data-i18n="knice">Кнайс</option><option value="g" data-i18n="kniger">Кнайгер</option><option value="h" data-i18n="hildeharoy">Хилдехарой</option></select>
+  <select id="futType"><option value="long" data-i18n="fut_long">Long (Вверх)</option><option value="short" data-i18n="fut_short">Short (Вниз)</option></select>
+  <select id="futLev"><option value="2">x2</option><option value="5">x5</option><option value="10">x10</option></select>
+  <input id="futMargin" type="number" min="100" data-i18n-ph="fut_margin_ph" placeholder="Маржа (Еглоты)">
+  <button onclick="openFuture()" data-i18n="fut_open" class="primary">Открыть позицию</button>
+  <div id="activeFutures" style="margin-top:10px"></div>
+  </div>
+ </div>
+</section>
+
+<section id="bank2" class="section"><div class="grid">
+<div class="card"><h2 data-i18n="card_title">💳 Knice Card</h2><p data-i18n="card_desc">Виртуальная банковская карта.</p><div id="cardBalance"></div><button onclick="createCard()" data-i18n="card_btn">Выпустить карту</button></div>
+<div class="card"><h2 data-i18n="ins_title">🛡️ Страхование</h2><p data-i18n="ins_desc">Страхование портфеля за 2%.</p><button onclick="buyInsurance()" data-i18n="ins_btn">Застраховать портфель</button></div></div></section>
+
+<section id="candles" class="section"><div class="card"><h2 data-i18n="cand_title">🕯️ Свечной график + SMA 20 + RSI 14</h2>
+<select id="candleAsset" onchange="renderCandles()"><option value="k" data-i18n="knice">Кнайс</option><option value="g" data-i18n="kniger">Кнайгер</option><option value="h" data-i18n="hildeharoy">Хилдехарой</option></select>
+<canvas id="candleChart" width="900" height="380" style="width:100%;margin-top:14px;border:1px solid var(--line);"></canvas></div></section>
+
+<section id="terminal" class="section">
+ <div class="card">
+  <div class="row"><div><h2 data-i18n="term_title">📊 Торговый терминал</h2></div><select id="terminalAsset" onchange="renderTerminal()"><option value="k" data-i18n="knice">Кнайс</option><option value="g" data-i18n="kniger">Кнайгер</option><option value="h" data-i18n="hildeharoy">Хилдехарой</option></select></div>
+  <div class="statgrid">
+   <div class="stat"><span data-i18n="term_price">Цена</span><br><b id="termPrice">0 ₲</b></div><div class="stat"><span data-i18n="term_max">Максимум</span><br><b id="termMax">0 ₲</b></div><div class="stat"><span data-i18n="term_min">Минимум</span><br><b id="termMin">0 ₲</b></div><div class="stat"><span data-i18n="term_avg">Средняя</span><br><b id="termAvg">0 ₲</b></div><div class="stat"><span data-i18n="term_change">Изменение</span><br><b id="termChange">0%</b></div><div class="stat"><span data-i18n="term_vol">Объём</span><br><b id="termVolume">0</b></div>
+  </div>
+  <canvas id="terminalChart" width="900" height="360" style="width:100%;margin-top:18px;border-radius:14px"></canvas>
+ </div>
+ <div class="grid">
+  <div class="card"><h2 data-i18n="term_port_title">💼 Мой портфель</h2><div id="portfolioBox"></div></div>
+  <div class="card"><h2 data-i18n="term_alert_title">🔔 Ценовое уведомление</h2>
+   <select id="alertAsset"><option value="k" data-i18n="knice">Кнайс</option><option value="g" data-i18n="kniger">Кнайгер</option><option value="h" data-i18n="hildeharoy">Хилдехарой</option></select>
+   <select id="alertType"><option value="below" data-i18n="term_alert_below">Цена ниже</option><option value="above" data-i18n="term_alert_above">Цена выше</option></select>
+   <input id="alertPrice" type="number" min="1" data-i18n-ph="ord_price" placeholder="Цена в Еглотах">
+   <button onclick="addPriceAlert()" data-i18n="term_alert_btn">Создать уведомление</button>
+   <div id="alertsBox" style="margin-top:10px"></div>
+  </div>
+ </div>
+ <div class="card"><h2 data-i18n="term_hist_title">🧾 История сделок</h2><select id="tradeFilter" onchange="renderTradeHistory()"><option value="all" data-i18n="term_hist_all">Все сделки</option><option value="buy" data-i18n="term_hist_buy">Покупки</option><option value="sell" data-i18n="term_hist_sell">Продажи</option></select><div id="tradeHistoryBox" style="margin-top:10px"></div></div>
+ <div class="card"><h2 data-i18n="term_ach_title">🏆 Достижения трейдера</h2><div id="traderAchievements"></div></div>
+</section>
+
+<section id="history" class="section">
+ <div class="card">
+  <div class="row"><div><h2 data-i18n="hist_title">📈 История рынка</h2></div>
+   <select id="historyRange" onchange="renderMarketHistory()">
+    <option value="day" data-i18n="hist_opt_day">Последний день</option><option value="week" data-i18n="hist_opt_week">Последняя неделя</option><option value="month" data-i18n="hist_opt_month">Последний месяц</option><option value="year" data-i18n="hist_opt_year">Последний год</option><option value="all" data-i18n="hist_opt_all">Всё время</option>
+   </select>
+  </div>
+  <div class="statgrid"><div class="stat"><span data-i18n="hist_k_now">Кнайс сейчас</span><br><b id="histK">0 ₲</b></div><div class="stat"><span data-i18n="hist_g_now">Кнайгер сейчас</span><br><b id="histG">0 ₲</b></div><div class="stat"><span data-i18n="hist_h_now">Хилдехарой сейчас</span><br><b id="histH">0 ₲</b></div></div>
+  <canvas id="historyChart" width="900" height="330" style="width:100%;margin-top:18px;border-radius:14px"></canvas>
+ </div>
+ <div class="card"><h2 data-i18n="hist_arc">🗓️ Архив рынка</h2><div id="historyTable"></div></div>
+</section>
+
+<section id="ranking" class="section">
+ <div class="card">
+  <div class="row"><h2 data-i18n="rank_title">🏆 Рейтинг игроков</h2><span class="badge" data-i18n="rank_sim">СИМУЛЯЦИЯ</span></div>
+  <div id="leaderboard"></div>
+ </div>
+ <div class="card">
+  <h2 data-i18n="rank_news">📰 Knice News</h2>
+  <div id="kniceNewsList"></div>
+ </div>
+</section>
+
+<section id="profile" class="section">
+ <div class="grid">
+  <div class="card">
+   <h2 data-i18n="prof_save_title">💾 Управление сохранениями</h2>
+   <p class="muted" style="margin-top:0" data-i18n="prof_save_desc">Теперь прогресс можно переносить.</p>
+   <div class="actions">
+    <button onclick="exportSave()" data-i18n="prof_exp_btn">📥 Экспорт кода</button>
+    <button class="gray" onclick="importSave()" data-i18n="prof_imp_btn">📤 Импорт кода</button>
+   </div>
+  </div>
+  <div class="card">
+   <h2 data-i18n="prof_set_title">⚙️ Настройки приложения</h2>
+   
+   <div class="row" style="margin-bottom:12px;">
+    <div style="flex:1; min-width: 140px;">
+     <p class="muted" style="margin:5px 0;" data-i18n="prof_lang">Язык / Language:</p>
+     <select id="langSelect" onchange="setLanguage(this.value)">
+      <option value="ru">Русский</option>
+      <option value="en">English</option>
+     </select>
+    </div>
+   </div>
+
+   <div class="row" style="margin-bottom:12px;">
+    <div style="flex:1; min-width: 140px;">
+     <p class="muted" style="margin:5px 0;" data-i18n="prof_theme_title">Тема оформления:</p>
+     <select id="themeSelect" onchange="changeTheme(this.value)">
+      <option value="light" data-i18n="prof_theme_l">Светлая</option>
+      <option value="dark" data-i18n="prof_theme_d">Тёмная</option>
+      <option value="red" data-i18n="prof_theme_r">Красная (8.3)</option>
+     </select>
+    </div>
+    <div style="flex:1; min-width: 140px;">
+     <p class="muted" style="margin:5px 0;" data-i18n="prof_stream_title">Режим стримера:</p>
+     <select id="streamerSelect" onchange="toggleStreamerMode(this.value)">
+      <option value="no" data-i18n="prof_stream_off">Выключен</option>
+      <option value="yes" data-i18n="prof_stream_on">Включен (Скрыть баланс)</option>
+     </select>
+    </div>
+   </div>
+   <div class="row">
+    <div style="flex:1;">
+     <p class="muted" style="margin:5px 0;" data-i18n="prof_status_title">Мой статус:</p>
+     <input id="profileStatusInput" type="text" data-i18n-ph="prof_status_ph" placeholder="Установить статус..." onchange="updateProfileStatus(this.value)">
+    </div>
+   </div>
+  </div>
+ </div>
+ <div class="card">
+  <h2 data-i18n="prof_title">👤 Профиль</h2>
+  <p class="muted" style="margin-top: 0; margin-bottom: 15px;" id="pStatusText"></p>
+  <div class="statgrid">
+   <div class="stat"><span data-i18n="prof_user">Пользователь</span><br><b>Тифа</b></div>
+   <div class="stat"><span data-i18n="prof_lvl">Уровень</span><br><b id="pl"></b></div>
+   <div class="stat"><span data-i18n="prof_earned">Заработано</span><br><b id="earned"></b></div>
+  </div>
+ </div>
+ <div class="card"><h2 data-i18n="prof_ach_title">🏆 Достижения</h2><div id="ach"></div></div>
+ <div class="card"><h2 data-i18n="prof_hist_title">📜 История</h2><div id="profileHistory" class="history"></div></div>
+ <button class="red" onclick="resetAll()" data-i18n="prof_reset_btn">Сбросить прогресс (Hard Reset)</button>
+</section>
+</main>
+
+<nav class="nav">
+ <button id="n-home" class="active" onclick="show('home')" data-i18n="nav_home">🏠<br>Главная</button>
+ <button id="n-exchange" onclick="show('exchange')" data-i18n="nav_ex">📈<br>Биржа</button>
+ <button id="n-banking" onclick="show('banking')" data-i18n="nav_bank">💳<br>Банк</button>
+ <button id="n-forex" onclick="show('forex')" data-i18n="nav_fx">💱<br>Форекс</button>
+ <button id="n-economy" onclick="show('economy')" data-i18n="nav_eco">🏛<br>Экономика</button>
+ <button id="n-shop" onclick="show('shop')" data-i18n="nav_shop">🛒<br>Магазин</button>
+ <button id="n-goals" onclick="show('goals')" data-i18n="nav_goals">🎯<br>Цели</button>
+ <button id="n-business" onclick="show('business')" data-i18n="nav_biz">🏢<br>Бизнес</button>
+ <button id="n-casino" onclick="show('casino')" data-i18n="nav_cas">🎲<br>Игры</button>
+ <button id="n-economy2" onclick="show('economy2')" data-i18n="nav_eco2">🏛️<br>Эк. 2.0</button>
+ <button id="n-exchange2" onclick="show('exchange2')" data-i18n="nav_ord">💹<br>Ордера</button>
+ <button id="n-bank2" onclick="show('bank2')" data-i18n="nav_card">💳<br>Карта</button>
+ <button id="n-candles" onclick="show('candles')" data-i18n="nav_cand">🕯️<br>Свечи</button>
+ <button id="n-terminal" onclick="show('terminal')" data-i18n="nav_term">📊<br>Терминал</button>
+ <button id="n-history" onclick="show('history')" data-i18n="nav_hist">📈<br>История</button>
+ <button id="n-ranking" onclick="show('ranking')" data-i18n="nav_rank">🏆<br>Рейтинг</button>
+ <button id="n-profile" onclick="show('profile')" data-i18n="nav_prof">👤<br>Профиль</button>
+</nav>
+</div>
+
+<script>
+const i18n = {
+  ru: {
+    login_desc: "Экономическая песочница", login_user: "Логин", login_pass: "Пароль", login_btn: "Войти", login_demo: "Демо: Тифа / eglot123", err_login: "Неверный логин или пароль.",
+    app_welcome: "Добро пожаловать,", nav_logout: "Выйти", nav_home: "🏠<br>Главная", nav_ex: "📈<br>Биржа", nav_bank: "💳<br>Банк", nav_fx: "💱<br>Форекс", nav_eco: "🏛<br>Экономика", nav_shop: "🛒<br>Магазин", nav_goals: "🎯<br>Цели", nav_biz: "🏢<br>Бизнес", nav_cas: "🎲<br>Игры", nav_eco2: "🏛️<br>Эк. 2.0", nav_ord: "💹<br>Фьюч/Ордера", nav_card: "💳<br>Карта", nav_cand: "🕯️<br>Свечи", nav_term: "📊<br>Терминал", nav_hist: "📈<br>История", nav_rank: "🏆<br>Рейтинг", nav_prof: "👤<br>Профиль",
+    home_wealth: "Общий капитал", home_session: "Изменение за сессию", home_level: "Уровень", eglot: "Еглот", manat: "Манат", vchedey: "Вчедей", knice: "Кнайс", kniger: "Кнайгер", hildeharoy: "Хилдехарой", card_owner: "Владелец", home_assets: "💰 Основные Активы", home_news: "📰 Последняя новость", home_ops: "📜 Последние операции",
+    ex_title: "📊 Knice Exchange", ex_mechanics: "⚖️ Механика рынка", ex_dem_k: "Спрос Кнайс", ex_sup_k: "Предложение Кнайс", ex_vol_k: "Объём Кнайс", ex_dem_g: "Спрос Кнайгер", ex_sup_g: "Предложение Кнайгер", ex_vol_g: "Объём Кнайгер", ex_dem_h: "Спрос Хилдехарой", ex_sup_h: "Предложение Хилдехарой", ex_vol_h: "Объём Хилдехарой", ex_you_have: "У тебя:", ex_buy: "Купить", ex_sell: "Продать", ex_market_news: "📰 Новости рынка",
+    bank_dep_title: "🏦 Вклад", bank_dep_desc: "Ставка: 5% за цикл.", bank_dep_btn: "Открыть вклад", bank_on_dep: "На вкладе:", bank_loan_title: "💳 Кредит", bank_loan_desc: "Ставка:", bank_loan_rate: "10% за цикл", bank_loan_debt: "Твой долг:", bank_loan_btn1: "Взять кредит", bank_loan_btn2: "Погасить", bank_trans_title: "💸 Перевод", bank_trans_ph1: "Имя получателя", bank_trans_ph2: "Еглот", bank_trans_btn: "Отправить", bank_hammam_title: "🍓 Малиновый хамам", bank_hammam_desc: "Элитный отдых. Дает бафф x2 к зарплате на 5 минут!", hammam_cost: "Цена входа:", hammam_dep: "Еглот (зависит от инфляции)", bank_hammam_btn: "Купить билет",
+    fx_title: "💱 Валютный Обменник (Knice Forex)", fx_manat_course: "Курс Маната", fx_vch_course: "Курс Вчедея", fx_desc: "Курс плавающий и зависит от рыночной инфляции. Комиссия спреда: 3%", fx_ph: "Количество валюты", fx_opt_m: "Манаты (🇦🇿)", fx_opt_v: "Вчедеи (⭐)", fx_buy_btn: "Купить валюту", fx_sell_btn: "Продать валюту",
+    eco_cbe_title: "🏛 ЦБЕ", eco_rate: "Ставка", eco_infl: "Инфляция", eco_index: "Индекс рынка", eco_bots_title: "🤖 Боты-трейдеры", eco_bull: "Бык:", eco_bear: "Медведь:", eco_job_title: "💼 Работа", job_worker: "Рабочий — 50–150", job_coder: "Программист — 100–250", job_banker: "Банкир — 150–350", job_trader: "Трейдер — 100–450", eco_job_btn: "Получить зарплату", eco_inv_title: "📈 Инвестиции", eglots: "Еглоты", eco_inv_btn: "Инвестировать",
+    biz_ipo_title: "🚀 Венчурные инвестиции (IPO)", biz_ipo_desc: "Вложи 50 000 Еглот в рискованный стартап. 70% шанс полного провала, но есть 30% шанс успешного выхода на IPO, что принесет тебе 500 000 Еглот!", biz_ipo_btn: "Профинансировать (50 000 ₲)", biz_obj_title: "🏢 Бизнес и Объекты", biz_shop: "Магазин", biz_it: "IT-компания", biz_factory: "Фабрика", biz_buy: "Купить", biz_prop_title: "🏠 Недвижимость", biz_flat: "Квартира", biz_house: "Дом", biz_my_title: "📊 Твои предприятия", biz_pr_btn: "Запустить PR (25k ₲)", biz_pr_prompt: "Для какого актива запустить PR? (k - Кнайс, g - Кнайгер)",
+    shop_title: "🛒 Магазин (За Еглоты)", shop_desc: "Купленные вещи можно продать на вторичке за 70% от стоимости во вкладке 'Имущество'.", item_phone: "Телефон", item_pc: "Компьютер", item_car: "Машина", shop_buy: "Купить", shop_ex_title: "💎 Эксклюзив (За Манаты/Вчедеи)", shop_ex_desc: "На бычьем рынке (Индекс > 120) раритеты продаются с наценкой +25%!", item_watch: "Золотые часы", item_suit: "Элитный костюм", item_jet: "Частный самолёт", shop_inv_title: "🎒 Имущество (Вторичный рынок)",
+    goal_title: "🎯 Финансовые цели", goal_ph_name: "Например: Купить дом", goal_ph_amt: "Сумма цели", goal_btn: "Создать цель", goal_cur: "📌 Текущая цель", goal_daily: "📅 Ежедневный бонус", goal_daily_btn: "Получить 500 Еглот",
+    cas_pred_title: "🎲 Рыночный прогноз", cas_up: "Рост", cas_down: "Падение", cas_rep_title: "🏅 Репутация", cas_rep: "Репутация", cas_trades: "Сделок", cas_best: "Лучший результат",
+    eco2_title: "🏛️ Экономика 2.0", eco2_gdp: "ВВП", eco2_unemp: "Безработица", eco2_money: "Денежная масса", eco2_budget: "Бюджет", eco2_tax: "Налог", eco2_cbe_acts: "🏛️ Действия ЦБЕ", eco2_raise: "📈 Повысить ставку", eco2_cut: "📉 Снизить ставку", eco2_print: "💵 Печать массы",
+    ord_title: "💹 Биржа 2.0 (Спот)", ord_sell: "Продажа", ord_buy: "Покупка", ord_qty: "Количество", ord_price: "Цена", ord_buy_opt: "Купить", ord_sell_opt: "Продать", ord_btn: "Разместить лимитный ордер",
+    fut_title: "📈 Фьючерсы (С плечом)", fut_long: "Long (Вверх)", fut_short: "Short (Вниз)", fut_margin_ph: "Маржа (Еглоты)", fut_open: "Открыть позицию", no_futures: "Нет активных фьючерсов.", close: "Закрыть",
+    stk_title: "🔐 Стейкинг-пул", stk_desc: "Заблокируй крипту для пассивного дохода.", stk_60: "60 циклов (+12%)", stk_180: "180 циклов (+35%)", stk_amt_ph: "Количество монет", stk_btn: "Застейкать", no_staking: "Нет активных стейкингов.", cycles_left: "циклов ост.",
+    card_title: "💳 Knice Card", card_desc: "Виртуальная банковская карта.", card_btn: "Выпустить карту", ins_title: "🛡️ Страхование", ins_desc: "Страхование портфеля за 2%.", ins_btn: "Застраховать портфель",
+    cand_title: "🕯️ Свечной график + SMA 20 + RSI 14",
+    term_title: "📊 Торговый терминал", term_price: "Цена", term_max: "Максимум", term_min: "Минимум", term_avg: "Средняя", term_change: "Изменение", term_vol: "Объём", term_port_title: "💼 Мой портфель", term_alert_title: "🔔 Ценовое уведомление", term_alert_below: "Цена ниже", term_alert_above: "Цена выше", term_alert_btn: "Создать уведомление", term_hist_title: "🧾 История сделок", term_hist_all: "Все сделки", term_hist_buy: "Покупки", term_hist_sell: "Продажи", term_ach_title: "🏆 Достижения трейдера",
+    hist_title: "📈 История рынка", hist_opt_day: "Последний день", hist_opt_week: "Последняя неделя", hist_opt_month: "Последний месяц", hist_opt_year: "Последний год", hist_opt_all: "Всё время", hist_k_now: "Кнайс сейчас", hist_g_now: "Кнайгер сейчас", hist_h_now: "Хилдехарой сейчас", hist_arc: "🗓️ Архив рынка",
+    rank_title: "🏆 Рейтинг игроков", rank_sim: "СИМУЛЯЦИЯ", rank_news: "📰 Knice News",
+    prof_save_title: "💾 Управление сохранениями", prof_save_desc: "Теперь прогресс можно переносить.", prof_exp_btn: "📥 Экспорт кода", prof_imp_btn: "📤 Импорт кода", prof_set_title: "⚙️ Настройки приложения", prof_lang: "Язык / Language:", prof_theme_title: "Тема оформления:", prof_theme_l: "Светлая", prof_theme_d: "Тёмная", prof_theme_r: "Красная", prof_stream_title: "Режим стримера:", prof_stream_off: "Выключен", prof_stream_on: "Включен (Скрыть баланс)", prof_status_title: "Мой статус:", prof_status_ph: "Установить статус...", prof_title: "👤 Профиль", prof_user: "Пользователь", prof_lvl: "Уровень", prof_earned: "Заработано", prof_ach_title: "🏆 Достижения", prof_hist_title: "📜 История", prof_reset_btn: "Сбросить прогресс (Hard Reset)",
+    def_status: "Крипто-энтузиаст", lvl: "Ур.",
+    log_salary: "Зарплата", log_invest: "Инвестиция", log_bought: "Куплено", log_sold: "Продано", log_for: "за", log_loan_taken: "Взят кредит на сумму", log_loan_repaid: "Погашен кредит", log_hammam: "Вход в хамам", log_dep_opened: "Вклад открыт", log_alert_created: "Создано ценовое уведомление", log_price_reached: "Цена {n} достигла {p} ₲", log_ach_unlocked: "Получено достижение", log_margin_call: "МАРЖИН-КОЛЛ! Банк изъял активы", log_ins_paid: "Сработала страховка! Выплачено 50 000 Еглот", log_biz_bought: "Куплен бизнес", log_biz_upgraded: "Бизнес {n} прокачан до ур. {l}", log_ipo_success: "Стартап вышел на IPO! Прибыль 500 000 Еглот.", log_ipo_fail: "Стартап прогорел. Потеряно 50 000 Еглот.", log_prop_bought: "Куплена недвижимость", log_passive_income: "Пассивный доход", log_dep_interest: "Начисления по вкладу", log_loan_interest: "Начислен процент по кредиту", log_hack_paid: "Оплачена защита от хакеров.", log_hack_stolen: "Хакеры украли 20% Кнайса.", log_tax_lawyer: "Юрист отбил проверку налоговой.", log_tax_paid: "Оплачен штраф налоговой.", log_item_bought: "Куплено", log_item_bought_v: "Куплено за Вчедеи", log_item_bought_m: "Куплено за Манаты", log_item_sold: "Продано имущество на барахолке за", log_goal_created: "Создана цель", log_goal_reached: "Финансовая цель выполнена", log_daily_bonus: "Ежедневный бонус", log_order_placed: "Лимитный ордер размещён", log_cbe_changed: "ЦБЕ изменил политику", log_card_issued: "Выпущена Knice Card", log_portfolio_insured: "Портфель застрахован", log_liq: "ЛИКВИДАЦИЯ! {t} x{l} по {a}", log_fut_opened: "Открыт {t} x{l} по {a}", log_fut_closed: "Закрыт {t} по {a}. PnL: {p} ₲", log_stk_opened: "Застейкано {q} {a} на {c} циклов", log_stk_closed: "Стейкинг завершен! Возвращено {q} {a}", log_pr_launched: "PR-кампания запущена для {a}!",
+    err_amt: "Некорректная сумма.", err_nomoney: "Недостаточно Еглотов.", err_novchedey: "Недостаточно Вчедей.", err_nomanat: "Недостаточно Манатов.", err_noloan: "У вас нет активного кредита.", err_nocrypto: "Недостаточно монет.", err_already_have: "Этот предмет у вас уже есть!", err_no_ins: "Нет инвестиций.", err_already_card: "Knice Card уже выпущена.", err_bonus_taken: "Уже получено.", err_pred: "Сначала дождись следующего изменения.", err_goal: "Введите корректную сумму.", err_work_cd: "Работать можно 1 раз в минуту!",
+    msg_goal_done: "🎉 Цель достигнута! {n} добавлено.", msg_buff: "🔥 Действует бафф хамама! (Ост: {t})", msg_cbe: "Решение ЦБЕ: ставка {r}%. Инфляция {i}%.", msg_margin: "🚨 БАНКРОТСТВО! Банк закрыл кредит.", msg_hack_ask: "⚠️ Хакеры атакуют! Заплатить 10 000 Еглот или рискнуть?", msg_hack_fail: "Нет денег! Хакеры украли крипту.", msg_hack_luck: "🛡️ Хакеры не пробили защиту. Повезло!", msg_hack_bad: "🚨 Взлом успешен! Потеряно 20% Кнайса.", msg_tax_ask: "⚠️ Налоговая проверка! Заплатить штраф 5 000 или нанять юриста за 15 000?", msg_tax_fail: "Пришлось платить штраф 5000.", msg_pred_win: "✅ Прогноз верный! Репутация +5.", msg_pred_draw: "➖ Ничья! Цена не изменилась.", msg_pred_lose: "❌ Прогноз неверный. Репутация -2.", msg_ipo_win: "🚀 УРА! Твой стартап ({n}) выстрелил на IPO!", msg_ipo_lose: "📉 Провал. Стартап {n} сгорел.",
+    news_1: "Крупный фонд покупает Кнайс.", news_2: "Проблема в сети Кнайгера.", news_3: "ЦБЕ снизил ставку — рынок оживился.", news_4: "Инвесторы фиксируют прибыль.", news_5: "Новые игроки пришли на рынок.", news_6: "Рынок стал очень волатильным.", news_7: "Кнайс получил статус перспективного актива.", news_8: "Хилдехарой расширяет экосистему.",
+    dyn_news_1: "{p} активно торгует Кнайсом.", dyn_news_2: "{p} открыл новый бизнес.", dyn_news_3: "{p} разместил деньги во вкладе.", dyn_news_4: "{p} ждёт удобной цены Кнайгера.", dyn_news_5: "{p} сделал крупную ставку.", dyn_news_6: "{p} инвестировал в Хилдехарой.", dyn_news_7: "{p} зафиксировал хорошую прибыль.", dyn_news_8: "{p} тестирует стратегии с Вчедей.", dyn_news_9: "{p} достиг финансовой цели.",
+    ach_1: "💰 Первые деньги", ach_2: "💎 5 000 заработано", ach_3: "🟦 Холдер Кнайса", ach_4: "🟥 Холдер Кнайгера", ach_5: "🟩 Холдер Хилдехароя", ach_6: "🛒 Шопоголик", ach_7: "👑 Миллионер",
+    tach_1: "Первый трейд", tach_2: "Опытный трейдер", tach_3: "Уважаемый трейдер", tach_4: "Криптомагнат",
+    port_all: "Общий портфель", no_history: "История пуста.", no_ach: "Пока нет достижений.", no_goal: "Цель ещё не создана.", no_biz: "Нет бизнеса.", upgrade: "Прокачать", sell_for: "Слить за", exc: "Эксклюзив", empty_inv: "Имущества пока нет.", no_alerts: "Уведомлений нет.", no_trades: "Сделок пока нет.", no_orders: "Открытых ордеров нет.", no_bids: "Нет заявок", got: "Получено", not_got: "Не получено", delete: "Удалить", cancel: "Отмена"
+  },
+  en: {
+    login_desc: "Economic Sandbox", login_user: "Username", login_pass: "Password", login_btn: "Login", login_demo: "Demo: Тифа / eglot123", err_login: "Invalid credentials.",
+    app_welcome: "Welcome,", nav_logout: "Logout", nav_home: "🏠<br>Home", nav_ex: "📈<br>Exchange", nav_bank: "💳<br>Bank", nav_fx: "💱<br>Forex", nav_eco: "🏛<br>Economy", nav_shop: "🛒<br>Shop", nav_goals: "🎯<br>Goals", nav_biz: "🏢<br>Business", nav_cas: "🎲<br>Casino", nav_eco2: "🏛️<br>Eco 2.0", nav_ord: "💹<br>Futures", nav_card: "💳<br>Card", nav_cand: "🕯️<br>Candles", nav_term: "📊<br>Terminal", nav_hist: "📈<br>History", nav_rank: "🏆<br>Rank", nav_prof: "👤<br>Profile",
+    home_wealth: "Total Wealth", home_session: "Session Change", home_level: "Level", eglot: "Eglot", manat: "Manat", vchedey: "Vchedey", knice: "Knice", kniger: "Kniger", hildeharoy: "Hildeharoy", card_owner: "Owner", home_assets: "💰 Main Assets", home_news: "📰 Latest News", home_ops: "📜 Recent Operations",
+    ex_title: "📊 Knice Exchange", ex_mechanics: "⚖️ Market Mechanics", ex_dem_k: "Knice Demand", ex_sup_k: "Knice Supply", ex_vol_k: "Knice Volume", ex_dem_g: "Kniger Demand", ex_sup_g: "Kniger Supply", ex_vol_g: "Kniger Volume", ex_dem_h: "Hilde Demand", ex_sup_h: "Hilde Supply", ex_vol_h: "Hilde Volume", ex_you_have: "You have:", ex_buy: "Buy", ex_sell: "Sell", ex_market_news: "📰 Market News",
+    bank_dep_title: "🏦 Deposit", bank_dep_desc: "Rate: 5% per cycle.", bank_dep_btn: "Open Deposit", bank_on_dep: "On deposit:", bank_loan_title: "💳 Loan", bank_loan_desc: "Rate:", bank_loan_rate: "10% per cycle", bank_loan_debt: "Your debt:", bank_loan_btn1: "Take Loan", bank_loan_btn2: "Repay", bank_trans_title: "💸 Transfer", bank_trans_ph1: "Receiver Name", bank_trans_ph2: "Eglot", bank_trans_btn: "Send", bank_hammam_title: "🍓 Raspberry Hammam", bank_hammam_desc: "Elite relax. x2 salary buff for 5 mins!", hammam_cost: "Entry cost:", hammam_dep: "Eglots", bank_hammam_btn: "Buy Ticket",
+    fx_title: "💱 Currency Exchange (Forex)", fx_manat_course: "Manat Rate", fx_vch_course: "Vchedey Rate", fx_desc: "Floating rate based on inflation. Spread: 3%", fx_ph: "Amount", fx_opt_m: "Manats (🇦🇿)", fx_opt_v: "Vchedeys (⭐)", fx_buy_btn: "Buy", fx_sell_btn: "Sell",
+    eco_cbe_title: "🏛 CBE", eco_rate: "Rate", eco_infl: "Inflation", eco_index: "Market Index", eco_bots_title: "🤖 Trading Bots", eco_bull: "Bull:", eco_bear: "Bear:", eco_job_title: "💼 Job", job_worker: "Worker", job_coder: "Programmer", job_banker: "Banker", job_trader: "Trader", eco_job_btn: "Get Salary", eco_inv_title: "📈 Investments", eglots: "Eglots", eco_inv_btn: "Invest",
+    biz_ipo_title: "🚀 Venture Capital (IPO)", biz_ipo_desc: "Invest 50k Eglot. 30% chance for 500k!", biz_ipo_btn: "Fund (50,000 ₲)", biz_obj_title: "🏢 Businesses", biz_shop: "Shop", biz_it: "IT Company", biz_factory: "Factory", biz_buy: "Buy", biz_prop_title: "🏠 Real Estate", biz_flat: "Apartment", biz_house: "House", biz_my_title: "📊 Your Enterprises", biz_pr_btn: "Launch PR (25k ₲)", biz_pr_prompt: "Which asset to boost? (k = Knice, g = Kniger)",
+    shop_title: "🛒 Shop", shop_desc: "Can be resold for 70% value.", item_phone: "Phone", item_pc: "Computer", item_car: "Car", shop_buy: "Buy", shop_ex_title: "💎 Exclusive", shop_ex_desc: "Markup during bull market!", item_watch: "Gold Watch", item_suit: "Elite Suit", item_jet: "Private Jet", shop_inv_title: "🎒 Inventory",
+    goal_title: "🎯 Financial Goals", goal_ph_name: "E.g.: Buy a house", goal_ph_amt: "Target Amount", goal_btn: "Create Goal", goal_cur: "📌 Current Goal", goal_daily: "📅 Daily Bonus", goal_daily_btn: "Claim 500 Eglots",
+    cas_pred_title: "🎲 Market Prediction", cas_up: "Up", cas_down: "Down", cas_rep_title: "🏅 Reputation", cas_rep: "Reputation", cas_trades: "Trades", cas_best: "Best Trade",
+    eco2_title: "🏛️ Economy 2.0", eco2_gdp: "GDP", eco2_unemp: "Unemployment", eco2_money: "Money Supply", eco2_budget: "Budget", eco2_tax: "Tax", eco2_cbe_acts: "🏛️ CBE Actions", eco2_raise: "📈 Raise Rate", eco2_cut: "📉 Cut Rate", eco2_print: "💵 Print Money",
+    ord_title: "💹 Exchange 2.0", ord_sell: "Sell Orders", ord_buy: "Buy Orders", ord_qty: "Quantity", ord_price: "Price", ord_buy_opt: "Buy", ord_sell_opt: "Sell", ord_btn: "Place Limit Order",
+    fut_title: "📈 Futures (Leveraged)", fut_long: "Long (Up)", fut_short: "Short (Down)", fut_margin_ph: "Margin (Eglots)", fut_open: "Open Position", no_futures: "No active futures.", close: "Close",
+    stk_title: "🔐 Staking Pool", stk_desc: "Lock crypto for passive income.", stk_60: "60 cycles (+12%)", stk_180: "180 cycles (+35%)", stk_amt_ph: "Coin Amount", stk_btn: "Stake", no_staking: "No active staking.", cycles_left: "cycles left",
+    card_title: "💳 Knice Card", card_desc: "Virtual bank card.", card_btn: "Issue Card", ins_title: "🛡️ Insurance", ins_desc: "Portfolio insurance.", ins_btn: "Insure Portfolio",
+    cand_title: "🕯️ Candlestick + SMA 20 + RSI 14",
+    term_title: "📊 Trading Terminal", term_price: "Price", term_max: "Maximum", term_min: "Minimum", term_avg: "Average", term_change: "Change", term_vol: "Volume", term_port_title: "💼 My Portfolio", term_alert_title: "🔔 Price Alert", term_alert_below: "Below", term_alert_above: "Above", term_alert_btn: "Create", term_hist_title: "🧾 Trade History", term_hist_all: "All", term_hist_buy: "Buys", term_hist_sell: "Sells", term_ach_title: "🏆 Achievements",
+    hist_title: "📈 Market History", hist_opt_day: "Last Day", hist_opt_week: "Last Week", hist_opt_month: "Last Month", hist_opt_year: "Last Year", hist_opt_all: "All Time", hist_k_now: "Knice Now", hist_g_now: "Kniger Now", hist_h_now: "Hildeharoy Now", hist_arc: "🗓️ Market Archive",
+    rank_title: "🏆 Leaderboard", rank_sim: "SIMULATION", rank_news: "📰 Knice News",
+    prof_save_title: "💾 Save Management", prof_save_desc: "Transfer progress.", prof_exp_btn: "📥 Export Code", prof_imp_btn: "📤 Import Code", prof_set_title: "⚙️ App Settings", prof_lang: "Язык / Language:", prof_theme_title: "Theme:", prof_theme_l: "Light", prof_theme_d: "Dark", prof_theme_r: "Red", prof_stream_title: "Streamer Mode:", prof_stream_off: "Off", prof_stream_on: "On", prof_status_title: "My Status:", prof_status_ph: "Set status...", prof_title: "👤 Profile", prof_user: "User", prof_lvl: "Level", prof_earned: "Earned", prof_ach_title: "🏆 Achievements", prof_hist_title: "📜 History", prof_reset_btn: "Hard Reset",
+    def_status: "Crypto Enthusiast", lvl: "Lv.",
+    log_salary: "Salary", log_invest: "Investment", log_bought: "Bought", log_sold: "Sold", log_for: "for", log_loan_taken: "Loan taken", log_loan_repaid: "Loan repaid", log_hammam: "Entered hammam", log_dep_opened: "Deposit opened", log_alert_created: "Alert created", log_price_reached: "Price {n} reached {p} ₲", log_ach_unlocked: "Achievement unlocked", log_margin_call: "MARGIN CALL! Assets seized", log_ins_paid: "Insurance triggered!", log_biz_bought: "Bought business", log_biz_upgraded: "Business {n} upgraded to Lv. {l}", log_ipo_success: "Startup hit IPO!", log_ipo_fail: "Startup failed.", log_prop_bought: "Bought real estate", log_passive_income: "Passive income", log_dep_interest: "Deposit interest", log_loan_interest: "Loan interest", log_hack_paid: "Paid anti-hacker.", log_hack_stolen: "Hackers stole Knice.", log_tax_lawyer: "Lawyer blocked IRS.", log_tax_paid: "Paid IRS fine.", log_item_bought: "Bought", log_item_bought_v: "Bought for Vchedeys", log_item_bought_m: "Bought for Manats", log_item_sold: "Sold item for", log_goal_created: "Goal created", log_goal_reached: "Goal reached", log_daily_bonus: "Daily bonus", log_order_placed: "Order placed", log_cbe_changed: "CBE changed policy", log_card_issued: "Card issued", log_portfolio_insured: "Portfolio insured", log_liq: "LIQUIDATION! {t} x{l} on {a}", log_fut_opened: "Opened {t} x{l} on {a}", log_fut_closed: "Closed {t} on {a}. PnL: {p} ₲", log_stk_opened: "Staked {q} {a} for {c} cycles", log_stk_closed: "Staking finished! Returned {q} {a}", log_pr_launched: "PR campaign launched for {a}!",
+    err_amt: "Invalid amount.", err_nomoney: "Not enough Eglots.", err_novchedey: "Not enough Vchedeys.", err_nomanat: "Not enough Manats.", err_noloan: "No active loan.", err_nocrypto: "Not enough coins.", err_already_have: "You already have this!", err_no_ins: "No investments.", err_already_card: "Card already issued.", err_bonus_taken: "Already claimed.", err_pred: "Wait for market change.", err_goal: "Enter valid amount.", err_work_cd: "Rest for a minute!",
+    msg_goal_done: "🎉 Goal reached! {n} added.", msg_buff: "🔥 Hammam buff active! (Left: {t})", msg_cbe: "CBE: rate {r}%. Infl {i}%.", msg_margin: "🚨 BANKRUPTCY! Loan closed.", msg_hack_ask: "⚠️ Hackers! Pay 10,000 Eglot or risk?", msg_hack_fail: "Hackers stole crypto.", msg_hack_luck: "🛡️ Lucky defense!", msg_hack_bad: "🚨 Hacked! Lost 20% Knice.", msg_tax_ask: "⚠️ IRS check! Pay fine 5k or lawyer 15k?", msg_tax_fail: "Paid 5k fine.", msg_pred_win: "✅ Prediction correct! +5 Rep.", msg_pred_draw: "➖ Draw!", msg_pred_lose: "❌ Prediction wrong. -2 Rep.", msg_ipo_win: "🚀 Startup ({n}) hit IPO!", msg_ipo_lose: "📉 Startup {n} crashed.",
+    news_1: "Fund buying Knice.", news_2: "Issue in Kniger.", news_3: "CBE cut rate.", news_4: "Investors taking profit.", news_5: "New players entered.", news_6: "Market highly volatile.", news_7: "Knice grows.", news_8: "Hildeharoy expands.",
+    dyn_news_1: "{p} actively trading Knice.", dyn_news_2: "{p} opened a new business.", dyn_news_3: "{p} placed deposit.", dyn_news_4: "{p} watching Kniger.", dyn_news_5: "{p} made a big bet.", dyn_news_6: "{p} invested in Hildeharoy.", dyn_news_7: "{p} took profits.", dyn_news_8: "{p} testing strategies.", dyn_news_9: "{p} reached a goal.",
+    ach_1: "💰 First Money", ach_2: "💎 5k Earned", ach_3: "🟦 Knice Holder", ach_4: "🟥 Kniger Holder", ach_5: "🟩 Hilde Holder", ach_6: "🛒 Shopaholic", ach_7: "👑 Millionaire",
+    tach_1: "First Trade", tach_2: "Experienced Trader", tach_3: "Respected Trader", tach_4: "Crypto Tycoon",
+    port_all: "Total Portfolio", no_history: "History is empty.", no_ach: "No achievements.", no_goal: "Goal not created.", no_biz: "No businesses.", upgrade: "Upgrade", sell_for: "Sell for", exc: "Exclusive", empty_inv: "Inventory empty.", no_alerts: "No alerts.", no_trades: "No trades.", no_orders: "No orders.", no_bids: "No bids", got: "Unlocked", not_got: "Locked", delete: "Delete", cancel: "Cancel"
+  }
+};
+function t(key) { return (i18n[d.lang] && i18n[d.lang][key]) !== undefined ? i18n[d.lang][key] : key; }
+
+const DEF={eglot:100000,manat:0,knice:100,kniger:30,hildeharoy:0,vchedey:0,wallet:0,knicePrice:500,knigerPrice:1200,hildeharoyPrice:250,prevK:500,prevG:1200,prevH:250,rate:6.5,inflation:3.2,manatRate:10,vchedeyRate:50,marketIndex:100,deposit:0,loanAmount:0,earned:0,sessionStart:100000,history:[],news:"Рынок открылся спокойно.",chartK:[],chartG:[],chartH:[],inventory:[],card:"4276 5831 2047 7319",goal:null,lastBonus:"",reputation:0,trades:0,bestTrade:0,prediction:null,predictionAsset:"k",alerts:[],traderAchievements:[],tradeHistory:[],businesses:[],properties:[],demandK:0,demandG:0,demandH:0,supplyK:0,supplyG:0,supplyH:0,volumeK:0,volumeG:0,volumeH:0,marketHistory:[],lastTick:Date.now(),lastIncomeTime:Date.now(),lastWork:0,streamerMode:false,profileStatus:"",cards:[],orders:[],gdp:1000000000,unemployment:5,moneySupply:500000000,governmentBudget:50000000,incomeTax:5,insurance:[],hammamBuff:0,ventureHistory:[],lang:"ru", futures:[], staking:[], prBuffs:[]};
+let d;
+const rawSave = localStorage.getItem("KniceBank5");
+if(rawSave){ try{ d = JSON.parse(decodeURIComponent(atob(rawSave))); } catch(e){ try{ d = JSON.parse(rawSave); } catch(e2){ d = structuredClone(DEF); } } } 
+else { d = structuredClone(DEF); }
+
+for(const key in DEF){
+  if(d[key] === undefined || d[key] === null){
+    if(Array.isArray(DEF[key])) d[key] = [];
+    else if(typeof DEF[key] === 'object') d[key] = structuredClone(DEF[key]);
+    else d[key] = DEF[key];
+  }
+}
+if(!Array.isArray(d.futures)) d.futures = [];
+if(!Array.isArray(d.staking)) d.staking = [];
+if(!Array.isArray(d.prBuffs)) d.prBuffs = [];
+
+const news=[["🟢", "news_1",1.08,1.02,1.01],["🔴", "news_2",.98,.76,1.00],["🟢", "news_3",1.05,1.07,1.06],["🔴", "news_4",.94,.92,.95],["🟢", "news_5",1.04,1.05,1.08],["⚠️", "news_6",.97,1.08,.92],["💎", "news_7",1.10,1.03,.99],["🟩", "news_8",1.01,.98,1.15]];
+
+let audioCtx = null;
+function initAudio(){ if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if(audioCtx.state === 'suspended') audioCtx.resume(); }
+function playSound(type) {
+  if(!audioCtx) return;
+  const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  if(type === 'buy' || type === 'work') { osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime+0.1); gain.gain.setValueAtTime(0.05, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+0.1); osc.start(); osc.stop(audioCtx.currentTime+0.1); }
+  if(type === 'error') { osc.type = 'square'; osc.frequency.setValueAtTime(200, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime+0.15); gain.gain.setValueAtTime(0.05, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+0.15); osc.start(); osc.stop(audioCtx.currentTime+0.15); }
+}
+
+function animateNumberChange(id, changeType) {
+  const el = document.getElementById(id);
+  if(el && !d.streamerMode) {
+    el.classList.remove('flash-up', 'flash-down');
+    void el.offsetWidth;
+    el.classList.add(changeType === 'up' ? 'flash-up' : 'flash-down');
+  }
+}
+
+function save(){localStorage.setItem("KniceBank5", btoa(encodeURIComponent(JSON.stringify(d))));}
+window.addEventListener('beforeunload', save); setInterval(save, 10000);
+
+function exportSave() {
+  const saveString = JSON.stringify(d); const blob = new Blob([saveString], { type: "text/plain" });
+  const url = URL.createObjectURL(blob); const a = document.createElement("a");
+  a.href = url; a.download = "my_savegame.txt"; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); alert("✅ OK!");
+}
+function importSave() {
+  const fileInput = document.createElement("input"); fileInput.type = "file"; fileInput.accept = ".txt"; 
+  fileInput.onchange = function(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const loadedData = JSON.parse(e.target.result); const safeData = structuredClone(DEF);
+        for (const key in DEF) {
+          if (loadedData.hasOwnProperty(key) && loadedData[key] !== null) {
+            if (Array.isArray(DEF[key])) { safeData[key] = Array.isArray(loadedData[key]) ? loadedData[key] : [...DEF[key]]; } 
+            else if (typeof loadedData[key] === typeof DEF[key]) { if (typeof loadedData[key] === 'number' && !Number.isFinite(loadedData[key])) continue; safeData[key] = loadedData[key]; }
+          }
+        }
+        d = safeData; setLanguage(d.lang); save(); update(); alert("✅ OK!");
+      } catch (err) { alert("❌ Error!"); }
+    };
+    reader.readAsText(file);
+  };
+  fileInput.click();
+}
+
+function fmt(x){return Number(x).toLocaleString("ru-RU",{maximumFractionDigits:2})}
+function log(x){d.history.unshift(new Date().toLocaleTimeString()+" — "+x);if(d.history.length>60)d.history.pop()}
+function login(){if(document.getElementById("user").value.trim()==="Тифа"&&document.getElementById("pass").value==="eglot123"){document.getElementById("login").style.display="none";document.getElementById("app").style.display="block"; initAudio(); initSettings(); update();}else{ initAudio(); playSound('error'); alert(t("err_login"));}}
+function show(id){document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));document.getElementById("n-"+id).classList.add("active"); if(id==="candles"||id==="exchange"||id==="history"||id==="terminal")setTimeout(draw,50)}
+
+function setLanguage(lang) {
+  d.lang = lang; document.getElementById('headerLangBtn').innerText = lang === 'ru' ? 'EN' : 'RU'; document.getElementById('langSelect').value = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+  save(); update();
+}
+function toggleLang() { setLanguage(d.lang === 'ru' ? 'en' : 'ru'); }
+
+function assetPrice(a){return a==="k"?d.knicePrice:(a==="g"?d.knigerPrice:d.hildeharoyPrice)}
+function assetName(a){return a==="k"?"knice":(a==="g"?"kniger":"hildeharoy")}
+
+function wealth(){
+  let bVal = (d.businesses||[]).reduce((a,b)=>a+(b.price*(b.level||1)),0);
+  let pVal = (d.properties||[]).reduce((a,p)=>a+p.price,0);
+  let futVal = (d.futures||[]).reduce((a,f)=>{
+     let p = assetPrice(f.asset); let pnl = (p - f.entryPrice) * f.qty * (f.type==='long'?1:-1); return a + f.margin + pnl;
+  },0);
+  let stkVal = (d.staking||[]).reduce((a,s)=>a+(s.amount*assetPrice(s.asset)),0);
+  return d.eglot+d.manat*d.manatRate+d.knice*d.knicePrice+d.kniger*d.knigerPrice+d.hildeharoy*d.hildeharoyPrice+d.vchedey*d.vchedeyRate+d.wallet+d.deposit-(d.loanAmount||0)+bVal+pVal+futVal+stkVal;
+}
+
+function checkGoals() {
+  if(d.goal && wealth() >= d.goal.target) {
+     alert(t('msg_goal_done').replace('{n}', d.goal.name));
+     if(!d.inventory.includes(d.goal.name)) d.inventory.push(d.goal.name);
+     log("🎯 " + t('log_goal_reached') + ": " + d.goal.name);
+     playSound('buy'); d.goal = null;
+  }
+}
+function getHammamCost() { return Math.min(5000, Math.floor(100 * (1 + (d.inflation > 0 ? d.inflation / 10 : 0)))); }
+
+function update(){
+ checkGoals();
+ const w=wealth(), lvl=1+Math.floor(d.earned/5000); const sm = d.streamerMode;
+ [["wealth",sm?"***":fmt(w)],["e",sm?"***":fmt(d.eglot)],["m",sm?"***":fmt(d.manat)],["k",sm?"***":fmt(d.knice)],["g",sm?"***":fmt(d.kniger)],["h",sm?"***":fmt(d.hildeharoy)],["v",sm?"***":fmt(d.vchedey)],["bd",sm?"***":fmt(d.deposit)],["loanOwed", sm?"***":fmt(d.loanAmount||0)],["earned",sm?"***":fmt(d.earned)],["level",lvl],["pl",lvl],["card",d.card],["ka",sm?"***":fmt(d.knice)],["ga",sm?"***":fmt(d.kniger)],["ha",sm?"***":fmt(d.hildeharoy)],["kp",fmt(d.knicePrice)+" ₲"],["gp",fmt(d.knigerPrice)+" ₲"],["hp",fmt(d.hildeharoyPrice)+" ₲"],["rate",d.rate.toFixed(2)+"%"],["infl",d.inflation.toFixed(2)+"%"],["index",d.marketIndex.toFixed(1)],["bull",Math.round(d.bull||50)+"%"],["bear",Math.round(d.bear||50)+"%"],["dK",fmt(d.demandK||0)],["sK",fmt(d.supplyK||0)],["volK",fmt(d.volumeK||0)],["dG",fmt(d.demandG||0)],["sG",fmt(d.supplyG||0)],["volG",fmt(d.volumeG||0)],["dH",fmt(d.demandH||0)],["sH",fmt(d.supplyH||0)],["volH",fmt(d.volumeH||0)],["fxManatUI",fmt(d.manatRate)],["fxVchedeyUI",fmt(d.vchedeyRate)],["hammamCostUI", fmt(getHammamCost())]].forEach(a=>{const e=document.getElementById(a[0]);if(e)e.textContent=a[1]});
+ const diff=w-d.sessionStart;const sc=document.getElementById("sessionChange"); sc.textContent=sm?"***":((diff>=0?"+":"")+fmt(diff)+" ₲");sc.className=diff>=0?"big up":"big down";
+ change("kc",d.knicePrice-d.prevK);change("gc",d.knigerPrice-d.prevG);change("hc",d.hildeharoyPrice-d.prevH);
+ document.getElementById("news").textContent = d.news; document.getElementById("homeNews").textContent = d.news;
+ document.getElementById("cbnews").textContent = t('msg_cbe').replace('{r}', d.rate.toFixed(2)).replace('{i}', d.inflation.toFixed(2));
+ document.getElementById("pStatusText").textContent = d.profileStatus || t('def_status');
+
+ const buffSt = document.getElementById("buffStatus");
+ if(buffSt) {
+    let timeLeft = Math.floor(((d.hammamBuff||0) - Date.now()) / 1000);
+    if(timeLeft > 0) {
+        buffSt.style.display = "block";
+        let mm = String(Math.floor(timeLeft / 60)).padStart(2, '0'); let ss = String(timeLeft % 60).padStart(2, '0');
+        buffSt.textContent = t('msg_buff').replace('{t}', mm + ":" + ss);
+    } else { buffSt.style.display = "none"; }
+ }
+
+ renderHistory();renderAch();renderInventory();renderGoal();renderBusinesses();renderVentureHistory();renderFutures();renderStaking();
+ if(typeof renderOrderBook==="function")renderOrderBook(); if(typeof renderMacro==="function")renderMacro();
+ draw();
+ const rep=document.getElementById("reputation"),tr=document.getElementById("trades"),bt=document.getElementById("bestTrade");
+ if(rep)rep.textContent=d.reputation||0;if(tr)tr.textContent=d.trades||0;if(bt)bt.textContent=fmt(d.bestTrade||0)+" ₲";
+ updateDaily();renderLeaderboard();save();
+}
+
+function change(id,v){const e=document.getElementById(id);if(!e)return;e.className=v>=0?"up":"down";e.textContent=(v>=0?"▲ +":"▼ ")+fmt(v)+" ₲"}
+
+function work(){
+ if (Date.now() - (d.lastWork||0) < 60000) { playSound('error'); return alert(t('err_work_cd')); } 
+ const job=document.getElementById("job").value, ranges={worker:[50,150],coder:[100,250],banker:[150,350],trader:[100,450]},r=ranges[job];
+ let x=Math.floor(Math.random()*(r[1]-r[0]+1))+r[0]; if (Date.now() < (d.hammamBuff||0)) { x *= 2; }
+ d.eglot+=x;d.earned+=x;d.lastWork = Date.now(); log("💼 " + t('log_salary') + ": +"+x+" " + t('eglot')); animateNumberChange('e', 'up'); playSound('work'); save(); update();
+}
+
+function invest(){let x=Math.floor(+document.getElementById("iv").value);if(!x||x<=0||x>d.eglot){ playSound('error'); return alert(t('err_amt'));} d.eglot-=x;let p=Math.floor(x*.25);d.vchedey+=p;log("📈 "+t('log_invest')+": -"+x+" "+t('eglot')+", +"+p+" "+t('vchedey')); animateNumberChange('e', 'down'); playSound('buy'); update()}
+function buyFx() {
+  let q = Math.floor(+document.getElementById("fxAmt").value), tp = document.getElementById("fxType").value;
+  if(!q || q<=0) { playSound('error'); return alert(t('err_amt')); }
+  let rate = tp==="m" ? d.manatRate : d.vchedeyRate, cost = Math.floor(q * rate * 1.03); 
+  if(d.eglot < cost) { playSound('error'); return alert(t('err_nomoney')); }
+  d.eglot -= cost; if(tp==="m") d.manat += q; else d.vchedey += q;
+  log("💱 " + t('log_bought') + " " + q + " " + (tp==="m"?t('manat'):t('vchedey')) + " " + t('log_for') + " " + fmt(cost) + " ₲"); playSound('buy'); animateNumberChange('e', 'down'); update();
+}
+function sellFx() {
+  let q = Math.floor(+document.getElementById("fxAmt").value), tp = document.getElementById("fxType").value;
+  if(!q || q<=0) { playSound('error'); return alert(t('err_amt')); }
+  let rate = tp==="m" ? d.manatRate : d.vchedeyRate, earn = Math.floor(q * rate * 0.97); 
+  if(tp==="m") { if(d.manat < q) { playSound('error'); return alert(t('err_nomanat')); } d.manat -= q; } 
+  else { if(d.vchedey < q) { playSound('error'); return alert(t('err_novchedey')); } d.vchedey -= q; }
+  d.eglot += earn; log("💱 " + t('log_sold') + " " + q + " " + (tp==="m"?t('manat'):t('vchedey')) + " " + t('log_for') + " " + fmt(earn) + " ₲"); playSound('work'); animateNumberChange('e', 'up'); update();
+}
+function takeLoan(){let x=Math.floor(+document.getElementById("loanAmt").value); if(!x||x<1000){ playSound('error'); return alert(t('err_amt'));} d.loanAmount=(d.loanAmount||0)+x; d.eglot+=x; log("💳 " + t('log_loan_taken') + ": "+fmt(x)+" "+t('eglot')); playSound('buy'); animateNumberChange('e', 'up'); update();}
+function repayLoan(){
+  let inputVal = document.getElementById("loanAmt").value; if(!d.loanAmount){ playSound('error'); return alert(t('err_noloan'));} 
+  let x = inputVal ? Math.floor(+inputVal) : Math.min(d.loanAmount, d.eglot);
+  if(x<=0){ playSound('error'); return alert(t('err_amt'));} if(x>d.loanAmount) x=d.loanAmount; if(x>d.eglot){ playSound('error'); return alert(t('err_nomoney'));} 
+  d.eglot-=x; d.loanAmount-=x; log("💳 " + t('log_loan_repaid') + ": "+fmt(x)+" "+t('eglot')); playSound('work'); animateNumberChange('e', 'down'); update();
+}
+function enterHammam() {
+  let cost = getHammamCost(); if(d.eglot < cost) { playSound('error'); return alert(t('err_nomoney')); } d.eglot -= cost; d.hammamBuff = Date.now() + 300000; 
+  log("🍓 " + t('log_hammam') + ": " + fmt(cost) + " " + t('eglot')); playSound('buy'); animateNumberChange('e', 'down'); update();
+}
+function transfer(){let n=document.getElementById("to").value.trim(),x=Math.floor(+document.getElementById("ta").value);if(!n||!x||x<=0||x>d.eglot){ playSound('error'); return alert(t('err_amt'));} d.eglot-=x;log("💸 "+x+" "+t('eglot')+" → "+n); playSound('buy'); animateNumberChange('e', 'down'); update()}
+function bankDeposit(){let x=Math.floor(+document.getElementById("deposit").value);if(!x||x<=0||x<100||x>d.eglot){ playSound('error'); return alert(t('err_amt'));} d.eglot-=x;d.deposit+=x;log("🏦 "+t('log_dep_opened')+": "+x+" "+t('eglot')); playSound('buy'); animateNumberChange('e', 'down'); update()}
+
+function trade(tp,dir){
+ let q=Math.floor(+(document.getElementById(tp+"qty").value)), price=assetPrice(tp), key=tp==="k"?"knice":(tp==="g"?"kniger":"hildeharoy"), name=assetName(tp);
+ if(!q||q<=0){ playSound('error'); return alert(t('err_amt')); }
+ if(dir>0){
+  if(q*price>d.eglot){ playSound('error'); return alert(t('err_nomoney'));} d.eglot-=q*price;d[key]+=q;
+  if(tp==="k"){d.demandK+=q;d.volumeK+=q}else if(tp==="g"){d.demandG+=q;d.volumeG+=q}else{d.demandH+=q;d.volumeH+=q};
+  d.trades=(d.trades||0)+1;d.reputation=(d.reputation||0)+1;d.tradeHistory.push({t:Date.now(),asset:t(name),side:"buy",qty:q,price,total:q*price});
+  if (d.tradeHistory.length > 500) d.tradeHistory.shift();
+  log("🛒 " + t('log_bought') + " "+q+" "+t(name)+" " + t('log_for') + " "+fmt(q*price)+" "+t('eglot')); animateNumberChange('e', 'down'); playSound('buy'); 
+ } else {
+  if(q>d[key]){ playSound('error'); return alert(t('err_nocrypto'));} d[key]-=q;d.eglot+=q*price;
+  if(tp==="k"){d.supplyK+=q;d.volumeK+=q}else if(tp==="g"){d.supplyG+=q;d.volumeG+=q}else{d.supplyH+=q;d.volumeH+=q};
+  d.trades=(d.trades||0)+1;d.reputation=(d.reputation||0)+1;d.bestTrade=Math.max(d.bestTrade||0,q*price);d.tradeHistory.push({t:Date.now(),asset:t(name),side:"sell",qty:q,price,total:q*price});
+  if (d.tradeHistory.length > 500) d.tradeHistory.shift();
+  log("💰 " + t('log_sold') + " "+q+" "+t(name)+" " + t('log_for') + " "+fmt(q*price)+" "+t('eglot')); animateNumberChange('e', 'up'); playSound('work'); 
+ }
+ checkTraderAchievements();update()
+}
+
+// FUTURES LOGIC
+function openFuture() {
+  let asset = document.getElementById('futAsset').value; let type = document.getElementById('futType').value; let lev = parseInt(document.getElementById('futLev').value); let margin = Math.floor(+document.getElementById('futMargin').value);
+  if(!margin || margin <= 0){ playSound('error'); return alert(t('err_amt'));}
+  if(d.eglot < margin){ playSound('error'); return alert(t('err_nomoney'));}
+  d.eglot -= margin;
+  let entryPrice = assetPrice(asset); let qty = (margin * lev) / entryPrice;
+  let liqPrice = type === 'long' ? entryPrice * (1 - 1/lev) : entryPrice * (1 + 1/lev);
+  d.futures.push({ id: Date.now() + Math.random(), asset, type, leverage: lev, margin, entryPrice, qty, liqPrice });
+  log(`📈 ${t('log_fut_opened').replace('{t}', type.toUpperCase()).replace('{l}', lev).replace('{a}', t(assetName(asset)))}`);
+  playSound('buy'); animateNumberChange('e', 'down'); update();
+}
+function closeFuture(id) {
+  let idx = d.futures.findIndex(f => f.id == id); if(idx < 0) return;
+  let f = d.futures[idx]; let p = assetPrice(f.asset); let pnl = (p - f.entryPrice) * f.qty * (f.type === 'long' ? 1 : -1); let payout = f.margin + pnl; if(payout < 0) payout = 0;
+  d.eglot += payout; d.futures.splice(idx, 1);
+  log(`📉 ${t('log_fut_closed').replace('{t}', f.type.toUpperCase()).replace('{a}', t(assetName(f.asset))).replace('{p}', fmt(pnl))}`);
+  playSound('work'); animateNumberChange('e', 'up'); update();
+}
+function renderFutures() {
+  const e = document.getElementById('activeFutures'); if(!e) return;
+  if(!d.futures.length) { e.innerHTML = "<span class='muted'>"+t('no_futures')+"</span>"; return; }
+  e.innerHTML = d.futures.map(f => {
+      let p = assetPrice(f.asset); let pnl = (p - f.entryPrice) * f.qty * (f.type==='long'?1:-1); let clr = pnl >= 0 ? "up" : "down"; let sign = pnl >= 0 ? "+" : "";
+      return `<div class="asset"><span>${f.type==='long'?'🟢':'🔴'} ${f.leverage}x ${t(assetName(f.asset))}</span><div><b class="${clr}" style="margin-right:8px">${sign}${fmt(pnl)} ₲</b> <button class="gray" style="padding: 5px 10px; font-size:12px;" onclick="closeFuture('${f.id}')">${t('close')}</button></div></div>`;
+  }).join("");
+}
+
+// STAKING LOGIC
+function openStaking() {
+  let asset = document.getElementById('stkAsset').value; let dur = parseInt(document.getElementById('stkDur').value); let amt = Math.floor(+document.getElementById('stkAmt').value);
+  if(!amt || amt <= 0){ playSound('error'); return alert(t('err_amt'));}
+  let key = asset === 'k' ? 'knice' : 'kniger';
+  if(d[key] < amt){ playSound('error'); return alert(t('err_nocrypto'));}
+  d[key] -= amt; let reward = dur === 60 ? amt * 0.12 : amt * 0.35;
+  d.staking.push({ id: Date.now() + Math.random(), asset, amount: amt, reward, unlockTime: d.lastTick + dur * 1000 });
+  log(`🔐 ${t('log_stk_opened').replace('{q}', fmt(amt)).replace('{a}', t(assetName(asset))).replace('{c}', dur)}`);
+  playSound('buy'); update();
+}
+function renderStaking() {
+  const e = document.getElementById('activeStaking'); if(!e) return;
+  if(!d.staking.length) { e.innerHTML = "<span class='muted'>"+t('no_staking')+"</span>"; return; }
+  e.innerHTML = d.staking.map(s => {
+      let left = Math.max(0, Math.ceil((s.unlockTime - d.lastTick)/1000));
+      return `<div class="asset"><span>🔐 ${fmt(s.amount)} ${t(assetName(s.asset))}</span><span class="muted">${left} ${t('cycles_left')}</span></div>`;
+  }).join("");
+}
+
+function draw(){
+ if(document.getElementById("exchange").classList.contains("active")) renderMainChart();
+ if(document.getElementById("candles").classList.contains("active")) renderCandles();
+ if(document.getElementById("terminal").classList.contains("active")) renderTerminal();
+ if(document.getElementById("history").classList.contains("active")) renderMarketHistory();
+}
+
+function renderMainChart(){
+ const c=document.getElementById("chart");if(!c||c.clientWidth===0)return;
+ const ctx=c.getContext("2d"),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);
+ ctx.strokeStyle=getComputedStyle(document.body).getPropertyValue("--line")||"#e7ebf2";ctx.lineWidth=1;for(let i=1;i<7;i++){let y=i*h/7;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+ function line(a,col){if(a.length<2)return;let lo=Math.min(...a),hi=Math.max(...a),rg=(hi-lo)||(lo*0.1)||1;ctx.strokeStyle=col;ctx.lineWidth=3;ctx.beginPath();a.forEach((v,i)=>{let x=10+i*(w-20)/(a.length-1),y=h-15-(v-lo)/rg*(h-30);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke()}
+ line(d.chartK,"#2457ff");line(d.chartG,"#ef4444");line(d.chartH||[],"#16a34a");
+}
+
+function renderTerminal(){
+ const asset=document.getElementById("terminalAsset")?.value||"k",key=asset==="k"?"k":(asset==="g"?"g":"h"),price=assetPrice(asset),vol=asset==="k"?d.volumeK:(asset==="g"?d.volumeG:d.volumeH),rows=(d.marketHistory||[]).slice(-500),vals=rows.map(x=>x[key]).filter(Number.isFinite),max=vals.length?Math.max(...vals):price,min=vals.length?Math.min(...vals):price,avg=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:price,first=vals[0]||price,change=(price/first-1)*100;
+ document.getElementById("termPrice").textContent=fmt(price)+" ₲";document.getElementById("termMax").textContent=fmt(max)+" ₲";document.getElementById("termMin").textContent=fmt(min)+" ₲";document.getElementById("termAvg").textContent=fmt(avg)+" ₲";document.getElementById("termChange").textContent=(change>=0?"+":"")+change.toFixed(2)+"%";document.getElementById("termVolume").textContent=fmt(vol);
+ const c=document.getElementById("terminalChart");
+ if(c&&c.clientWidth>0){
+  const W=c.clientWidth,H=360,dpr=devicePixelRatio||1;c.width=W*dpr;c.height=H*dpr;const ctx=c.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+  if(vals.length>2){const lo=min-(max-min)*.08||(min*0.92)||min-1,hi=max+(max-min)*.08||(max*1.08)||max+1;ctx.beginPath();vals.forEach((v,i)=>{const x=30+i*(W-50)/(vals.length-1),y=H-35-(v-lo)/(hi-lo)*(H-65);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.strokeStyle=asset==="k"?"#315cff":(asset==="g"?"#d43b73":"#16a34a");ctx.lineWidth=3;ctx.stroke();}
+ }
+ renderPortfolio();renderAlerts();renderTradeHistory();renderTraderAchievements();
+}
+
+function renderMarketHistory(){
+ const range=document.getElementById("historyRange")?.value||"day",limits={day:86400000,week:604800000,month:2592000000,year:31536000000,all:Infinity},limit=limits[range]??Infinity,now=Date.now(),rows=(d.marketHistory||[]).filter(x=>now-x.t<=limit);
+ const kc=document.getElementById("histK"),gc=document.getElementById("histG"),hc=document.getElementById("histH");
+ if(kc)kc.textContent=fmt(d.knicePrice)+" ₲";if(gc)gc.textContent=fmt(d.knigerPrice)+" ₲";if(hc)hc.textContent=fmt(d.hildeharoyPrice)+" ₲";
+ const c=document.getElementById("historyChart");
+ if(c&&c.clientWidth>0){
+  const W=c.clientWidth,H=330,dpr=devicePixelRatio||1;c.width=W*dpr;c.height=H*dpr;const ctx=c.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+  if(rows.length>2){
+   const vals=rows.flatMap(x=>[x.k,x.g,x.h||0]),min=Math.min(...vals),max=Math.max(...vals),pad=(max-min)*.12||(min*0.1)||1,lo=min-pad,hi=max+pad;
+   function line(key){ctx.beginPath();rows.forEach((x,i)=>{const px=30+i*(W-50)/(rows.length-1),py=H-30-((x[key]||0)-lo)/(hi-lo)*(H-55);i?ctx.lineTo(px,py):ctx.moveTo(px,py);});ctx.strokeStyle=key==="k"?"#315cff":(key==="g"?"#d43b73":"#16a34a");ctx.lineWidth=3;ctx.stroke();}
+   line("k");line("g");line("h");ctx.fillStyle=getComputedStyle(document.body).getPropertyValue("--muted")||"#6b7280";ctx.font="12px sans-serif";ctx.fillText(t("knice"),35,18);ctx.fillText(t("kniger"),95,18);ctx.fillText(t("hildeharoy"),165,18);
+  }else{ctx.fillStyle=getComputedStyle(document.body).getPropertyValue("--muted")||"#6b7280";ctx.font="14px sans-serif";ctx.fillText(t("no_history"),25,45);}
+ }
+ const table=document.getElementById("historyTable");if(table)table.innerHTML=rows.slice(-12).reverse().length?rows.slice(-12).reverse().map(x=>`<div class="asset"><span>${new Date(x.t).toLocaleString()}</span><b>${t('knice')} ${fmt(x.k)} ₲ · ${t('kniger')} ${fmt(x.g)} ₲ · ${t('hildeharoy')} ${fmt(x.h||0)} ₲</b></div>`).join(""):"<span class='muted'>"+t('no_history')+"</span>";
+}
+
+function renderCandles(){
+ const a=document.getElementById("candleAsset")?.value||"k",c=document.getElementById("candleChart");
+ if(!c||c.clientWidth===0)return;
+ const history = (d.marketHistory||[]).slice(-400); 
+ if(history.length<3) return;
+ const W=c.clientWidth, H=380, D=devicePixelRatio||1; c.width=W*D; c.height=H*D; 
+ const ctx=c.getContext("2d"); ctx.setTransform(D,0,0,D,0,0); ctx.clearRect(0,0,W,H);
+
+ const candlesMap = new Map(); const interval = 10000; 
+ history.forEach(tick => {
+    const price = tick[a]; if(!Number.isFinite(price)) return;
+    const bucket = Math.floor(tick.t / interval); 
+    if(!candlesMap.has(bucket)) { candlesMap.set(bucket, { open: price, high: price, low: price, close: price }); } 
+    else { const cnd = candlesMap.get(bucket); cnd.high = Math.max(cnd.high, price); cnd.low = Math.min(cnd.low, price); cnd.close = price; }
+ });
+ const candles = Array.from(candlesMap.values()).slice(-40);
+ if(candles.length < 3) return;
+
+ const topH = 250, botH = 100, botY = 270;
+ let sma20 = [];
+ for(let i=0; i<candles.length; i++){
+   if(i < 19) { sma20.push(null); continue; }
+   let sum = 0; for(let j=0; j<20; j++) sum += candles[i-j].close; sma20.push(sum/20);
+ }
+ let rsi14 = [null]; let gains = 0, losses = 0;
+ for(let i=1; i<candles.length; i++) {
+   let diff = candles[i].close - candles[i-1].close, curGain = diff > 0 ? diff : 0, curLoss = diff < 0 ? -diff : 0;
+   if(i <= 14) {
+       gains += curGain; losses += curLoss;
+       if(i === 14) { gains /= 14; losses /= 14; rsi14.push(losses === 0 ? 100 : 100 - (100 / (1 + gains/losses))); } else { rsi14.push(null); }
+   } else {
+       gains = (gains * 13 + curGain) / 14; losses = (losses * 13 + curLoss) / 14;
+       rsi14.push(losses === 0 ? 100 : 100 - (100 / (1 + gains/losses)));
+   }
+ }
+
+ const allHigh = Math.max(...candles.map(c=>c.high)), allLow = Math.min(...candles.map(c=>c.low)), padding = (allHigh - allLow) * 0.1 || 5, maxVal = allHigh + padding, minVal = Math.max(0, allLow - padding);
+ ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue("--line")||"#2c3650"; ctx.lineWidth = 1;
+ for(let i=1; i<=4; i++){ let y = i * (topH - 20) / 5 + 10; ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(W - 20, y); ctx.stroke(); }
+ 
+ ctx.fillStyle = "rgba(255,255,255,0.03)"; ctx.fillRect(30, botY, W-50, botH);
+ ctx.strokeStyle = "rgba(255,255,255,0.2)"; ctx.beginPath(); ctx.moveTo(30, botY + botH*0.3); ctx.lineTo(W-20, botY + botH*0.3); ctx.stroke(); 
+ ctx.beginPath(); ctx.moveTo(30, botY + botH*0.7); ctx.lineTo(W-20, botY + botH*0.7); ctx.stroke(); 
+
+ const candleWidth = Math.max(4, Math.floor((W - 60) / candles.length) - 4);
+ candles.forEach((cnd, i) => {
+    const x = 40 + i * ((W - 60) / candles.length) + (candleWidth / 2); 
+    const isGreen = cnd.close >= cnd.open, color = isGreen ? "#169b50" : "#dc3d4b";
+    const yOpen = topH - 10 - ((cnd.open - minVal) / (maxVal - minVal)) * (topH - 20);
+    const yClose = topH - 10 - ((cnd.close - minVal) / (maxVal - minVal)) * (topH - 20);
+    const yHigh = topH - 10 - ((cnd.high - minVal) / (maxVal - minVal)) * (topH - 20);
+    const yLow = topH - 10 - ((cnd.low - minVal) / (maxVal - minVal)) * (topH - 20);
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, yHigh); ctx.lineTo(x, yLow); ctx.stroke();
+    const bodyTop = Math.min(yOpen, yClose), bodyHeight = Math.max(Math.abs(yOpen - yClose), 1); 
+    ctx.fillStyle = color; ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
+ });
+
+ ctx.beginPath(); ctx.strokeStyle = "#facc15"; ctx.lineWidth = 2; let firstSma = true;
+ sma20.forEach((val, i) => {
+     if(val !== null) {
+        const x = 40 + i * ((W - 60) / candles.length) + (candleWidth / 2), y = topH - 10 - ((val - minVal) / (maxVal - minVal)) * (topH - 20);
+        if(firstSma) { ctx.moveTo(x,y); firstSma=false; } else { ctx.lineTo(x,y); }
+     }
+ });
+ ctx.stroke();
+
+ ctx.beginPath(); ctx.strokeStyle = "#c084fc"; ctx.lineWidth = 2; let firstRsi = true;
+ rsi14.forEach((val, i) => {
+     if(val !== null) {
+        const x = 40 + i * ((W - 60) / candles.length) + (candleWidth / 2), y = botY + botH - (val / 100) * botH;
+        if(firstRsi) { ctx.moveTo(x,y); firstRsi=false; } else { ctx.lineTo(x,y); }
+     }
+ });
+ ctx.stroke();
+
+ ctx.fillStyle = getComputedStyle(document.body).getPropertyValue("--muted")||"#6b7280"; ctx.font = "12px sans-serif";
+ ctx.fillText("SMA (20)", 40, 20); ctx.fillText("RSI (14)", 40, botY - 5);
+}
+
+function renderPortfolio(){const e=document.getElementById("portfolioBox");if(e)e.innerHTML=`<div class="asset"><span>🟦 ${t('knice')} · ${fmt(d.knice)}</span><b>${fmt(d.knice*d.knicePrice)} ₲</b></div><div class="asset"><span>🟥 ${t('kniger')} · ${fmt(d.kniger)}</span><b>${fmt(d.kniger*d.knigerPrice)} ₲</b></div><div class="asset"><span>🟩 ${t('hildeharoy')} · ${fmt(d.hildeharoy)}</span><b>${fmt(d.hildeharoy*d.hildeharoyPrice)} ₲</b></div><div class="asset"><span>💰 ${t('eglots')}</span><b>${fmt(d.eglot)} ₲</b></div><div class="asset"><span><b>${t('port_all')}</b></span><b>${fmt(d.knice*d.knicePrice+d.kniger*d.knigerPrice+d.hildeharoy*d.hildeharoyPrice)} ₲</b></div>`;}
+function addPriceAlert(){const asset=document.getElementById("alertAsset").value,type=document.getElementById("alertType").value,price=+document.getElementById("alertPrice").value;if(!price||price<=0){ playSound('error'); return alert(t('err_amt'));} d.alerts.push({asset,type,price,created:Date.now(),active:true});log("🔔 "+t('log_alert_created'));renderAlerts();save();}
+function renderAlerts(){const e=document.getElementById("alertsBox");if(e)e.innerHTML=(d.alerts||[]).length?d.alerts.map((x,i)=>`<div class="asset"><span>${t(x.asset==="k"?"knice":(x.asset==="g"?"kniger":"hildeharoy"))}: ${x.type==="below"?"↓":"↑"} ${fmt(x.price)} ₲</span><button class="gray" onclick="removeAlert(${i})">${t("delete")}</button></div>`).join(""):"<span class='muted'>"+t('no_alerts')+"</span>";}
+function removeAlert(i){d.alerts.splice(i,1);renderAlerts();save()}
+function checkAlerts(){(d.alerts||[]).forEach(a=>{if(!a.active)return;const p=assetPrice(a.asset);const hit=a.type==="below"?p<=a.price:p>=a.price;if(hit){a.active=false;log("🔔 "+t('log_price_reached').replace('{n}', t(assetName(a.asset))).replace('{p}', fmt(p)));alert("🔔 "+t(assetName(a.asset))+" — "+fmt(p)+" ₲"); playSound('work');}});}
+function renderTradeHistory(){const e=document.getElementById("tradeHistoryBox"),f=document.getElementById("tradeFilter")?.value||"all",arr=(d.tradeHistory||[]).filter(x=>f==="all"||x.side===f).slice(-30).reverse();if(e)e.innerHTML=arr.length?arr.map(x=>`<div class="asset"><span>${new Date(x.t).toLocaleString()} · ${x.side==="buy"?"🟢 "+t('term_hist_buy'):"🔴 "+t('term_hist_sell')} ${t(x.asset)}</span><b>${x.qty} × ${fmt(x.price)} ₲</b></div>`).join(""):"<span class='muted'>"+t('no_trades')+"</span>";}
+function checkTraderAchievements(){const checks=[["first","tach_1","",(d.trades||0)>=1],["trader25","tach_2","",(d.trades||0)>=25],["rep100","tach_3","",(d.reputation||0)>=100],["million","tach_4","",(d.knice*d.knicePrice+d.kniger*d.knigerPrice+d.hildeharoy*d.hildeharoyPrice)>=1000000]];checks.forEach(x=>{if(x[3]&&!d.traderAchievements.includes(x[0])){d.traderAchievements.push(x[0]);log("🏆 "+t('log_ach_unlocked')+": "+t(x[1])); playSound('work');}});}
+function renderTraderAchievements(){const e=document.getElementById("traderAchievements"),all=[["first","tach_1"],["trader25","tach_2"],["rep100","tach_3"],["million","tach_4"]];if(e)e.innerHTML=all.map(x=>`<div class="asset"><span>${d.traderAchievements.includes(x[0])?"🏆":"🔒"} ${t(x[1])}</span><b>${d.traderAchievements.includes(x[0])?t("got"):t("not_got")}</b></div>`).join("");}
+
+function initSettings(){
+ const theme = localStorage.getItem("KniceTheme") || "light"; changeTheme(theme); document.getElementById("streamerSelect").value = d.streamerMode ? "yes" : "no"; document.getElementById("profileStatusInput").value = d.profileStatus || ""; setLanguage(d.lang || "ru");
+}
+function changeTheme(val) {
+ document.body.classList.remove("dark", "red-theme"); if (val === "dark") document.body.classList.add("dark"); if (val === "red") document.body.classList.add("red-theme");
+ localStorage.setItem("KniceTheme", val); const sel = document.getElementById("themeSelect");if(sel) sel.value = val; setTimeout(draw, 50);
+}
+function toggleStreamerMode(val){d.streamerMode=(val==="yes");save();update();}
+function updateProfileStatus(val){d.profileStatus=val;save();update();}
+
+function processTicks() {
+  const now = Date.now(); if (!d.lastTick) d.lastTick = now;
+  if (now - d.lastTick > 120000) d.lastTick = now - 120000; 
+  let ticks = Math.floor((now - d.lastTick) / 1000); if (ticks < 1) return;
+  for (let i = 0; i < ticks; i++) { let simTime = d.lastTick + (i + 1) * 1000; runSingleTick(simTime); }
+  d.lastTick += ticks * 1000; update();
+}
+
+function checkMarginCall() {
+  if((d.loanAmount||0) > 0 && wealth() < (d.loanAmount||0)) {
+      let debt = d.loanAmount; d.loanAmount = 0; d.businesses = []; d.properties = []; d.knice = Math.floor(d.knice * 0.2); d.kniger = Math.floor(d.kniger * 0.2); d.hildeharoy = Math.floor(d.hildeharoy * 0.2); d.eglot = Math.max(500, Math.floor(d.eglot * 0.1));
+      log("🚨 " + t('log_margin_call')); playSound('error'); setTimeout(() => { alert(t('msg_margin')); }, 100);
+  }
+}
+
+function runSingleTick(simTime) {
+ matchOrders();
+ d.gdp=Math.max(100000000,d.gdp*(1+(3.5-d.inflation)*.0008-(d.unemployment-5)*.0005));
+ d.unemployment=Math.max(1,Math.min(20,d.unemployment+(d.marketIndex>110?-.05:.05)+(Math.random()-.5)*.1));
+ d.prevK=d.knicePrice;d.prevG=d.knigerPrice;d.prevH=d.hildeharoyPrice;
+
+ const ev=news[Math.floor(Math.random()*news.length)]; d.news=ev[0]+" "+t(ev[1]);
+
+ d.prBuffs = d.prBuffs.filter(b => b.expires > simTime);
+ let prK = d.prBuffs.some(b => b.asset === 'k') ? 1.4 : 1;
+ let prG = d.prBuffs.some(b => b.asset === 'g') ? 1.4 : 1;
+
+ d.bull=Math.max(10,Math.min(90,(d.bull||50)+(Math.random()-.5)*16));d.bear=100-d.bull;
+ const botKBuy=Math.max(0,Math.round(5+(d.bull-50)/5+Math.random()*8)),botKSell=Math.max(0,Math.round(5+(d.bear-50)/5+Math.random()*8));
+ const botGBuy=Math.max(0,Math.round(4+(d.bull-50)/6+Math.random()*7)),botGSell=Math.max(0,Math.round(4+(d.bear-50)/6+Math.random()*7));
+ const botHBuy=Math.max(0,Math.round(6+(d.bull-50)/4+Math.random()*10)),botHSell=Math.max(0,Math.round(6+(d.bear-50)/4+Math.random()*10)); 
+
+ const macro=1-(d.rate-6.5)*0.012-(d.inflation-3.2)*0.004;
+ const imbalanceK=(botKBuy+Math.max(0,d.demandK*0.18*prK))-(botKSell+Math.max(0,d.supplyK*0.18));
+ const imbalanceG=(botGBuy+Math.max(0,d.demandG*0.18*prG))-(botGSell+Math.max(0,d.supplyG*0.18));
+ const imbalanceH=(botHBuy+Math.max(0,(d.demandH||0)*0.18))-(botHSell+Math.max(0,(d.supplyH||0)*0.18));
+ 
+ const demandEffectK=1+Math.max(-0.12,Math.min(0.12,imbalanceK/100)), demandEffectG=1+Math.max(-0.14,Math.min(0.14,imbalanceG/90)), demandEffectH=1+Math.max(-0.20,Math.min(0.20,imbalanceH/80)); 
+ const reversionK=1+(500/d.knicePrice-1)*0.006,reversionG=1+(1200/d.knigerPrice-1)*0.006,reversionH=1+(250/d.hildeharoyPrice-1)*0.008;
+
+ d.knicePrice=Math.max(1,+(d.knicePrice*ev[2]*macro*demandEffectK*reversionK).toFixed(2));
+ d.knigerPrice=Math.max(1,+(d.knigerPrice*ev[3]*macro*demandEffectG*reversionG).toFixed(2));
+ d.hildeharoyPrice=Math.max(1,+(d.hildeharoyPrice*(ev[4]||1)*macro*demandEffectH*reversionH).toFixed(2));
+ 
+ const avgBubble = ((d.knicePrice / 500) + (d.knigerPrice / 1200) + (d.hildeharoyPrice / 250)) / 3;
+ d.inflation += (avgBubble - 1) * 0.008 - (d.rate - 6.5) * 0.005 + (Math.random()-0.5)*0.05; d.inflation += (3.2 - d.inflation) * 0.002; d.inflation = Math.max(0.5, Math.min(30, d.inflation));
+ d.manatRate = Math.max(1, +(10 + (d.inflation - 3.2) * 0.8).toFixed(2)); d.vchedeyRate = Math.max(1, +(50 + (d.inflation - 3.2) * 2.5).toFixed(2));
+
+ checkMarginCall();
+
+ d.marketHistory.push({t:simTime,k:d.knicePrice,g:d.knigerPrice,h:d.hildeharoyPrice,index:d.marketIndex,inflation:d.inflation,rate:d.rate});
+ checkAlerts();checkTraderAchievements(); if(d.marketHistory.length>1000)d.marketHistory.shift();
+
+ d.marketIndex=Math.max(20,Math.min(250,d.marketIndex+(d.knicePrice>d.prevK?1:-1)*1.5+(Math.random()-.5)*2));
+ if(d.inflation>6)d.rate=Math.min(15,d.rate+.08);else if(d.inflation<2)d.rate=Math.max(1,d.rate-.05);else d.rate=Math.max(1,Math.min(15,d.rate+(Math.random()-.5)*.04));
+
+ if(d.insurance && d.insurance.length > 0 && d.marketIndex < 60) { d.eglot += 50000; d.insurance = []; log("🛡️ " + t('log_ins_paid')); playSound('buy'); }
+
+ // Futures Liq check
+ d.futures.forEach(f => {
+    let p = assetPrice(f.asset); let isLiq = false;
+    if(f.type === 'long' && p <= f.liqPrice) isLiq = true; if(f.type === 'short' && p >= f.liqPrice) isLiq = true;
+    if(isLiq) { log("🚨 " + t('log_liq').replace('{t}', f.type.toUpperCase()).replace('{l}', f.leverage).replace('{a}', t(assetName(f.asset)))); playSound('error'); f._liq = true; }
+ });
+ d.futures = d.futures.filter(f => !f._liq);
+
+ // Staking resolve
+ d.staking.forEach(s => {
+    if(simTime >= s.unlockTime && !s._done) {
+        let key = s.asset === 'k' ? 'knice' : 'kniger'; d[key] += (s.amount + s.reward); s._done = true;
+        log(`🔓 ${t('log_stk_closed').replace('{q}', fmt(s.amount + s.reward)).replace('{a}', t(assetName(s.asset)))}`); playSound('buy');
+    }
+ });
+ d.staking = d.staking.filter(s => !s._done);
+
+ d.demandK*=.55; d.supplyK*=.55; d.demandG*=.55; d.supplyG*=.55; d.demandH*=.55; d.supplyH*=.55;
+ d.chartK.push(d.knicePrice);d.chartG.push(d.knigerPrice); if(!d.chartH) d.chartH = []; d.chartH.push(d.hildeharoyPrice);
+ if(d.chartK.length>50)d.chartK.shift();if(d.chartG.length>50)d.chartG.shift();if(d.chartH.length>50)d.chartH.shift();
+
+ if(d.prediction){
+   const act=assetPrice(d.predictionAsset); let result = "loss";
+   if (act > d.prediction.price && d.prediction.direction === 1) result = "win"; 
+   else if (act < d.prediction.price && d.prediction.direction === -1) result = "win"; 
+   else if (act === d.prediction.price) result = "draw";
+
+   const pe=document.getElementById("prediction");
+   if(result === "win") { d.reputation = (d.reputation||0) + 5; if(pe) pe.textContent = t("msg_pred_win"); playSound('work'); } 
+   else if (result === "draw") { if(pe) pe.textContent = t("msg_pred_draw"); } 
+   else { d.reputation = (d.reputation||0) - 2; if(pe) pe.textContent = t("msg_pred_lose"); }
+   d.prediction=null; 
+ }
+ 
+ const timeWindow = simTime - (120 * 1000);
+ d.volumeK = (d.tradeHistory||[]).filter(x => x.asset === t("knice") && x.t >= timeWindow).reduce((a, b) => a + b.qty, 0);
+ d.volumeG = (d.tradeHistory||[]).filter(x => x.asset === t("kniger") && x.t >= timeWindow).reduce((a, b) => a + b.qty, 0);
+ d.volumeH = (d.tradeHistory||[]).filter(x => x.asset === t("hildeharoy") && x.t >= timeWindow).reduce((a, b) => a + b.qty, 0);
+
+ generateDynamicNews();
+}
+
+function renderLeaderboard(){
+ const e=document.getElementById("leaderboard");if(!e)return; const sm=d.streamerMode;
+ const players=[["Тифа",wealth()],["Расул",Math.round(650000+Math.sin(Date.now()/900000)*70000)],["Туран",Math.round(420000+Math.cos(Date.now()/1000000)*55000)],["Эльдар",Math.round(300000+Math.sin(Date.now()/1200000)*40000)],["Турал",Math.round(250000+Math.sin(Date.now()/1100000)*35000)],["Али",Math.round(190000+Math.cos(Date.now()/800000)*30000)],["Магран",Math.round(150000+Math.sin(Date.now()/700000)*25000)]].sort((a,b)=>b[1]-a[1]);
+ e.innerHTML=players.map((p,i)=>`<div class="asset"><span><b>#${i+1}</b> ${p[0]}</span><b>${sm?"***":fmt(p[1])} ₲</b></div>`).join("");
+}
+
+function generateDynamicNews(){
+    const e = document.getElementById("kniceNewsList"); if(!e) return;
+    const tpl = ["dyn_news_1", "dyn_news_2", "dyn_news_3", "dyn_news_4", "dyn_news_5", "dyn_news_6", "dyn_news_7", "dyn_news_8", "dyn_news_9"];
+    const players = ["Тифа","Расул","Эльдар","Али","Туран","Магран","Турал"];
+    let shuffledPlayers = [...players].sort(() => 0.5 - Math.random()); let shuffledTpl = [...tpl].sort(() => 0.5 - Math.random());
+    let html = ""; for (let i = 0; i < 4; i++) { html += `<div class="news" style="margin-top:8px">${t(shuffledTpl[i]).replace("{p}", shuffledPlayers[i])}</div>`; }
+    e.innerHTML = html;
+}
+
+function launchPR(name) {
+   if(d.eglot < 25000){ playSound('error'); return alert(t('err_nomoney')); }
+   let asset = prompt(t('biz_pr_prompt'), "k");
+   if(asset !== 'k' && asset !== 'g') return;
+   d.eglot -= 25000; d.prBuffs.push({ asset, expires: d.lastTick + 120000 });
+   log(`🚀 ${t('log_pr_launched').replace('{a}', t(assetName(asset)))}`); playSound('buy'); animateNumberChange('e', 'down'); update();
+}
+
+const bizKeyMap = {
+  'Магазин': 'biz_shop',
+  'IT-компания': 'biz_it',
+  'Фабрика': 'biz_factory',
+  'Квартира': 'biz_flat',
+  'Дом': 'biz_house'
+};
+function getBizName(name) {
+  const k = bizKeyMap[name];
+  return k ? t(k) : name;
+}
+
+const itemKeyMap = {
+  'Телефон': 'item_phone',
+  'Компьютер': 'item_pc',
+  'Машина': 'item_car',
+  'Золотые часы': 'item_watch',
+  'Элитный костюм': 'item_suit',
+  'Частный самолёт': 'item_jet'
+};
+function getItemName(name) {
+  const k = itemKeyMap[name];
+  return k ? t(k) : name;
+}
+
+function buyBusiness(name,price,inc){
+  if((d.businesses||[]).some(b => b.name === name)){ alert(t('err_already_have')); return false; }
+  if(d.eglot<price){ playSound('error'); return alert(t('err_nomoney'));} 
+  d.eglot-=price; d.businesses.push({name,price,income:inc,level:1}); d.earned+=Math.floor(price/20);
+  log("🏢 " + t('log_biz_bought') + ": "+getBizName(name)+" " + t('log_for') + " "+fmt(price)+" "+t('eglot')); 
+  playSound('buy'); animateNumberChange('e', 'down'); update();
+}
+
+function upgradeBusiness(index) {
+  let b = d.businesses[index]; let cost = Math.floor(b.price * 0.5 * (b.level || 1));
+  if(d.eglot < cost) { playSound('error'); return alert(t('err_nomoney')); }
+  d.eglot -= cost; b.level = (b.level || 1) + 1; b.income = Math.floor(b.income * 1.4);
+  log("🛠️ " + t('log_biz_upgraded').replace('{n}', getBizName(b.name)).replace('{l}', b.level));
+  playSound('buy'); animateNumberChange('e', 'down'); update();
+}
+
+function renderVentureHistory() {
+   const e = document.getElementById("ventureHistoryBox"); if(!e) return;
+   if(!(d.ventureHistory||[]).length) { e.innerHTML = ""; return; }
+   e.innerHTML = "<h3 style='margin-top:15px; margin-bottom:10px;'>History</h3>" + d.ventureHistory.map(v => `<div class="asset"><span>${v.time} · ${t(v.name)||v.name}</span><b style="color:${v.color}">${t(v.status)||v.status} (${v.amount})</b></div>`).join("");
+}
+
+function startVenture() {
+  if (d.eglot < 50000) { playSound('error'); return alert(t('err_nomoney')); } d.eglot -= 50000;
+  let names = ['Нейросеть "Кот"', 'Крипто-шаурма', 'Доставка дронами', 'AI-ассистент', 'Метавселенная Knice', 'Эко-Хамам', 'Маркетплейс'];
+  let vName = names[Math.floor(Math.random()*names.length)], success = Math.random() < 0.3, timeStr = new Date().toLocaleTimeString();
+  if(success) { d.eglot += 500000; log("🚀 " + t('log_ipo_success')); alert(t('msg_ipo_win').replace('{n}', vName)); playSound('buy'); d.ventureHistory.unshift({time: timeStr, name: vName, status: "IPO", amount: "+500 000 ₲", color: "#169b50"}); } 
+  else { log("📉 " + t('log_ipo_fail')); alert(t('msg_ipo_lose').replace('{n}', vName)); playSound('error'); d.ventureHistory.unshift({time: timeStr, name: vName, status: "Fail", amount: "-50 000 ₲", color: "#dc3d4b"}); }
+  if(d.ventureHistory.length > 5) d.ventureHistory.pop(); update();
+}
+
+function buyProperty(name,price,rt){
+  if((d.properties||[]).some(p => p.name === name)){ alert(t('err_already_have')); return false; }
+  if(d.eglot<price){ playSound('error'); return alert(t('err_nomoney'));} 
+  d.eglot-=price;d.properties.push({name,price,rent:rt});d.earned+=Math.floor(price/25);
+  log("🏠 " + t('log_prop_bought') + ": "+getBizName(name)+" " + t('log_for') + " "+fmt(price)+" "+t('eglot')); playSound('buy'); animateNumberChange('e', 'down'); update();
+}
+
+function updatePassiveIncome() {
+  let now = Date.now(); if (!d.lastIncomeTime) d.lastIncomeTime = now;
+  let deltaMs = now - d.lastIncomeTime, minutesPassed = Math.floor(deltaMs / 60000); 
+  if (minutesPassed > 0) {
+    let incomePerMinute = (d.businesses||[]).reduce((a,b)=>a+(Number(b.income)||0),0) + (d.properties||[]).reduce((a,p)=>a+(Number(p.rent)||0),0); 
+    if (incomePerMinute > 0) { d.eglot += incomePerMinute * minutesPassed; d.earned += incomePerMinute * minutesPassed; log("🏢 " + t('log_passive_income') + ": +"+fmt(incomePerMinute * minutesPassed)+" "+t('eglot')); }
+    if (d.deposit > 0) { for(let i = 0; i < minutesPassed; i++){ d.deposit += Math.floor(d.deposit*.05); } log("🏦 " + t('log_dep_interest')); }
+    if ((d.loanAmount||0) > 0) { let interest = Math.floor(d.loanAmount * 0.10 * minutesPassed); d.loanAmount += interest; log("💳 " + t('log_loan_interest') + ": " + fmt(interest) + " " + t('eglot')); }
+
+    let eventChance = 1 - Math.pow(0.95, minutesPassed); 
+    if(Math.random() < eventChance) {
+        if(Math.random() < 0.5) {
+            if(confirm(t('msg_hack_ask'))) { if(d.eglot >= 10000) { d.eglot -= 10000; log("💸 " + t('log_hack_paid')); } else { alert(t('msg_hack_fail')); d.knice = Math.floor(d.knice*0.8); } } 
+            else { if(Math.random() < 0.5) { alert(t('msg_hack_bad')); d.knice = Math.floor(d.knice*0.8); log("🚨 " + t('log_hack_stolen')); } else { alert(t('msg_hack_luck')); } }
+        } else {
+            if(confirm(t('msg_tax_ask'))) { if(d.eglot >= 15000) { d.eglot -= 15000; log("⚖️ " + t('log_tax_lawyer')); } else { alert(t('msg_tax_fail')); d.eglot = Math.max(0, d.eglot-5000); } } 
+            else { if(d.eglot >= 5000) { d.eglot -= 5000; log("💸 " + t('log_tax_paid')); } else { d.eglot = 0; } }
+        }
+    }
+    d.lastIncomeTime += minutesPassed * 60000; if(incomePerMinute > 0 || d.deposit > 0 || d.loanAmount > 0) { animateNumberChange('e', 'up'); update(); }
+  }
+}
+
+function renderBusinesses(){
+ const e=document.getElementById("businesses"); if(!e)return; const bs=d.businesses||[],ps=d.properties||[];
+ if(!bs.length&&!ps.length){e.innerHTML="<span class='muted'>"+t('no_biz')+"</span>";return}
+ e.innerHTML=bs.map((b,i)=>{
+    let prBtn = (b.name === 'IT-компания' || b.name === 'Фабрика') ? `<button class="primary" style="padding: 5px 10px; font-size: 12px; margin-left: 5px;" onclick="launchPR('${b.name}')">${t('biz_pr_btn')}</button>` : '';
+    return `<div class="asset"><span>🏢 ${getBizName(b.name)} (${t('lvl')} ${b.level||1})</span><div><b style="margin-right:10px">+${fmt(b.income)} ₲</b><button class="gray" style="padding: 5px 10px; font-size: 12px;" onclick="upgradeBusiness(${i})">${t("upgrade")}</button>${prBtn}</div></div>`
+ }).join("")+(ps.map(p=>`<div class="asset"><span>🏠 ${getBizName(p.name)}</span><b>+${fmt(p.rent)} ₲</b></div>`).join(""));
+}
+
+function buyItem(name,price){
+  if(d.inventory.includes(name)){ playSound('error'); return alert(t('err_already_have'));}
+  if(d.eglot<price){ playSound('error'); return alert(t('err_nomoney'));} 
+  d.eglot-=price;d.inventory.push(name);d.earned+=Math.floor(price/10);
+  log("🛒 " + t('log_item_bought') + ": "+getItemName(name)+" " + t('log_for') + " "+fmt(price)+" "+t('eglot')); 
+  playSound('buy'); animateNumberChange('e', 'down'); update();
+}
+function buyItemVchedey(name,price){
+  if(d.inventory.includes(name)){ playSound('error'); return alert(t('err_already_have'));}
+  if(d.vchedey<price){ playSound('error'); return alert(t('err_novchedey'));} 
+  d.vchedey-=price;d.inventory.push(name);
+  log("🛒 " + t('log_item_bought_v') + ": "+getItemName(name)); 
+  playSound('buy'); update();
+}
+function buyItemManat(name,price){
+  if(d.inventory.includes(name)){ playSound('error'); return alert(t('err_already_have'));}
+  if(d.manat<price){ playSound('error'); return alert(t('err_nomanat'));} 
+  d.manat-=price;d.inventory.push(name);
+  log("🛒 " + t('log_item_bought_m') + ": "+getItemName(name)); 
+  playSound('buy'); update();
+}
+
+function renderInventory() {
+    const e = document.getElementById("inventory");
+    if(!d.inventory.length) { e.innerHTML = "<span class='muted'>"+t('empty_inv')+"</span>"; return; }
+    const prices = { "Телефон": { p: 30000, c: "e" }, "Компьютер": { p: 80000, c: "e" }, "Машина": { p: 250000, c: "e" }, "Золотые часы": { p: 100, c: "v", ex: true }, "Элитный костюм": { p: 500, c: "m", ex: true }, "Частный самолёт": { p: 10000, c: "m", ex: true } };
+    let html = d.inventory.map((x, i) => {
+        let item = prices[x];
+        if(item) {
+            let resell = Math.floor(item.p * 0.7), suffix = " ₲";
+            if(item.ex) { let mult = (d.marketIndex > 120) ? 1.25 : 0.7; resell = Math.floor(item.p * mult); suffix = item.c === "m" ? " 🇦🇿" : " ⭐"; }
+            return `<div class="asset"><span>${getItemName(x)}</span><button class="red" style="padding: 5px 10px; font-size: 12px;" onclick="sellItem(${i}, ${resell}, '${item.c}')">${t('sell_for')} ${fmt(resell)}${suffix}</button></div>`;
+        } else { return `<div class="asset"><span>${x}</span><span class="badge">${t('exc')}</span></div>`; }
+    }).join(""); e.innerHTML = html;
+}
+
+function sellItem(i, p, c) {
+    if (c === "m") d.manat += p; else if (c === "v") d.vchedey += p; else d.eglot += p;
+    let cName = c === "m" ? "manat" : (c === "v" ? "vchedey" : "eglot");
+    log("🛒 " + t('log_item_sold') + " " + fmt(p) + " " + t(cName));
+    d.inventory.splice(i, 1); playSound('work'); update();
+}
+
+function createGoal(){const n=document.getElementById("goalName").value.trim(),tar=Math.floor(+document.getElementById("goalTarget").value);if(!n||!tar||tar<=0){ playSound('error'); return alert(t('err_goal'));} d.goal={name:n,target:tar,created:Date.now()};log("🎯 " + t('log_goal_created') + ": "+n); playSound('buy'); update();}
+function renderGoal(){const e=document.getElementById("goalBox");if(!e)return;if(!d.goal){e.innerHTML="<span class='muted'>"+t('no_goal')+"</span>";return}const pct=Math.max(0,Math.min(100,Math.round(wealth()/d.goal.target*100)));e.innerHTML=`<b>${d.goal.name}</b><p>${fmt(wealth())} / ${fmt(d.goal.target)} ${t('eglot')}</p><div class='bar'><i style='width:${pct}%'></i></div><p class='muted'>${pct}%</p>`;}
+function updateDaily(){const e=document.getElementById("dailyText");if(!e)return;const tm=new Date().toISOString().slice(0,10);if(d.lastBonus===tm){e.textContent=t('err_bonus_taken');return}e.textContent="";}
+function dailyBonus(){const tm=new Date().toISOString().slice(0,10);if(d.lastBonus===tm){ playSound('error'); return alert(t('err_bonus_taken'));} d.lastBonus=tm;d.eglot+=500;d.earned+=500;log("🎁 " + t('log_daily_bonus') + ": +500 "+t('eglot')); playSound('work'); animateNumberChange('e', 'up'); update();}
+function predict(direction){if(d.prediction){ playSound('error'); return alert(t('err_pred'));} d.predictionAsset=document.getElementById("predictionAsset")?.value||"k";d.prediction={direction,price:assetPrice(d.predictionAsset)};document.getElementById("prediction").textContent="OK."; playSound('buy');}
+
+function placeLimitOrder(){
+  const a=document.getElementById("orderAsset").value, side=document.getElementById("orderSide").value, q=Math.floor(+document.getElementById("orderQty").value), p=+document.getElementById("orderPrice").value;
+  if(!q || q<1 || !p || p<1){ playSound('error'); return alert(t('err_amt'));} 
+  if(side==="buy"){ if(q*p > d.eglot){ playSound('error'); return alert(t('err_nomoney'));} d.eglot -= (q*p); } 
+  else { const key = a==="k"?"knice":(a==="g"?"kniger":"hildeharoy"); if(q > d[key]){ playSound('error'); return alert(t('err_nocrypto'));} d[key] -= q; }
+  d.orders.push({id: Date.now().toString() + Math.floor(Math.random()*10000), asset:a, side, qty:q, price:p});
+  log("📋 " + t('log_order_placed')); playSound('buy'); renderOrderBook(); save();
+}
+
+function cancelOrder(id){
+  const o = d.orders.find(x => x.id === id);
+  if(o) { if(o.side === "buy") d.eglot += (o.qty * o.price); else { const key = o.asset==="k"?"knice":(o.asset==="g"?"kniger":"hildeharoy"); d[key] += o.qty; } }
+  d.orders = d.orders.filter(x => x.id !== id); renderOrderBook(); save();
+}
+
+function matchOrders(){
+  (d.orders||[]).slice().forEach(o=>{
+    let p=assetPrice(o.asset), hit = o.side==="buy" ? p<=o.price : p>=o.price; if(!hit) return;
+    let key = o.asset==="k"?"knice":(o.asset==="g"?"kniger":"hildeharoy");
+    if(o.side==="buy"){ d[key] += o.qty; if(p < o.price) { d.eglot += o.qty * (o.price - p); } if(o.asset==="k") d.demandK += o.qty; else if (o.asset==="g") d.demandG += o.qty; else d.demandH += o.qty; } 
+    else { d.eglot += (o.qty * p); if(o.asset==="k") d.supplyK += o.qty; else if (o.asset==="g") d.supplyG += o.qty; else d.supplyH += o.qty; }
+    d.tradeHistory.push({t:Date.now(), asset:t(assetName(o.asset)), side:o.side, qty:o.qty, price:p, total:(o.qty*p)}); if (d.tradeHistory.length > 500) d.tradeHistory.shift();
+    d.orders = d.orders.filter(x => x.id !== o.id); playSound('work'); 
+  });
+}
+
+function renderOrderBook(){const e=document.getElementById("myOrders"),a=document.getElementById("orderAsset")?.value||"k";if(!e)return;const arr=(d.orders||[]).filter(o=>o.asset===a);e.innerHTML=arr.map(o=>`<div class="asset"><span>${o.side==="buy"?"🟢":"🔴"} ${o.qty} ${t(assetName(a))} × ${fmt(o.price)} ₲</span><button class="gray" onclick="cancelOrder('${o.id}')">${t('cancel')}</button></div>`).join("")||"<span class='muted'>"+t('no_orders')+"</span>";document.getElementById("asks").innerHTML=arr.filter(o=>o.side==="sell").map(o=>`<div class="asset">${o.qty} · ${fmt(o.price)} ₲</div>`).join("")||"<span class='muted'>"+t('no_bids')+"</span>";document.getElementById("bids").innerHTML=arr.filter(o=>o.side==="buy").map(o=>`<div class="asset">${o.qty} · ${fmt(o.price)} ₲</div>`).join("")||"<span class='muted'>"+t('no_bids')+"</span>";}
+
+function centralBankAction(x){if(x==="raise")d.rate=Math.min(15,d.rate+.5);if(x==="cut")d.rate=Math.max(1,d.rate-.5);if(x==="money"){d.moneySupply+=10000000; d.inflation+=0.5;} log("🏛️ " + t('log_cbe_changed')); playSound('work'); update()}
+function createCard(){if(d.cards.length){ playSound('error'); return alert(t('err_already_card'));} if(d.eglot<1000){ playSound('error'); return alert(t('err_nomoney'));} d.eglot-=1000;d.cards.push(Date.now());log("💳 " + t('log_card_issued')); playSound('buy'); update()}
+function buyInsurance(){let v=d.knice*d.knicePrice+d.kniger*d.knigerPrice+d.hildeharoy*d.hildeharoyPrice,c=v*.02;if(!v){ playSound('error'); return alert(t('err_no_ins'));} if(d.eglot<c){ playSound('error'); return alert(t('err_nomoney'));} d.eglot-=c;d.insurance=[Date.now()];log("🛡️ " + t('log_portfolio_insured')); playSound('buy'); animateNumberChange('e', 'down'); update()}
+function renderMacro(){let f=(i,v)=>{let e=document.getElementById(i);if(e)e.textContent=v};f("gdpStat",fmt(d.gdp)+" ₲");f("unempStat",d.unemployment.toFixed(2)+"%");f("moneyStat",fmt(d.moneySupply)+" ₲");f("budgetStat",fmt(d.governmentBudget)+" ₲");f("taxStat",d.incomeTax.toFixed(1)+"%");let c=document.getElementById("cardBalance");if(c)c.textContent=d.streamerMode?"Balance: ***":"Balance: "+fmt(d.eglot)+" ₲"}
+
+function resetAll(){if(confirm("Hard Reset?")){localStorage.removeItem("KniceBank5");location.reload()}}
+
+if(!d.marketHistory.length)d.marketHistory.push({t:Date.now(),k:d.knicePrice,g:d.knigerPrice,h:d.hildeharoyPrice,index:d.marketIndex,inflation:d.inflation,rate:d.rate});
+setInterval(processTicks, 1000); setInterval(updatePassiveIncome, 1000);
+</script>
+</body>
+</html>
