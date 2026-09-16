@@ -164,6 +164,7 @@
 
 <div id="action-pad">
   <div class="touch-btn" id="btn-reload">R<span id="btn-lbl-reload">ПЕРЕЗАР.</span></div>
+  <div class="touch-btn" id="btn-build-toggle">⚒<span id="btn-lbl-build">СТРОЙКА</span></div>
   <div class="touch-btn" id="btn-orders">П<span id="btn-lbl-order">ПРИКАЗ</span></div>
   <div class="touch-btn" id="btn-grenade">G<span id="btn-lbl-grenade">ГРАНАТА</span></div>
   <div class="touch-btn" id="btn-tank">E<span id="btn-lbl-tank">СЕСТЬ</span></div>
@@ -686,6 +687,20 @@ bindBtn('btn-tank', () => toggleMount());
 bindBtn('btn-artillery', () => toggleBinoculars());
 bindBtn('btn-whistle', () => commandWhistle());
 
+bindBtn('btn-build-toggle', () => {
+  const pad = document.getElementById('build-pad');
+  const btn = document.getElementById('btn-build-toggle');
+  if (pad.style.display === 'none' || pad.style.display === '') {
+    pad.style.display = 'flex';
+    btn.style.borderColor = '#f5cd79';
+    btn.style.color = '#f5cd79';
+  } else {
+    pad.style.display = 'none';
+    btn.style.borderColor = '#3d4f40';
+    btn.style.color = '#fff';
+  }
+});
+
 bindBtn('btn-build-sand', () => buildStructure('sandbag'));
 bindBtn('btn-build-wire', () => buildStructure('wire'));
 bindBtn('btn-build-mine', () => buildStructure('mine'));
@@ -1170,8 +1185,15 @@ class Unit {
         if (vx !== 0 && vy !== 0) { vx *= 0.7071; vy *= 0.7071; }
       }
 
-      if (vx !== 0 || vy !== 0) { this.stamina = Math.max(0, this.stamina - 0.25); this.move(vx * this.baseSpeed * speedMult, vy * this.baseSpeed * speedMult); }
-      else { this.stamina = Math.min(100, this.stamina + 0.4); }
+      if (vx !== 0 || vy !== 0) { 
+        this.stamina = Math.max(0, this.stamina - 0.25); 
+        this.move(vx * this.baseSpeed * speedMult, vy * this.baseSpeed * speedMult); 
+        if (!rightStick.firing && window.matchMedia('(pointer: coarse)').matches) {
+          this.angle = Math.atan2(vy, vx);
+        }
+      } else { 
+        this.stamina = Math.min(100, this.stamina + 0.4); 
+      }
 
       let tryShoot = false;
       if (rightStick.firing) {
