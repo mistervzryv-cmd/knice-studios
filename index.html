@@ -43,6 +43,7 @@
       letter-spacing: -1px;
       margin-bottom: 8px;
       background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+      background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -87,6 +88,24 @@
       box-shadow: 0 16px 36px -8px rgba(56, 189, 248, 0.25), 0 0 12px rgba(56, 189, 248, 0.2);
     }
     .card:hover::before { opacity: 1; }
+
+    /* Ancient 4X Card Hover Accent */
+    .card.card-ancient:hover {
+      border-color: #f1c40f;
+      box-shadow: 0 16px 36px -8px rgba(241, 196, 15, 0.3), 0 0 16px rgba(241, 196, 15, 0.25);
+    }
+    .card.card-ancient::before {
+      background: radial-gradient(circle at top, rgba(241, 196, 15, 0.12), transparent 70%);
+    }
+
+    /* RTS Card Hover Accent */
+    .card.card-rts:hover {
+      border-color: #22c55e;
+      box-shadow: 0 16px 36px -8px rgba(34, 197, 94, 0.3), 0 0 16px rgba(34, 197, 94, 0.2);
+    }
+    .card.card-rts::before {
+      background: radial-gradient(circle at top, rgba(34, 197, 94, 0.12), transparent 70%);
+    }
 
     .card-preview {
       width: 100%;
@@ -161,6 +180,16 @@
       background: #1e293b;
       border-radius: 6px;
       color: #38bdf8;
+    }
+    .tag.gold {
+      color: #f1c40f;
+      background: rgba(241, 196, 15, 0.12);
+      border: 1px solid rgba(241, 196, 15, 0.25);
+    }
+    .tag.green {
+      color: #4ade80;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.25);
     }
 
     .btn-dots {
@@ -377,7 +406,59 @@
       </div>
     </div>
 
-    <!-- 3. Rasul World -->
+    <!-- 3. Fracture of Empires: Ancient 4X (Directly after Frontline 1944) -->
+    <div class="card card-ancient" onclick="launchAncient4X()">
+      <div class="card-preview">
+        <div class="preview-badge"><span></span>4X STRATEGY LIVE</div>
+        <svg viewBox="0 0 320 145" width="100%" height="100%">
+          <defs>
+            <linearGradient id="bronzeGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#1c1917"/>
+              <stop offset="60%" stop-color="#2d2115"/>
+              <stop offset="100%" stop-color="#451a03"/>
+            </linearGradient>
+          </defs>
+          <rect width="320" height="145" fill="url(#bronzeGrad)"/>
+          
+          <g stroke="rgba(241,196,15,0.18)" stroke-width="1.2" fill="none">
+            <polygon points="50,45 75,30 100,45 100,75 75,90 50,75"/>
+            <polygon points="100,45 125,30 150,45 150,75 125,90 100,75" fill="rgba(46,204,113,0.08)"/>
+            <polygon points="150,45 175,30 200,45 200,75 175,90 150,75"/>
+            <polygon points="200,45 225,30 250,45 250,75 225,90 200,75"/>
+            <polygon points="75,90 100,75 125,90 125,120 100,135 75,120"/>
+            <polygon points="125,90 150,75 175,90 175,120 150,135 125,120" fill="rgba(241,196,15,0.1)"/>
+            <polygon points="175,90 200,75 225,90 225,120 200,135 175,120"/>
+          </g>
+
+          <path d="M20,130 Q110,110 140,80 T260,20" fill="none" stroke="#0ea5e9" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+
+          <polygon points="130,76 170,76 164,62 136,62" fill="#d97706"/>
+          <polygon points="136,62 164,62 159,50 141,50" fill="#f59e0b"/>
+          <rect x="145" y="42" width="10" height="8" rx="1" fill="#fef3c7"/>
+          <polygon points="144,42 156,42 150,34" fill="#ef4444"/>
+
+          <circle cx="95" cy="62" r="5" fill="#f1c40f"/>
+          <text x="91" y="65" fill="#000" font-size="8" font-weight="900">⚔</text>
+          <circle cx="215" cy="100" r="5" fill="#ef4444"/>
+          <text x="212" y="103" fill="#fff" font-size="7" font-weight="900">⚑</text>
+          
+          <rect x="205" y="14" width="105" height="20" rx="4" fill="rgba(241,196,15,0.2)"/>
+          <text x="214" y="28" fill="#f1c40f" font-size="9.5" font-weight="bold">BRONZE AGE 4X</text>
+        </svg>
+      </div>
+      <div class="card-content">
+        <div class="card-title">🏛️ Fracture of Empires</div>
+        <p class="card-desc">Historical 4X strategy on an authentic hexagonal world map. Imperial overextension, secession mechanics, cultural tier evolution, and research systems.</p>
+      </div>
+      <div class="card-tags">
+        <span class="tag gold">4X Strategy</span>
+        <span class="tag gold">Hex Map</span>
+        <span class="tag">Diplomacy</span>
+        <span class="tag">Tech Tree</span>
+      </div>
+    </div>
+
+    <!-- 4. Rasul World -->
     <div class="card" onclick="launchGame('rasulworld.html', 'Ideal World 2026')">
       <div class="card-preview">
         <div class="preview-badge"><span></span>GEOPOLITICS</div>
@@ -402,7 +483,7 @@
       </div>
     </div>
 
-    <!-- 4. Mega Evolution: Spore -->
+    <!-- 5. Mega Evolution: Spore -->
     <div class="card" onclick="launchMegaLatest()">
       <div class="btn-dots" title="All versions" onclick="event.stopPropagation(); openModal('megaModal')">•••</div>
       <div class="card-preview">
@@ -434,7 +515,7 @@
       </div>
     </div>
 
-    <!-- 5. 3D Flight Simulator -->
+    <!-- 6. 3D Flight Simulator -->
     <div class="card" onclick="launchFlightLatest()">
       <div class="btn-dots" title="All versions" onclick="event.stopPropagation(); openModal('flightModal')">•••</div>
       <div class="card-preview">
@@ -467,6 +548,52 @@
         <span class="tag">Three.js</span>
         <span class="tag">Flight</span>
         <span class="tag">Archive [7 versions]</span>
+      </div>
+    </div>
+
+    <!-- 7. HTML5 RTS (Master Edition & Complete Archive) -->
+    <div class="card card-rts" onclick="launchRtsLatest()">
+      <div class="btn-dots" title="All versions" onclick="event.stopPropagation(); openModal('rtsModal')">•••</div>
+      <div class="card-preview">
+        <div class="preview-badge"><span></span>RTS LIVE</div>
+        <svg viewBox="0 0 320 145" width="100%" height="100%">
+          <rect width="320" height="145" fill="#0d1117"/>
+          <rect x="20" y="20" width="280" height="105" rx="6" fill="#1e3a1f" stroke="#2d5a27" stroke-width="1.5"/>
+          
+          <!-- Base Grid & River/Gold -->
+          <circle cx="250" cy="50" r="12" fill="#a6851e"/>
+          <circle cx="250" cy="50" r="7" fill="#ffe066"/>
+          <circle cx="50" cy="95" r="14" fill="#13381b"/>
+          <circle cx="65" cy="100" r="11" fill="#1e4f28"/>
+          
+          <!-- Player Citadel Base -->
+          <rect x="75" y="42" width="24" height="24" rx="3" fill="#4da6ff" stroke="#fff" stroke-width="1.5"/>
+          <rect x="83" y="50" width="8" height="8" fill="#ffe45c"/>
+          
+          <!-- Enemy Citadel -->
+          <rect x="210" y="80" width="22" height="22" rx="3" fill="#ff4757" stroke="#fff" stroke-width="1.5"/>
+          
+          <!-- Units & Combat -->
+          <circle cx="120" cy="55" r="5" fill="#4da6ff"/>
+          <polygon points="145,62 153,74 137,74" fill="#4da6ff"/>
+          <polygon points="175,70 183,82 167,82" fill="#ff4757"/>
+          
+          <!-- Selection box -->
+          <rect x="110" y="45" width="48" height="35" fill="rgba(77,166,255,0.18)" stroke="#4da6ff" stroke-width="1.2" stroke-dasharray="3,3"/>
+          
+          <rect x="195" y="14" width="115" height="18" rx="4" fill="rgba(34,197,94,0.2)"/>
+          <text x="205" y="27" fill="#4ade80" font-size="9" font-weight="bold">HTML5 RTS v1.0</text>
+        </svg>
+      </div>
+      <div class="card-content">
+        <div class="card-title">⚔️ HTML5 RTS — Master Edition</div>
+        <p class="card-desc">Classic real-time strategy: base building, worker logistics, combat mechanics, AI opponent, control groups, and tech upgrades.</p>
+      </div>
+      <div class="card-tags">
+        <span class="tag green">RTS</span>
+        <span class="tag green">A* Pathfinding</span>
+        <span class="tag">AI Opponent</span>
+        <span class="tag">Archive [10 versions]</span>
       </div>
     </div>
   </div>
@@ -580,7 +707,6 @@
         </button>
         <button class="btn-version" onclick="chooseVersion('frontline_3_3_2.html', 'Frontline 3.3.2')">
           <span>3.3.2 (Tactical Balance & Artillery Patch)</span>
-        </button>
         </button>
         <button class="btn-version" onclick="chooseVersion('frontline_3_3_1.html', 'Frontline 3.3.1')">
           <span>3.3.1 (Combat Overhaul Beta)</span>
@@ -713,6 +839,48 @@
     </div>
   </div>
 
+  <!-- Modal: HTML5 RTS Archive -->
+  <div class="modal-overlay" id="rtsModal">
+    <div class="choice-dialog">
+      <h3>⚔️ HTML5 RTS — Full Archive</h3>
+      <p>Select an RTS build:</p>
+      <div class="version-btns">
+        <button class="btn-version primary" onclick="launchRtsLatest()">
+          <span>⚡ <b>1.0</b> (Master Edition — Audio, Groups, Polish)</span>
+          <small style="color:inherit">Latest Stable</small>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('rts_0_11.html', 'RTS 0.11 (Victory, Defeat & Balance)')">
+          <span>0.11 (Victory, Defeat & Balance)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('rts_0_10.html', 'RTS 0.10 (Farms & Expanded Economy)')">
+          <span>0.10 (Farms & Expanded Economy)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('rts_0_9.html', 'RTS 0.9 (Construction System)')">
+          <span>0.9 (Construction System)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('rts_step8_ai_monolith.html', 'RTS 0.8 (Enemy AI & Attack Waves)')">
+          <span>0.8 (Enemy AI & Attack Waves)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('rts_step7_combat_monolith.html', 'RTS 0.7 (Combat & Unit Targeting)')">
+          <span>0.7 (Combat & Unit Targeting)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('rts_step6_monolith.html', 'RTS 0.6 (Barracks & Warriors)')">
+          <span>0.6 (Barracks & Warriors)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('rts0_5.html', 'RTS 0.5 (Resource Gathering & Economy)')">
+          <span>0.5 (Resource Gathering & Economy)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('rts0_2.html', 'RTS 0.2 (Camera & Zoom System)')">
+          <span>0.2 (Camera & Zoom System)</span>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('rts0_1.html', 'RTS 0.1 (Tilemap Prototype)')">
+          <span>0.1 (Tilemap Prototype)</span>
+        </button>
+      </div>
+      <button class="btn-dialog-close" onclick="closeModal('rtsModal')">Cancel</button>
+    </div>
+  </div>
+
   <!-- Game Runner Frame Modal -->
   <div id="frameModal">
     <div id="frameBar">
@@ -731,14 +899,18 @@
     const frameTitle = document.getElementById('frameTitle');
     let currentGameUrl = '';
 
+    function launchAncient4X() {
+      chooseVersion('index.html', 'Fracture of Empires (Ancient 4X Strategy)');
+    }
+
     function launchBankLatest() {
       const target = 'Knice_Bank_8_7_1.html';
       chooseVersion(target, 'Knice Bank 8.7.1');
     }
 
     function launchFrontlineLatest() {
-      const target = 'frontline_3_3_2.html';
-      chooseVersion(target, 'Frontline 1944 (v3.3.2)');
+      const target = 'frontline_3_4.html';
+      chooseVersion(target, 'Frontline 1944 (v3.4)');
     }
 
     function launchMegaLatest() {
@@ -749,6 +921,11 @@
     function launchFlightLatest() {
       const target = 'flightsim_1_6.html';
       chooseVersion(target, '3D Flight Simulator (v1.6)');
+    }
+
+    function launchRtsLatest() {
+      const target = 'rts_1_0.html';
+      chooseVersion(target, 'HTML5 RTS (Master Edition v1.0)');
     }
 
     function launchGame(url, title) {
