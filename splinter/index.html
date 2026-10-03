@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Раскол Древних Империй — 4X Прототип</title>
-  <link rel="stylesheet" crossorigin href="assets/index-DnNwFpjy.css">
-  <script type="module" crossorigin src="assets/index-DPih5P4D.js"></script>
+  <script type="module" crossorigin src="/assets/index-vhjqA9aq.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BFIi-i6d.css">
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -40,6 +40,7 @@
       <div class="hud-stat">
         ⚖️ Легитимность: <span id="hud-legitimacy" class="val good">88%</span>
         <span id="hud-interregnum-badge" class="badge-danger hidden">⚠️ СМУТА</span>
+        <span id="hud-golden-age-badge" class="badge-danger hidden" style="background:#f1c40f; color:#0b0e14; font-weight:800;">🌟 ЗОЛОТОЙ ВЕК</span>
       </div>
       <div class="hud-stat">💰 <span id="hud-gold" class="val">180</span></div>
       <div class="hud-stat">🌾 <span id="hud-grain" class="val">240</span></div>
@@ -73,6 +74,11 @@
       <button id="btn-culture-tree" data-i18n="btnCultureTree">🌳 Древо</button>
       <button id="btn-lang-toggle" class="btn-icon" title="Сменить язык / Switch Language">🌐 RU</button>
     </div>
+  </div>
+
+  <!-- Top-Left Hex Coordinate Display (Fixed below Top HUD at top: 76px; left: 16px) -->
+  <div id="coord-display" title="Координаты текущего гекса [q, r]">
+    📍 <span id="coord-display-val">[0, 0]</span>
   </div>
 
   <!-- Floating End Turn Button (Fixed Bottom-Right, never overlapped) -->
@@ -444,6 +450,21 @@
       <h2 id="quest-title" style="color: #f1c40f; text-align: center; margin: 0 0 10px; font-size: 1.55rem; letter-spacing: 0.5px;">Историческая Дилемма</h2>
       <p id="quest-desc" class="modal-desc" style="font-size: 0.96rem; line-height: 1.6; margin-bottom: 20px; text-align: justify; color: #e6edf3; background: rgba(0,0,0,0.35); padding: 14px; border-radius: 6px; border-left: 3px solid #f1c40f;"></p>
       <div id="quest-choices" style="display: flex; flex-direction: column; gap: 12px;"></div>
+    </div>
+  </div>
+
+  <!-- Modal 10: Battle Statistics Modal -->
+  <div id="battle-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 540px; max-width: 95vw; border-color: #e74c3c; box-shadow: 0 0 40px rgba(231, 76, 60, 0.4);">
+      <div id="battle-modal-icon" style="font-size: 3rem; text-align: center; margin-bottom: 4px;">⚔️</div>
+      <h2 id="battle-modal-title" style="color: #f1c40f; text-align: center; margin: 0 0 8px; font-size: 1.5rem;">ИТОГИ СРАЖЕНИЯ</h2>
+      <div id="battle-modal-summary" style="font-size: 0.95rem; text-align: center; margin-bottom: 12px; color: #ecf0f1; font-weight: 600;"></div>
+      <div id="battle-modal-stats" style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; border: 1px solid #30363d; font-size: 0.85rem; line-height: 1.6; margin-bottom: 16px;">
+        <!-- Battle factors injected dynamically -->
+      </div>
+      <div class="modal-actions" style="justify-content: center;">
+        <button id="btn-battle-modal-close" class="modal-btn primary" style="min-width: 140px;">Принять</button>
+      </div>
     </div>
   </div>
 
