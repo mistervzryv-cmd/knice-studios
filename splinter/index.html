@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Раскол Древних Империй — 4X Прототип</title>
+  <script type="module" crossorigin src="/assets/index-DPih5P4D.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DnNwFpjy.css">
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Top HUD -->
+  <div id="top-hud">
+    <div class="hud-section">
+      <div class="hud-title">
+        ⚔️ <span id="hud-faction-name">Шумерское Царство</span>
+        <button id="btn-rename-faction" class="btn-icon" title="Переименовать государство">✏️</button>
+      </div>
+      <div class="hud-stat" id="hud-age-box">
+        🏛️ <span id="hud-age-name" class="val" style="color:#f1c40f">Эпоха Орудий</span>
+        <span id="hud-crisis-badge" class="badge-danger hidden">⚡ КРИЗИС</span>
+      </div>
+      <div class="hud-stat">📅 <span id="hud-year" class="val">2400 до н.э.</span></div>
+      <div class="hud-stat" id="hud-ruler-box">
+        👑 <span id="hud-ruler-title" style="color:#d4af37">Лугаль</span> 
+        <span id="hud-ruler-name" class="val" style="color:#f1c40f">Имя</span> 
+        <span id="hud-ruler-trait" class="val" style="color:#3498db; font-size:0.75rem; background:rgba(52,152,219,0.15); padding:1px 5px; border-radius:4px;">[Завоеватель]</span>
+        <span style="font-size:0.78rem; color:#8b949e">(<span id="hud-ruler-age">32</span> г.)</span>
+      </div>
+      <div class="hud-stat" id="hud-tier-box" title="Культурный Тир вашей державы: Дикое Племя (1) -> Вождество (2) -> Цивилизация (3) -> Великая Империя (4)">
+        🏛️ Тир: <span id="hud-faction-tier" class="val" style="color:#2ecc71; font-weight:700; background:rgba(46,204,113,0.18); padding:2px 8px; border-radius:4px;">[Дикое Племя]</span>
+      </div>
+      <div class="hud-stat" id="hud-tier-progress-box" title="Условия эволюции: накопление Очков Культуры и удержание стабильных провинций (Cohesion >= 70%)">
+        📈 Эволюция: <span id="hud-tier-progress-text" class="val" style="color:#f1c40f;">40/100 📜 (1/2 стаб.)</span>
+        <div class="meter-bar" style="width:55px; display:inline-block; vertical-align:middle; margin-left:4px; height:6px;">
+          <div id="hud-tier-progress-fill" class="fill" style="width:40%; background:#2ecc71;"></div>
+        </div>
+      </div>
+      <div class="hud-stat">
+        ⚖️ Легитимность: <span id="hud-legitimacy" class="val good">88%</span>
+        <span id="hud-interregnum-badge" class="badge-danger hidden">⚠️ СМУТА</span>
+      </div>
+      <div class="hud-stat">💰 <span id="hud-gold" class="val">180</span></div>
+      <div class="hud-stat">🌾 <span id="hud-grain" class="val">240</span></div>
+      <div class="hud-stat">📜 Очки Культуры: <span id="hud-culture-points" class="val" style="color:#d7bde2">40</span></div>
+      <div class="hud-stat" id="hud-science-box" title="Очки Исследований (Наука)">🔬 Наука: <span id="hud-science" class="val" style="color:#58a6ff">0</span></div>
+      <div class="hud-stat" id="hud-resources-box" title="Стратегические ресурсы: Медь, Олово, Скот, Благовония">
+        🪨 <span id="hud-res-copper" class="val" style="color:#e67e22; margin-right:4px;">2</span>
+        ⛏️ <span id="hud-res-tin" class="val" style="color:#bdc3c7; margin-right:4px;">1</span>
+        🐂 <span id="hud-res-cattle" class="val" style="color:#f39c12; margin-right:4px;">3</span>
+        🏺 <span id="hud-res-incense" class="val" style="color:#9b59b6">2</span>
+      </div>
+      <div class="hud-stat" id="hud-luxury-box" title="Столичные блага: редкие ресурсы (Ладан, Скот), соединенные снабжением со столицей, дают +15% Cohesion">
+        👑 Блага: <span id="hud-luxury-val" class="val good" style="color:#2ecc71;">Доставлены (+15% ⚖️)</span>
+      </div>
+      <div class="hud-stat">⚠️ Бремя: <span id="hud-overextension" class="val good">10%</span></div>
+    </div>
+
+    <div class="hud-section">
+      <div class="overlay-controls">
+        <button class="overlay-btn active" data-mode="POLITICAL" data-i18n="btnBorders">🏛️ Границы</button>
+        <button class="overlay-btn" data-mode="CULTURE" data-i18n="btnCultures">📜 Культуры</button>
+        <button class="overlay-btn" data-mode="AUTHORITY" data-i18n="btnUnrest">⚖️ Власть / Бунты</button>
+      </div>
+
+      <button id="btn-research-lab" class="hud-action-btn" data-i18n="btnResearchLab" title="Научно-исследовательская лаборатория">🔬 Лаборатория</button>
+      <button id="btn-politics" class="hud-action-btn" data-i18n="btnPolitics" title="Политические режимы и реформы">⚖️ Политика</button>
+      <button id="btn-tax-rate" class="hud-action-btn" data-i18n="btnTaxRate" title="Переключить налоги: Низкие / Норма / Высокие">💰 Налоги: Норм</button>
+      <button id="btn-traditions" data-i18n="btnTraditions">📜 Традиции / Язык</button>
+      <button id="btn-migration" data-i18n="btnMigration">🚶 Миграция</button>
+      <button id="btn-diplomacy" data-i18n="btnDiplomacy">🤝 Дипломатия</button>
+      <button id="btn-culture-tree" data-i18n="btnCultureTree">🌳 Древо</button>
+      <button id="btn-lang-toggle" class="btn-icon" title="Сменить язык / Switch Language">🌐 RU</button>
+    </div>
+  </div>
+
+  <!-- Floating End Turn Button (Fixed Bottom-Right, never overlapped) -->
+  <button id="btn-end-turn" class="next-turn-btn" title="Завершить ход (Space)">
+    <span class="btn-turn-icon">⌛</span>
+    <span class="btn-text" data-i18n="btnEndTurn">Завершить ход</span>
+    <span class="btn-shortcut">[Space]</span>
+    <span class="btn-mobile-icon hidden">➔</span>
+  </button>
+
+  <!-- Left Inspector Panel -->
+  <div id="inspector-panel">
+    <div id="inspector-content">
+      <p class="placeholder">Кликните на гекс, город или армию для осмотра</p>
+    </div>
+  </div>
+
+  <!-- Right Event Chronicles -->
+  <div id="chronicles-panel">
+    <h4 data-i18n="chroniclesTitle">Хроники событий</h4>
+    <div id="chronicles-list"></div>
+  </div>
+
+  <!-- Screen 1: Start Menu Overlay (Culture Choice) -->
+  <div id="start-menu-overlay">
+    <div class="start-header">
+      <h1 class="start-title" data-i18n="gameTitle">РАСКОЛ ДРЕВНИХ ИМПЕРИЙ</h1>
+      <p class="start-subtitle" data-i18n="gameSubtitle">Глобальная 4X-стратегия на гексагональной карте Земли • Эпоха Бронзового Века</p>
+    </div>
+
+    <div class="culture-selection-container">
+      <div class="selection-title" data-i18n="chooseCultureTitle">Выберите стартовую культуру вашего народа:</div>
+      <div class="culture-cards-grid">
+        <!-- Culture 1: River Farmers -->
+        <div class="culture-card selected" data-choice="RIVER_FARMERS">
+          <div class="card-icon">🌾🌊</div>
+          <div class="card-title">Речные Земледельцы</div>
+          <div class="card-region">Междуречье Тигра и Евфрата (Шумер)</div>
+          <div class="card-perk-badge">✨ Бонус: Ирригационная экспансия</div>
+          <div class="card-desc">
+            Мастера искусственного орошения и строительства каналов. Получают +15% к плодородию и ускоренный демографический рост во всех речных провинциях.
+          </div>
+          <ul class="card-traits">
+            <li>📜 Храмовые амбары и учет запасов</li>
+            <li>🌾 Пассивная экспансия по долинам рек</li>
+            <li>🏛️ Основатели древнейшей клинописи</li>
+          </ul>
+        </div>
+
+        <!-- Culture 2: Steppe Nomads -->
+        <div class="culture-card" data-choice="STEPPE_NOMADS">
+          <div class="card-icon">🐎🏹</div>
+          <div class="card-title">Степные Кочевники</div>
+          <div class="card-region">Великая Евразийская Степь (Скифия)</div>
+          <div class="card-perk-badge">✨ Бонус: Всадники без границ</div>
+          <div class="card-desc">
+            Неукротимые скотоводы и конные стрелки. Полностью игнорируют штрафы передвижения по засушливым степям и пустыням, даруя армиям +1 к скорости.
+          </div>
+          <ul class="card-traits">
+            <li>🐎 Игнорирование штрафов степей и пустынь</li>
+            <li>🏹 Стремительные конные разъезды</li>
+            <li>⛺ Высокая лояльность пограничных кочевий</li>
+          </ul>
+        </div>
+
+        <!-- Culture 3: Mountain Totemists -->
+        <div class="culture-card" data-choice="MOUNTAIN_TOTEMISTS">
+          <div class="card-icon">⛰️🦅</div>
+          <div class="card-title">Горные Тотемисты</div>
+          <div class="card-region">Нагорья Загроса и Элама</div>
+          <div class="card-perk-badge">✨ Бонус: Монолитное Единство</div>
+          <div class="card-desc">
+            Хранители священных горных вершин и древней металлургии. Обладают повышенной сплоченностью (+25% Cohesion) в холмах и горах, замедляя раскол империи.
+          </div>
+          <ul class="card-traits">
+            <li>⛰️ Высокая сплоченность и защита в горах</li>
+            <li>🛡️ Неприступные цитадели ущелий</li>
+            <li>🔥 Древние тайны выплавки бронзы</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="start-actions-row">
+      <button id="btn-start-game" class="btn-start-game" data-i18n="startGameBtn">👑 Основать Цивилизацию</button>
+      <button id="btn-continue-game" class="btn-start-game btn-continue hidden">
+        <span data-i18n="continueGameBtn">▶️ Продолжить игру</span> (<span data-i18n="continueTurn">Ход</span> <span id="save-turn-num">1</span>)
+      </button>
+    </div>
+  </div>
+
+  <!-- Screen 2: Traditions & Faith Modal -->
+  <div id="traditions-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 720px; max-width: 95vw;">
+      <h2>📜 Религия, Традиции и Язык Народа</h2>
+      <p class="small-text">Утверждайте священные догматы и языковые нормы за накопленные Очки Культуры</p>
+      
+      <div style="margin: 10px 0; font-size: 0.92rem; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          Баланс Очков Культуры: <strong id="traditions-points-val" style="color:#d7bde2; font-size:1.15rem;">40</strong> 📜
+        </div>
+        <div id="language-drift-hud" style="font-size:0.82rem; color:#8b949e;">
+          <!-- Sub-culture drift info rendered dynamically -->
+        </div>
+      </div>
+
+      <div class="modal-tabs" style="display:flex; gap:10px; margin-bottom:12px; border-bottom:1px solid #30363d; padding-bottom:8px;">
+        <button id="tab-btn-dogmas" class="tab-btn active">📜 Священные Догматы</button>
+        <button id="tab-btn-language" class="tab-btn">🗣️ Язык и Письменность</button>
+      </div>
+
+      <!-- Tab 1: Dogmas -->
+      <div id="tab-panel-dogmas">
+        <div class="traditions-grid">
+          <!-- Dogma 1: Ancestor Cult -->
+          <div class="dogma-card" id="dogma-ancestor">
+            <div class="dogma-icon">🗿</div>
+            <div class="dogma-title">Культ Предков</div>
+            <div class="dogma-desc">
+              Почитание духов древних вождей связывает окраинные земли с центром. 
+              <br><br>
+              <strong style="color:#2ecc71;">+20% к Cohesion (сплоченности)</strong> на дальних рубежах.
+              <br>
+              <span style="color:#e74c3c;">-15% к сбору налогов</span> из-за богатых погребальных приношений.
+            </div>
+            <button class="dogma-btn" data-dogma="ANCESTOR_CULT">Принять догмат (75 📜)</button>
+          </div>
+
+          <!-- Dogma 2: River Priesthood -->
+          <div class="dogma-card" id="dogma-river">
+            <div class="dogma-icon">🌊</div>
+            <div class="dogma-title">Речное Священничество</div>
+            <div class="dogma-desc">
+              Жрецы ведут храмовый учет разливов великих рек, прославляя водные божества.
+              <br><br>
+              <strong style="color:#2ecc71;">Удваивает Очки Культуры</strong> от всех речных провинций (+6 вместо +3).
+              <br>
+              <strong style="color:#2ecc71;">+1 еда</strong> во всех речных поймах.
+            </div>
+            <button class="dogma-btn" data-dogma="RIVER_PRIESTHOOD">Принять догмат (75 📜)</button>
+          </div>
+
+          <!-- Dogma 3: Nomadic Lifestyle -->
+          <div class="dogma-card" id="dogma-nomadic">
+            <div class="dogma-icon">⛺</div>
+            <div class="dogma-title">Кочевой Быт</div>
+            <div class="dogma-desc">
+              Культура легка на подъем и с готовностью покидает оскудевшие земли в поисках новых пастбищ.
+              <br><br>
+              <strong style="color:#2ecc71;">+2 к дальности миграции</strong> (Орда ходит на 7 гексов).
+              <br>
+              <strong style="color:#2ecc71;">Бесплатная экспансия</strong> в пустынях и степях.
+            </div>
+            <button class="dogma-btn" data-dogma="NOMADIC_LIFESTYLE">Принять догмат (75 📜)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Language -->
+      <div id="tab-panel-language" class="hidden">
+        <div id="language-techs-grid" class="traditions-grid">
+          <!-- Rendered dynamically by UIManager based on LANGUAGE_TECHS -->
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top:14px;">
+        <button id="btn-traditions-close" class="modal-btn secondary">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 3: Migration Modal -->
+  <div id="migration-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h2 style="color:#e67e22;">🚶 Великая Миграция Племени</h2>
+      <p class="small-text">Снимите население с истощенной или охваченной войной провинции и отправьтесь в путь:</p>
+      
+      <div id="migration-province-list" class="migration-province-list">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="modal-desc" style="text-align: left; font-size: 0.84rem;">
+        ⚠️ <strong>Последствия:</strong> Текущий город будет покинут, а провинция станет ничейной дикой землей. Ваше население сформирует <strong>Орду (5-7 шагов/ход)</strong>, которая сможет свободно пересечь мир и мгновенно колонизировать новые плодородные земли или штурмом взять чужой город!
+      </div>
+
+      <div class="modal-actions">
+        <button id="btn-migration-cancel" class="modal-btn secondary">Отмена</button>
+        <button id="btn-migration-confirm" class="modal-btn primary" disabled>🚀 Начать Миграцию</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 4: Diplomacy Screen Modal -->
+  <div id="diplomacy-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="diplomacy-header">
+        <h2>🤝 Дипломатия и Торговля Древнего Мира</h2>
+        <p class="small-text">Отношения, пакты и обмен редкими ресурсами (Медь, Олово, Скот, Благовония)</p>
+      </div>
+
+      <div id="diplomacy-list" class="diplomacy-list">
+        <!-- Rendered dynamically by UIManager -->
+      </div>
+
+      <div class="modal-actions" style="margin-top: 16px;">
+        <button id="btn-diplomacy-close" class="modal-btn secondary">Закрыть окно дипломатии</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 1: Historic Secession Choice Modal -->
+  <div id="secession-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 520px; border-color: #e74c3c;">
+      <h2 id="modal-title" style="color:#e74c3c">⚡ ВЕЛИКИЙ РАСКОЛ ИМПЕРИИ!</h2>
+      <div id="modal-desc" class="modal-desc"></div>
+      <div class="modal-actions">
+        <button id="modal-btn-stay" class="modal-btn secondary">🛡️ Остаться у руля Метрополии</button>
+        <button id="modal-btn-switch" class="modal-btn danger">👑 Возглавить Свободное Царство!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: City Founding Naming Ratification -->
+  <div id="found-city-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 420px;">
+      <h2>🏛️ Основание Нового Города</h2>
+      <p class="small-text" style="color: #c9d1d9; margin-bottom: 12px;">Утвердите имя поселения или придумайте собственное:</p>
+      <div class="input-row">
+        <input type="text" id="input-city-name" class="modal-input" placeholder="Название города" />
+        <button id="btn-city-reroll" class="btn-icon" style="padding: 0 12px; font-size:1.2rem;" title="Сгенерировать другое имя">🎲</button>
+      </div>
+      <div class="modal-actions">
+        <button id="btn-city-cancel" class="modal-btn secondary">Отмена</button>
+        <button id="btn-city-confirm" class="modal-btn primary">✅ Утвердить и основать</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Rename Faction / Empire -->
+  <div id="rename-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 440px;">
+      <h2>✏️ Переименование Державы</h2>
+      <p class="small-text" style="color: #c9d1d9; margin-bottom: 12px;">Утвердите название вашего государства:</p>
+      <div class="input-row">
+        <input type="text" id="input-faction-name" class="modal-input" placeholder="Название державы" />
+        <button id="btn-faction-reroll" class="btn-icon" style="padding: 0 12px; font-size:1.2rem;" title="Сгенерировать другое имя">🎲</button>
+      </div>
+      <div class="modal-actions">
+        <button id="btn-rename-cancel" class="modal-btn secondary">Отмена</button>
+        <button id="btn-rename-confirm" class="modal-btn primary">✅ Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Cultural Family Tree Visualizer & Chronicles of Ages -->
+  <div id="culture-tree-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 660px; max-width: 95vw;">
+      <h2>🌳 Генеалогическое Древо и Летопись Веков</h2>
+      <p class="small-text" style="color: #8b949e; margin-bottom: 12px;">Эволюция, расколы народов и хроника великих свершений:</p>
+      
+      <div class="modal-tabs" style="display:flex; gap:10px; margin-bottom:12px; border-bottom:1px solid #30363d; padding-bottom:8px;">
+        <button id="tab-btn-tree" class="tab-btn active">🌳 Древо Культур</button>
+        <button id="tab-btn-ages" class="tab-btn">📜 Летопись Веков</button>
+      </div>
+
+      <div id="tab-panel-tree">
+        <div id="tree-container"></div>
+      </div>
+
+      <div id="tab-panel-ages" class="hidden">
+        <div id="chronicles-of-ages-list" class="chronicles-of-ages-list" style="max-height:360px; overflow-y:auto; text-align:left; background:rgba(0,0,0,0.3); border-radius:8px; padding:12px; border:1px solid #30363d;">
+          <!-- Rendered dynamically by UIManager -->
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top:14px;">
+        <button id="btn-tree-close" class="modal-btn secondary">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Cultural Tier Evolution Celebration Modal -->
+  <div id="tier-evolution-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 540px; border-color: #2ecc71; box-shadow: 0 0 45px rgba(46, 204, 113, 0.4);">
+      <div style="font-size: 2.8rem; margin-bottom: 6px;">🌟</div>
+      <h2 id="evolution-title" style="color: #2ecc71; font-size: 1.45rem; margin-bottom: 4px;">КУЛЬТУРНАЯ ТРАНСФОРМАЦИЯ!</h2>
+      <h3 id="evolution-subtitle" style="color: #f1c40f; margin-bottom: 14px; font-weight: 700; font-size: 1.05rem;">Ваша культура эволюционировала в Вождество!</h3>
+      <div id="evolution-desc" class="modal-desc" style="text-align: left; font-size: 0.88rem; line-height: 1.55;">
+        <!-- Dynamically rendered perks -->
+      </div>
+      <div class="modal-actions" style="margin-top: 18px;">
+        <button id="btn-evolution-continue" class="modal-btn primary" style="padding: 12px; font-size: 1rem;">👑 Во славу нашего народа!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: Research Lab & Technology Tree Modal -->
+  <div id="research-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 740px; max-width: 95vw;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:8px;">
+        <h2 style="color:#58a6ff; margin:0;">🔬 Научно-Исследовательская Лаборатория</h2>
+        <div style="font-size:0.95rem; background:rgba(88,166,255,0.15); border:1px solid #58a6ff; border-radius:6px; padding:4px 12px;">
+          Баланс науки: <strong id="research-science-val" style="color:#58a6ff; font-size:1.15rem;">0</strong> 🔬
+        </div>
+      </div>
+      <p class="small-text">Исследуйте ключевые открытия эпох: открывайте новые типы войск, постройки и финальную победу</p>
+
+      <div id="research-tech-tree" class="research-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; max-height:420px; overflow-y:auto; margin:14px 0;">
+        <!-- Rendered dynamically by UIManager -->
+      </div>
+
+      <div class="modal-actions" style="margin-top:12px;">
+        <button id="btn-research-close" class="modal-btn secondary">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Politics, Regimes & Reforms Modal -->
+  <div id="politics-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 680px; max-width: 95vw;">
+      <h2 style="color:#f1c40f;">⚖️ Государственный Строй и Политика</h2>
+      <p class="small-text">Управляйте формой правления и налоговым бременем вашей империи</p>
+
+      <div style="margin: 14px 0;">
+        <h4 style="color:#c9d1d9; text-align:left; margin-bottom:8px;">🏛️ Политический строй:</h4>
+        <div class="regimes-grid" id="regimes-list" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:10px; text-align:left;">
+          <!-- Dynamically populated or rendered -->
+        </div>
+      </div>
+
+      <div style="margin: 16px 0;">
+        <h4 style="color:#c9d1d9; text-align:left; margin-bottom:8px;">💰 Налоговая политика державы:</h4>
+        <div class="taxes-row" style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="btn-tax-low" class="modal-btn secondary tax-option-btn" data-rate="LOW" style="flex:1;">
+            Низкие (20% 💰, +10% Cohesion)
+          </button>
+          <button id="btn-tax-normal" class="modal-btn primary tax-option-btn" data-rate="NORMAL" style="flex:1;">
+            Обычные (100% 💰, баланс)
+          </button>
+          <button id="btn-tax-high" class="modal-btn secondary tax-option-btn" data-rate="HIGH" style="flex:1;">
+            Высокие (+40% 💰, -20% Cohesion)
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top:16px;">
+        <button id="btn-politics-close" class="modal-btn secondary">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 8: Victory & Game Over Modal -->
+  <div id="victory-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 580px; max-width: 95vw; border-color:#f1c40f; box-shadow:0 0 50px rgba(241,196,15,0.45);">
+      <div style="font-size:3.5rem; margin-bottom:8px;">🏆</div>
+      <h1 id="victory-title" style="color:#f1c40f; font-size:1.8rem; margin:0 0 10px;">ВЕЛИКАЯ ПОБЕДА!</h1>
+      <div id="victory-desc" class="modal-desc" style="font-size:1rem; line-height:1.6; margin-bottom:20px; text-align:center;"></div>
+      <div class="modal-actions" style="justify-content:center; gap:14px;">
+        <button id="btn-victory-continue" class="modal-btn primary">Продолжить игру</button>
+        <button id="btn-victory-restart" class="modal-btn secondary">Новая игра</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 9: Historical Quests & Dilemmas Modal -->
+  <div id="quest-modal" class="modal-overlay hidden">
+    <div class="modal-card quest-card" style="width: 580px; max-width: 95vw; border-color: #f1c40f; box-shadow: 0 0 50px rgba(241, 196, 15, 0.4);">
+      <div id="quest-icon" style="font-size: 3.2rem; text-align: center; margin-bottom: 6px;">📜</div>
+      <h2 id="quest-title" style="color: #f1c40f; text-align: center; margin: 0 0 10px; font-size: 1.55rem; letter-spacing: 0.5px;">Историческая Дилемма</h2>
+      <p id="quest-desc" class="modal-desc" style="font-size: 0.96rem; line-height: 1.6; margin-bottom: 20px; text-align: justify; color: #e6edf3; background: rgba(0,0,0,0.35); padding: 14px; border-radius: 6px; border-left: 3px solid #f1c40f;"></p>
+      <div id="quest-choices" style="display: flex; flex-direction: column; gap: 12px;"></div>
+    </div>
+  </div>
+
+  <!-- Floating UI: Click-to-Annex Context Menu (at cursor position) -->
+  <div id="floating-annex-menu" class="floating-annex-menu hidden">
+    <div class="annex-header">
+      <span class="annex-icon">🏛️</span>
+      <span id="annex-province-name" class="annex-title">Провинция</span>
+      <button id="btn-annex-close" class="annex-close" title="Закрыть">✕</button>
+    </div>
+    <div id="annex-info-text" class="annex-info">Плодородие: 4 🌾 | Степь</div>
+    <div class="annex-actions">
+      <button id="btn-annex-instant" class="annex-btn primary">
+        ✅ Присоединить регион <span id="annex-cost-badge" class="cost-badge">(🌾 35 | 📜 25)</span>
+      </button>
+      <button id="btn-annex-outpost" class="annex-btn secondary hidden">
+        ⛺ Построить аванпост <span class="cost-badge">(💰 25)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating UI: Canvas Hover Tooltip -->
+  <div id="province-tooltip" class="province-tooltip hidden"></div>
+
+</body>
+</html>
