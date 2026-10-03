@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>RTS Prototype</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #111;
+    }
+
+    canvas {
+      display: block;
+      margin: auto;
+      background: #222;
+    }
+  </style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<script>
+const TILE_SIZE = 32
+
+const canvas = document.getElementById("game")
+
+canvas.width = 1280
+canvas.height = 800
+
+const ctx = canvas.getContext("2d")
+
+const TILE_TYPES = {
+  LAND: "land",
+  WATER: "water",
+  FOREST: "forest",
+  GOLD: "gold"
+}
+
+class Tile {
+  constructor(x, y, type) {
+    this.x = x
+    this.y = y
+    this.type = type
+    this.building = null
+    this.unit = null
+  }
+}
+
+class GameMap {
+  constructor(width, height) {
+    this.width = width
+    this.height = height
+    this.tiles = []
+
+    this.generate()
+  }
+
+  generate() {
+    for (let y = 0; y < this.height; y++) {
+      this.tiles[y] = []
+
+      for (let x = 0; x < this.width; x++) {
+        let type = TILE_TYPES.LAND
+        const random = Math.random()
+
+        if (random < 0.10) {
+          type = TILE_TYPES.WATER
+        } else if (random < 0.20) {
+          type = TILE_TYPES.FOREST
+        } else if (random < 0.23) {
+          type = TILE_TYPES.GOLD
+        }
+
+        this.tiles[y][x] = new Tile(x, y, type)
+      }
+    }
+  }
+}
+
+class Renderer {
+  constructor(canvas) {
+    this.canvas = canvas
+    this.ctx = canvas.getContext("2d")
+  }
+
+  draw(game) {
+    this.drawMap(game.map)
+  }
+
+  drawMap(map) {
+    for (let y = 0; y < map.height; y++) {
+      for (let x = 0; x < map.width; x++) {
+        this.drawTile(map.tiles[y][x])
+      }
+    }
+  }
+
+  drawTile(tile) {
+    const px = tile.x * TILE_SIZE
+    const py = tile.y * TILE_SIZE
+
+    this.ctx.fillStyle = this.getTileColor(tile.type)
+
+    this.ctx.fillRect(
+      px,
+      py,
+      TILE_SIZE,
+      TILE_SIZE
+    )
+
+    this.ctx.strokeStyle = "rgba(0,0,0,0.2)"
+
+    this.ctx.strokeRect(
+      px,
+      py,
+      TILE_SIZE,
+      TILE_SIZE
+    )
+  }
+
+  getTileColor(type) {
+    switch (type) {
+      case TILE_TYPES.LAND:
+        return "#8fbc65"
+
+      case TILE_TYPES.WATER:
+        return "#4b91c9"
+
+      case TILE_TYPES.FOREST:
+        return "#397044"
+
+      case TILE_TYPES.GOLD:
+        return "#d6b43c"
+
+      default:
+        return "#000"
+    }
+  }
+}
+
+class Game {
+  constructor() {
+    this.map = new GameMap(40, 25)
+  }
+
+  update(deltaTime) {
+  }
+
+  render() {
+    renderer.draw(this)
+  }
+}
+
+const renderer = new Renderer(canvas)
+
+const game = new Game()
+
+let lastTime = performance.now()
+
+function gameLoop(currentTime) {
+  const deltaTime = currentTime - lastTime
+
+  lastTime = currentTime
+
+  game.update(deltaTime)
+  game.render()
+
+  requestAnimationFrame(gameLoop)
+}
+
+requestAnimationFrame(gameLoop)
+</script>
+
+</body>
+</html>

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>RTS Prototype</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #111;
+    }
+
+    canvas {
+      display: block;
+      margin: auto;
+      background: #222;
+      cursor: crosshair;
+    }
+  </style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<script>
+const TILE_SIZE = 32
+
+const canvas = document.getElementById("game")
+
+canvas.width = 1280
+canvas.height = 800
+
+const ctx = canvas.getContext("2d")
+
+const TILE_TYPES = {
+  LAND: "land",
+  WATER: "water",
+  FOREST: "forest",
+  GOLD: "gold"
+}
+
+class Tile {
+  constructor(x, y, type) {
+    this.x = x
+    this.y = y
+    this.type = type
+    this.building = null
+    this.unit = null
+  }
+}
+
+class GameMap {
+  constructor(width, height) {
+    this.width = width
+    this.height = height
+    this.tiles = []
+
+    this.generate()
+  }
+
+  generate() {
+    for (let y = 0; y < this.height; y++) {
+      this.tiles[y] = []
+
+      for (let x = 0; x < this.width; x++) {
+        let type = TILE_TYPES.LAND
+        const random = Math.random()
+
+        if (random < 0.10) {
+          type = TILE_TYPES.WATER
+        } else if (random < 0.20) {
+          type = TILE_TYPES.FOREST
+        } else if (random < 0.23) {
+          type = TILE_TYPES.GOLD
+        }
+
+        this.tiles[y][x] = new Tile(x, y, type)
+      }
+    }
+  }
+
+  getTile(x, y) {
+    if (
+      x < 0 ||
+      y < 0 ||
+      x >= this.width ||
+      y >= this.height
+    ) {
+      return null
+    }
+
+    return this.tiles[y][x]
+  }
+}
+
+class Camera {
+  constructor(gameMap) {
+    this.x = 0
+    this.y = 0
+
+    this.zoom = 1
+
+    this.minZoom = 0.5
+    this.maxZoom = 2
+
+    this.gameMap = gameMap
+  }
+
+  getViewWidth() {
+    return canvas.width / this.zoom
+  }
+
+  getViewHeight() {
+    return canvas.height / this.zoom
+  }
+
+  update(keys, deltaTime) {
+    const speed = 500 / this.zoom
+    const movement = speed * deltaTime / 1000
+
+    if (keys["w"] || keys["ArrowUp"]) {
+      this.y -= movement
+    }
+
+    if (keys["s"] || keys["ArrowDown"]) {
+      this.y += movement
+    }
+
+    if (keys["a"] || keys["ArrowLeft"]) {
+      this.x -= movement
+    }
+
+    if (keys["d"] || keys["ArrowRight"]) {
+      this.x += movement
+    }
+
+    this.clamp()
+  }
+
+  clamp() {
+    const mapWidth = this.gameMap.width * TILE_SIZE
+    const mapHeight = this.gameMap.height * TILE_SIZE
+
+    const viewWidth = this.getViewWidth()
+    const viewHeight = this.getViewHeight()
+
+    const maxX = Math.max(0, mapWidth - viewWidth)
+    const maxY = Math.max(0, mapHeight - viewHeight)
+
+    this.x = Math.max(0, Math.min(this.x, maxX))
+    this.y = Math.max(0, Math.min(this.y, maxY))
+  }
+
+  zoomAt(screenX, screenY, amount) {
+    const oldZoom = this.zoom
+
+    const worldX = this.x + screenX / oldZoom
+    const worldY = this.y + screenY / oldZoom
+
+    this.zoom += amount
+
+    this.zoom = Math.max(
+      this.minZoom,
+      Math.min(this.zoom, this.maxZoom)
+    )
+
+    this.x = worldX - screenX / this.zoom
+    this.y = worldY - screenY / this.zoom
+
+    this.clamp()
+  }
+
+  screenToWorld(screenX, screenY) {
+    return {
+      x: this.x + screenX / this.zoom,
+      y: this.y + screenY / this.zoom
+    }
+  }
+
+  screenToTile(screenX, screenY) {
+    const world = this.screenToWorld(screenX, screenY)
+
+    return {
+      x: Math.floor(world.x / TILE_SIZE),
+      y: Math.floor(world.y / TILE_SIZE)
+    }
+  }
+}
+
+class Input {
+  constructor() {
+    this.keys = {}
+    this.mouseX = 0
+    this.mouseY = 0
+    this.mouseDown = false
+
+    this.clickedTile = null
+
+    window.addEventListener("keydown", event => {
+      this.keys[event.key] = true
+    })
+
+    window.addEventListener("keyup", event => {
+      this.keys[event.key] = false
+    })
+
+    canvas.addEventListener("mousemove", event => {
+      const rect = canvas.getBoundingClientRect()
+
+      this.mouseX = event.clientX - rect.left
+      this.mouseY = event.clientY - rect.top
+    })
+
+    canvas.addEventListener("mousedown", event => {
+      if (event.button === 0) {
+        this.mouseDown = true
+      }
+    })
+
+    canvas.addEventListener("mouseup", event => {
+      if (event.button === 0) {
+        this.mouseDown = false
+      }
+    })
+
+    canvas.addEventListener("wheel", event => {
+      event.preventDefault()
+
+      const zoomAmount = event.deltaY < 0 ? 0.1 : -0.1
+
+      game.camera.zoomAt(
+        this.mouseX,
+        this.mouseY,
+        zoomAmount
+      )
+    }, { passive: false })
+  }
+}
+
+class Renderer {
+  constructor(canvas) {
+    this.canvas = canvas
+    this.ctx = canvas.getContext("2d")
+  }
+
+  draw(game) {
+    this.ctx.clearRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    )
+
+    this.ctx.save()
+
+    this.ctx.scale(
+      game.camera.zoom,
+      game.camera.zoom
+    )
+
+    this.ctx.translate(
+      -game.camera.x,
+      -game.camera.y
+    )
+
+    this.drawMap(game.map)
+    this.drawSelection(game)
+
+    this.ctx.restore()
+
+    this.drawUI(game)
+  }
+
+  drawMap(map) {
+    const startX = Math.floor(
+      game.camera.x / TILE_SIZE
+    )
+
+    const startY = Math.floor(
+      game.camera.y / TILE_SIZE
+    )
+
+    const endX = Math.ceil(
+      (game.camera.x + game.camera.getViewWidth()) /
+      TILE_SIZE
+    )
+
+    const endY = Math.ceil(
+      (game.camera.y + game.camera.getViewHeight()) /
+      TILE_SIZE
+    )
+
+    for (
+      let y = Math.max(0, startY);
+      y < Math.min(map.height, endY);
+      y++
+    ) {
+      for (
+        let x = Math.max(0, startX);
+        x < Math.min(map.width, endX);
+        x++
+      ) {
+        this.drawTile(map.tiles[y][x])
+      }
+    }
+  }
+
+  drawTile(tile) {
+    const px = tile.x * TILE_SIZE
+    const py = tile.y * TILE_SIZE
+
+    this.ctx.fillStyle =
+      this.getTileColor(tile.type)
+
+    this.ctx.fillRect(
+      px,
+      py,
+      TILE_SIZE,
+      TILE_SIZE
+    )
+
+    this.ctx.strokeStyle =
+      "rgba(0,0,0,0.2)"
+
+    this.ctx.strokeRect(
+      px,
+      py,
+      TILE_SIZE,
+      TILE_SIZE
+    )
+  }
+
+  getTileColor(type) {
+    switch (type) {
+      case TILE_TYPES.LAND:
+        return "#8fbc65"
+
+      case TILE_TYPES.WATER:
+        return "#4b91c9"
+
+      case TILE_TYPES.FOREST:
+        return "#397044"
+
+      case TILE_TYPES.GOLD:
+        return "#d6b43c"
+
+      default:
+        return "#000"
+    }
+  }
+
+  drawSelection(game) {
+    const tile = game.hoveredTile
+
+    if (!tile) {
+      return
+    }
+
+    const px = tile.x * TILE_SIZE
+    const py = tile.y * TILE_SIZE
+
+    this.ctx.fillStyle =
+      "rgba(255,255,255,0.18)"
+
+    this.ctx.fillRect(
+      px,
+      py,
+      TILE_SIZE,
+      TILE_SIZE
+    )
+
+    this.ctx.strokeStyle =
+      "#ffffff"
+
+    this.ctx.lineWidth = 2
+
+    this.ctx.strokeRect(
+      px + 1,
+      py + 1,
+      TILE_SIZE - 2,
+      TILE_SIZE - 2
+    )
+
+    this.ctx.lineWidth = 1
+  }
+
+  drawUI(game) {
+    this.ctx.fillStyle =
+      "rgba(0,0,0,0.65)"
+
+    this.ctx.fillRect(
+      10,
+      10,
+      250,
+      80
+    )
+
+    this.ctx.fillStyle = "#fff"
+    this.ctx.font = "16px Arial"
+
+    this.ctx.fillText(
+      "WASD / стрелки - камера",
+      20,
+      35
+    )
+
+    this.ctx.fillText(
+      "Колесо - масштаб",
+      20,
+      58
+    )
+
+    if (game.hoveredTile) {
+      this.ctx.fillText(
+        `Клетка: ${game.hoveredTile.x}, ${game.hoveredTile.y}`,
+        20,
+        80
+      )
+    }
+  }
+}
+
+class Game {
+  constructor() {
+    this.map = new GameMap(80, 50)
+
+    this.input = new Input()
+
+    this.camera = new Camera(this.map)
+
+    this.hoveredTile = null
+    this.selectedTile = null
+  }
+
+  update(deltaTime) {
+    this.camera.update(
+      this.input.keys,
+      deltaTime
+    )
+
+    const tilePosition =
+      this.camera.screenToTile(
+        this.input.mouseX,
+        this.input.mouseY
+      )
+
+    this.hoveredTile =
+      this.map.getTile(
+        tilePosition.x,
+        tilePosition.y
+      )
+
+    if (this.input.mouseDown) {
+      this.selectedTile = this.hoveredTile
+    }
+  }
+
+  render() {
+    renderer.draw(this)
+  }
+}
+
+const renderer = new Renderer(canvas)
+
+const game = new Game()
+
+let lastTime = performance.now()
+
+function gameLoop(currentTime) {
+  const deltaTime =
+    currentTime - lastTime
+
+  lastTime = currentTime
+
+  game.update(deltaTime)
+  game.render()
+
+  requestAnimationFrame(gameLoop)
+}
+
+requestAnimationFrame(gameLoop)
+</script>
+
+</body>
+</html>
