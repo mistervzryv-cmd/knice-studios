@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Раскол Древних Империй — 4X Прототип</title>
-  <script type="module" crossorigin src="assets/index-CLhrtjuW.js"></script>
-  <link rel="stylesheet" crossorigin href="assets/index-CPA4sW4m.css">
+  <script type="module" crossorigin src="/assets/index-C7hozZVc.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BRmtwkbx.css">
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -38,14 +38,17 @@
         </div>
       </div>
       <div class="hud-stat">
-        ⚖️ Легитимность: <span id="hud-legitimacy" class="val good">88%</span>
+        <span data-i18n="hudLegitimacyLabel">⚖️ Легитимность:</span> <span id="hud-legitimacy" class="val good">88%</span>
         <span id="hud-interregnum-badge" class="badge-danger hidden">⚠️ СМУТА</span>
         <span id="hud-golden-age-badge" class="badge-danger hidden" style="background:#f1c40f; color:#0b0e14; font-weight:800;">🌟 ЗОЛОТОЙ ВЕК</span>
       </div>
       <div class="hud-stat">💰 <span id="hud-gold" class="val">180</span></div>
       <div class="hud-stat">🌾 <span id="hud-grain" class="val">240</span></div>
-      <div class="hud-stat">📜 Очки Культуры: <span id="hud-culture-points" class="val" style="color:#d7bde2">40</span></div>
-      <div class="hud-stat" id="hud-science-box" title="Очки Исследований (Наука)">🔬 Наука: <span id="hud-science" class="val" style="color:#58a6ff">0</span></div>
+      <div class="hud-stat"><span data-i18n="hudCultureLabel">📜 Очки Культуры:</span> <span id="hud-culture-points" class="val" style="color:#d7bde2">40</span></div>
+      <div class="hud-stat" id="hud-science-box" title="Очки Исследований (Наука)"><span data-i18n="hudScienceLabel">🔬 Наука:</span> <span id="hud-science" class="val" style="color:#58a6ff">0</span></div>
+      <div class="hud-stat" id="hud-focus-box" title="Национальный культурный фокус (50 📜)">
+        <span data-i18n="hudFocusLabel">🎯 Фокус:</span> <span id="hud-focus-val" class="val" style="color:#e67e22; font-weight:600;">[Нет]</span>
+      </div>
       <div class="hud-stat" id="hud-resources-box" title="Стратегические ресурсы: Медь, Олово, Скот, Благовония">
         🪨 <span id="hud-res-copper" class="val" style="color:#e67e22; margin-right:4px;">2</span>
         ⛏️ <span id="hud-res-tin" class="val" style="color:#bdc3c7; margin-right:4px;">1</span>
@@ -55,7 +58,7 @@
       <div class="hud-stat" id="hud-luxury-box" title="Столичные блага: редкие ресурсы (Ладан, Скот), соединенные снабжением со столицей, дают +15% Cohesion">
         👑 Блага: <span id="hud-luxury-val" class="val good" style="color:#2ecc71;">Доставлены (+15% ⚖️)</span>
       </div>
-      <div class="hud-stat">⚠️ Бремя: <span id="hud-overextension" class="val good">10%</span></div>
+      <div class="hud-stat"><span data-i18n="hudOverextensionLabel">⚠️ Бремя:</span> <span id="hud-overextension" class="val good">10%</span></div>
     </div>
 
     <div class="hud-section">
@@ -452,12 +455,28 @@
       <p class="small-text" style="color: #8b949e; margin-bottom: 12px;">Эволюция, расколы народов и хроника великих свершений:</p>
       
       <div class="modal-tabs" style="display:flex; gap:10px; margin-bottom:12px; border-bottom:1px solid #30363d; padding-bottom:8px;">
-        <button id="tab-btn-tree" class="tab-btn active">🌳 Древо Культур</button>
-        <button id="tab-btn-ages" class="tab-btn">📜 Летопись Веков</button>
+        <button id="tab-btn-tree" class="tab-btn active" data-i18n="tabCultureTree">🌳 Древо Культур</button>
+        <button id="tab-btn-focus" class="tab-btn" data-i18n="tabCulturalFocus">🏛️ Культурный Фокус</button>
+        <button id="tab-btn-ages" class="tab-btn" data-i18n="tabChroniclesOfAges">📜 Летопись Веков</button>
       </div>
 
       <div id="tab-panel-tree">
         <div id="tree-container"></div>
+      </div>
+
+      <div id="tab-panel-focus" class="hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #30363d; padding-bottom:6px;">
+          <h3 style="color:#f1c40f; margin:0; font-size:1.15rem; display:flex; align-items:center; gap:8px;">
+            <span>🏛️</span> <span data-i18n="culturalFocusModalTitle">Культурный Фокус и Национальные Идеи</span>
+          </h3>
+          <span style="font-size:0.78rem; background:rgba(215,189,226,0.15); color:#d7bde2; padding:3px 10px; border-radius:12px; border:1px solid rgba(215,189,226,0.3); font-weight:600;"><span data-i18n="costLabel">Стоимость:</span> 50 📜</span>
+        </div>
+        <p class="small-text" style="color: #8b949e; margin-bottom: 10px; text-align:left;" data-i18n="culturalFocusModalDesc">
+          Накопленные Очки Культуры позволяют принять общенациональный вектор развития державы:
+        </p>
+        <div id="cultural-focus-list" class="focus-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; max-height:360px; overflow-y:auto; text-align:left;">
+          <!-- Dynamically rendered by UIManager -->
+        </div>
       </div>
 
       <div id="tab-panel-ages" class="hidden">
