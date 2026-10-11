@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Раскол Древних Империй — 4X Прототип</title>
-  <script type="module" crossorigin src="assets/index-C7hozZVc.js"></script>
-  <link rel="stylesheet" crossorigin href="assets/index-BRmtwkbx.css">
+  <script type="module" crossorigin src="/assets/index-x5hpvOXC.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DRx4-UQd.css">
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -15,7 +15,7 @@
     <div class="hud-section">
       <div class="hud-title">
         ⚔️ <span id="hud-faction-name">Шумерское Царство</span>
-        <button id="btn-rename-faction" class="btn-icon" title="Переименовать государство">✏️</button>
+        <button id="btn-rename-faction" class="btn-icon" title="Переименовать государство" data-i18n-title="renameFactionTitle">✏️</button>
       </div>
       <div class="hud-stat" id="hud-age-box">
         🏛️ <span id="hud-age-name" class="val" style="color:#f1c40f">Эпоха Орудий</span>
@@ -28,11 +28,11 @@
         <span id="hud-ruler-trait" class="val" style="color:#3498db; font-size:0.75rem; background:rgba(52,152,219,0.15); padding:1px 5px; border-radius:4px;">[Завоеватель]</span>
         <span style="font-size:0.78rem; color:#8b949e">(<span id="hud-ruler-age">32</span> г.)</span>
       </div>
-      <div class="hud-stat" id="hud-tier-box" title="Культурный Тир вашей державы: Дикое Племя (1) -> Вождество (2) -> Цивилизация (3) -> Великая Империя (4)">
-        🏛️ Тир: <span id="hud-faction-tier" class="val" style="color:#2ecc71; font-weight:700; background:rgba(46,204,113,0.18); padding:2px 8px; border-radius:4px;">[Дикое Племя]</span>
+      <div class="hud-stat" id="hud-tier-box" title="Культурный Тир вашей державы: Дикое Племя (1) -> Вождество (2) -> Цивилизация (3) -> Великая Империя (4)" data-i18n-title="hudTierBoxTooltip">
+        <span data-i18n="hudTierLabel">🏛️ Тир:</span> <span id="hud-faction-tier" class="val" style="color:#2ecc71; font-weight:700; background:rgba(46,204,113,0.18); padding:2px 8px; border-radius:4px;">[Дикое Племя]</span>
       </div>
-      <div class="hud-stat" id="hud-tier-progress-box" title="Условия эволюции: накопление Очков Культуры и удержание стабильных провинций (Cohesion >= 70%)">
-        📈 Эволюция: <span id="hud-tier-progress-text" class="val" style="color:#f1c40f;">40/100 📜 (1/2 стаб.)</span>
+      <div class="hud-stat" id="hud-tier-progress-box" title="Условия эволюции: накопление Очков Культуры и удержание стабильных провинций (Cohesion >= 70%)" data-i18n-title="hudTierProgressTooltip">
+        <span data-i18n="hudEvolutionLabel">📈 Эволюция:</span> <span id="hud-tier-progress-text" class="val" style="color:#f1c40f;">40/100 📜 (1/2 стаб.)</span>
         <div class="meter-bar" style="width:55px; display:inline-block; vertical-align:middle; margin-left:4px; height:6px;">
           <div id="hud-tier-progress-fill" class="fill" style="width:40%; background:#2ecc71;"></div>
         </div>
@@ -45,18 +45,18 @@
       <div class="hud-stat">💰 <span id="hud-gold" class="val">180</span></div>
       <div class="hud-stat">🌾 <span id="hud-grain" class="val">240</span></div>
       <div class="hud-stat"><span data-i18n="hudCultureLabel">📜 Очки Культуры:</span> <span id="hud-culture-points" class="val" style="color:#d7bde2">40</span></div>
-      <div class="hud-stat" id="hud-science-box" title="Очки Исследований (Наука)"><span data-i18n="hudScienceLabel">🔬 Наука:</span> <span id="hud-science" class="val" style="color:#58a6ff">0</span></div>
-      <div class="hud-stat" id="hud-focus-box" title="Национальный культурный фокус (50 📜)">
+      <div class="hud-stat" id="hud-science-box" title="Очки Исследований (Наука)" data-i18n-title="hudScienceTooltip"><span data-i18n="hudScienceLabel">🔬 Наука:</span> <span id="hud-science" class="val" style="color:#58a6ff">0</span></div>
+      <div class="hud-stat" id="hud-focus-box" title="Национальный культурный фокус (50 📜)" data-i18n-title="hudFocusTooltip">
         <span data-i18n="hudFocusLabel">🎯 Фокус:</span> <span id="hud-focus-val" class="val" style="color:#e67e22; font-weight:600;">[Нет]</span>
       </div>
-      <div class="hud-stat" id="hud-resources-box" title="Стратегические ресурсы: Медь, Олово, Скот, Благовония">
+      <div class="hud-stat" id="hud-resources-box" title="Стратегические ресурсы: Медь, Олово, Скот, Благовония" data-i18n-title="hudStrategicResTooltip">
         🪨 <span id="hud-res-copper" class="val" style="color:#e67e22; margin-right:4px;">2</span>
         ⛏️ <span id="hud-res-tin" class="val" style="color:#bdc3c7; margin-right:4px;">1</span>
         🐂 <span id="hud-res-cattle" class="val" style="color:#f39c12; margin-right:4px;">3</span>
         🏺 <span id="hud-res-incense" class="val" style="color:#9b59b6">2</span>
       </div>
-      <div class="hud-stat" id="hud-luxury-box" title="Столичные блага: редкие ресурсы (Ладан, Скот), соединенные снабжением со столицей, дают +15% Cohesion">
-        👑 Блага: <span id="hud-luxury-val" class="val good" style="color:#2ecc71;">Доставлены (+15% ⚖️)</span>
+      <div class="hud-stat" id="hud-luxury-box" title="Столичные блага: редкие ресурсы (Ладан, Скот), соединенные снабжением со столицей, дают +15% Cohesion" data-i18n-title="hudLuxuryTooltip">
+        <span data-i18n="hudLuxuryTitle">👑 Блага:</span> <span id="hud-luxury-val" class="val good" style="color:#2ecc71;">Доставлены (+15% ⚖️)</span>
       </div>
       <div class="hud-stat"><span data-i18n="hudOverextensionLabel">⚠️ Бремя:</span> <span id="hud-overextension" class="val good">10%</span></div>
     </div>
@@ -68,24 +68,26 @@
         <button class="overlay-btn" data-mode="AUTHORITY" data-i18n="btnUnrest">⚖️ Власть / Бунты</button>
       </div>
 
-      <button id="btn-research-lab" class="hud-action-btn" data-i18n="btnResearchLab" title="Научно-исследовательская лаборатория">🔬 Лаборатория</button>
-      <button id="btn-politics" class="hud-action-btn" data-i18n="btnPolitics" title="Политические режимы и реформы">⚖️ Политика</button>
-      <button id="btn-tax-rate" class="hud-action-btn" data-i18n="btnTaxRate" title="Переключить налоги: Низкие / Норма / Высокие">💰 Налоги: Норм</button>
+      <button id="btn-research-lab" class="hud-action-btn" data-i18n="btnResearchLab" title="Научно-исследовательская лаборатория" data-i18n-title="btnResearchLabTooltip">🔬 Лаборатория</button>
+      <button id="btn-politics" class="hud-action-btn" data-i18n="btnPolitics" title="Политические режимы и реформы" data-i18n-title="btnPoliticsTooltip">⚖️ Политика</button>
+      <button id="btn-tax-rate" class="hud-action-btn" title="Переключить налоги: Низкие / Норма / Высокие" data-i18n-title="btnTaxRateTooltip">💰 Налоги: Норм</button>
       <button id="btn-traditions" data-i18n="btnTraditions">📜 Традиции / Язык</button>
       <button id="btn-migration" data-i18n="btnMigration">🚶 Миграция</button>
       <button id="btn-diplomacy" data-i18n="btnDiplomacy">🤝 Дипломатия</button>
       <button id="btn-culture-tree" data-i18n="btnCultureTree">🌳 Древо</button>
+      <button id="btn-cultural-focus" data-i18n="btnCulturalFocus">🎯 Фокус</button>
+      <button id="btn-vassals" class="hud-action-btn" data-i18n="btnVassals" title="Управление вассалами и сателлитами" data-i18n-title="btnVassalsTooltip">👑 Вассалы</button>
       <button id="btn-lang-toggle" class="btn-icon" title="Сменить язык / Switch Language">🌐 RU</button>
     </div>
   </div>
 
   <!-- Top-Left Hex Coordinate Display (Fixed below Top HUD at top: 76px; left: 16px) -->
-  <div id="coord-display" title="Координаты текущего гекса [q, r]">
+  <div id="coord-display" title="Координаты текущего гекса [q, r]" data-i18n-title="coordDisplayTooltip">
     📍 <span id="coord-display-val">[0, 0]</span>
   </div>
 
   <!-- Floating End Turn Button (Fixed Bottom-Right, never overlapped) -->
-  <button id="btn-end-turn" class="next-turn-btn" title="Завершить ход (Space)">
+  <button id="btn-end-turn" class="next-turn-btn" title="Завершить ход (Space)" data-i18n-title="btnEndTurnTooltip">
     <span class="btn-turn-icon">⌛</span>
     <span class="btn-text" data-i18n="btnEndTurn">Завершить ход</span>
     <span class="btn-shortcut">[Space]</span>
@@ -105,15 +107,81 @@
     <div id="chronicles-list"></div>
   </div>
 
-  <!-- Screen 1: Start Menu Overlay (Culture Choice) -->
+  <!-- Screen 1: Start Menu Overlay (Launcher & Culture Choice) -->
   <div id="start-menu-overlay">
-    <div class="start-header">
-      <h1 class="start-title" data-i18n="gameTitle">РАСКОЛ ДРЕВНИХ ИМПЕРИЙ</h1>
-      <p class="start-subtitle" data-i18n="gameSubtitle">Глобальная 4X-стратегия на гексагональной карте Земли • Эпоха Бронзового Века</p>
+    <!-- View A: Paradox AAA-Style Launcher Dashboard -->
+    <div id="launcher-home-view" class="launcher-dashboard">
+      <!-- Pinned Header: strictly fixed, never scrolls, moves, or shrinks -->
+      <div class="launcher-pinned-header">
+        <div style="display:flex; justify-content:center; align-items:center; position:relative; width:100%;">
+          <div class="launcher-badge" data-i18n="launcherBadge">ГЛОБАЛЬНАЯ СИМУЛЯЦИЯ ДРЕВНЕГО МИРА</div>
+          <button id="btn-launcher-lang" class="modal-btn secondary" style="position:absolute; right:0; top:0; font-size:0.82rem; padding:3px 10px; border-radius:4px; display:inline-flex; align-items:center; gap:5px; cursor:pointer;" title="Сменить язык / Switch Language">🌐 RU</button>
+        </div>
+        <h1 class="start-title" data-i18n="gameTitle">РАСКОЛ ДРЕВНИХ ИМПЕРИЙ</h1>
+        <p class="start-subtitle" data-i18n="gameSubtitle">Глобальная 4X-стратегия на гексагональной карте Земли • Эпоха Бронзового Века</p>
+      </div>
+
+      <!-- Menu Controls Container: independent center/bottom wrapper scaling responsively -->
+      <div class="launcher-controls-wrapper">
+        <div class="launcher-menu-buttons">
+          <button id="btn-launcher-continue" class="launcher-menu-btn continue-btn hidden">
+            <span class="btn-icon">▶️</span>
+            <div class="btn-content">
+              <span class="btn-primary-text" data-i18n="continueGameBtn">Продолжить игру</span>
+              <span class="btn-desc"><span data-i18n="menuContinueDesc">Загрузить сохраненную сессию</span> (<span data-i18n="continueTurn">Ход</span> <span id="save-turn-num">1</span>)</span>
+            </div>
+          </button>
+          <button id="btn-launcher-play" class="launcher-menu-btn primary-action">
+            <span class="btn-icon">👑</span>
+            <div class="btn-content">
+              <span class="btn-primary-text" data-i18n="menuPlayGame">Основать Державу</span>
+              <span class="btn-desc" data-i18n="menuPlayGameDesc">Выбрать одну из 10 исторических культур бронзового века</span>
+            </div>
+          </button>
+          <button id="btn-launcher-chronicles" class="launcher-menu-btn">
+            <span class="btn-icon">📜</span>
+            <div class="btn-content">
+              <span class="btn-primary-text" data-i18n="tabChroniclesOfAges">Летопись Веков</span>
+              <span class="btn-desc" data-i18n="menuChroniclesDesc">Летопись исторических эпох, кризисов и свершений</span>
+            </div>
+          </button>
+          <button id="btn-launcher-settings" class="launcher-menu-btn">
+            <span class="btn-icon">⚙️</span>
+            <div class="btn-content">
+              <span class="btn-primary-text" data-i18n="menuSettings">Настройки графики</span>
+              <span class="btn-desc" data-i18n="menuSettingsDesc">Качество графики, визуальные эффекты и язык</span>
+            </div>
+          </button>
+          <button id="btn-launcher-credits" class="launcher-menu-btn">
+            <span class="btn-icon">🏛️</span>
+            <div class="btn-content">
+              <span class="btn-primary-text" data-i18n="menuCredits">Создатели / Knice Studios</span>
+              <span class="btn-desc" data-i18n="menuCreditsDesc">Авторы проекта, архитектура игрового движка и благодарности</span>
+            </div>
+          </button>
+          <button id="btn-launcher-exit" class="launcher-menu-btn danger-action">
+            <span class="btn-icon">🚪</span>
+            <div class="btn-content">
+              <span class="btn-primary-text" data-i18n="menuExit">Сбросить и выйти</span>
+              <span class="btn-desc" data-i18n="menuExitDesc">Сбросить текущую сессию и перезагрузить игру</span>
+            </div>
+          </button>
+        </div>
+        <div class="launcher-footer">
+          <span>Knice Studios © 2026 • Fall of Ancient Empires v2.4</span>
+        </div>
+      </div>
     </div>
 
-    <div class="culture-selection-container">
-      <div class="selection-title" data-i18n="chooseCultureTitle">Выберите стартовую культуру вашего народа:</div>
+    <!-- View B: Culture Selection Grid -->
+    <div id="culture-selection-view" class="culture-selection-container hidden">
+      <div class="selection-nav-row" style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:12px;">
+        <button id="btn-back-to-launcher" class="modal-btn secondary" style="display:flex; align-items:center; gap:8px;">
+          <span>◀️</span> <span data-i18n="btnBackToLauncher">В главное меню</span>
+        </button>
+        <div class="selection-title" style="margin-bottom:0;" data-i18n="chooseCultureTitle">Выберите стартовую культуру вашего народа:</div>
+        <div style="width:120px;"></div>
+      </div>
       <div class="culture-cards-grid">
         <!-- Culture 1: River Farmers -->
         <div class="culture-card selected" data-choice="RIVER_FARMERS">
@@ -275,25 +343,39 @@
           </ul>
         </div>
       </div>
+      <div class="start-actions-row" style="margin-top:14px; text-align:center;">
+        <button id="btn-start-game" class="btn-start-game" data-i18n="startGameBtn">👑 Основать Цивилизацию</button>
+      </div>
     </div>
+  </div>
 
-    <div class="start-actions-row">
-      <button id="btn-start-game" class="btn-start-game" data-i18n="startGameBtn">👑 Основать Цивилизацию</button>
-      <button id="btn-continue-game" class="btn-start-game btn-continue hidden">
-        <span data-i18n="continueGameBtn">▶️ Продолжить игру</span> (<span data-i18n="continueTurn">Ход</span> <span id="save-turn-num">1</span>)
-      </button>
+  <!-- Modal: Credits / Knice Studios -->
+  <div id="credits-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 580px; max-width: 95vw; border-color: #d4af37; box-shadow: 0 0 45px rgba(212, 175, 55, 0.35);">
+      <div style="font-size: 2.8rem; margin-bottom: 6px;">🏛️</div>
+      <h2 id="credits-title" style="color: #f1c40f; font-size: 1.45rem; margin-bottom: 4px;" data-i18n="creditsTitle">Knice Studios — Авторы Проекта</h2>
+      <h3 style="color: #c9d1d9; margin-bottom: 14px; font-weight: 500; font-size: 0.95rem;" data-i18n="creditsSubtitle">Глобальная историческая 4X-стратегия «Раскол Древних Империй»</h3>
+      <div class="modal-desc" style="text-align: left; font-size: 0.88rem; line-height: 1.6; background: rgba(0,0,0,0.35); padding: 14px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 16px;">
+        <p><strong>🎯 Концепция и Геймдизайн:</strong> Knice Studios</p>
+        <p><strong>⚙️ Архитектура Движка:</strong> Гексагональная сетка Земли, логистика снабжения, симуляция 3 классов ПОПов (Крестьяне, Ремесленники, Знать), Ассамблея Сословий и динамический раскол культур.</p>
+        <p><strong>🎨 Визуальный Стиль:</strong> Процедурный Canvas 2D рендерер, картографический шейдинг биомов бронзового века и адаптивный интерфейс.</p>
+        <p><strong>🌍 Историческая База:</strong> Междуречье Шумера, Древний Египет, Долина Инда, Скифия, Шань и культуры ранней античности.</p>
+      </div>
+      <div class="modal-actions" style="justify-content: center;">
+        <button id="btn-credits-close" class="modal-btn primary" style="min-width: 140px;" data-i18n="creditsCloseBtn">Понятно</button>
+      </div>
     </div>
   </div>
 
   <!-- Screen 2: Traditions & Faith Modal -->
   <div id="traditions-modal" class="modal-overlay hidden">
     <div class="modal-card" style="width: 720px; max-width: 95vw;">
-      <h2>📜 Религия, Традиции и Язык Народа</h2>
-      <p class="small-text">Утверждайте священные догматы и языковые нормы за накопленные Очки Культуры</p>
+      <h2 data-i18n="traditionsTitle">📜 Религия, Традиции и Язык Народа</h2>
+      <p class="small-text" data-i18n="traditionsSubtitle">Утверждайте священные догматы и языковые нормы за накопленные Очки Культуры</p>
       
       <div style="margin: 10px 0; font-size: 0.92rem; display:flex; justify-content:space-between; align-items:center;">
         <div>
-          Баланс Очков Культуры: <strong id="traditions-points-val" style="color:#d7bde2; font-size:1.15rem;">40</strong> 📜
+          <span data-i18n="culturePointsBalance">Баланс Очков Культуры:</span> <strong id="traditions-points-val" style="color:#d7bde2; font-size:1.15rem;">40</strong> 📜
         </div>
         <div id="language-drift-hud" style="font-size:0.82rem; color:#8b949e;">
           <!-- Sub-culture drift info rendered dynamically -->
@@ -301,8 +383,8 @@
       </div>
 
       <div class="modal-tabs" style="display:flex; gap:10px; margin-bottom:12px; border-bottom:1px solid #30363d; padding-bottom:8px;">
-        <button id="tab-btn-dogmas" class="tab-btn active">📜 Священные Догматы</button>
-        <button id="tab-btn-language" class="tab-btn">🗣️ Язык и Письменность</button>
+        <button id="tab-btn-dogmas" class="tab-btn active" data-i18n="tabDogmas">📜 Священные Догматы</button>
+        <button id="tab-btn-language" class="tab-btn" data-i18n="tabLanguage">🗣️ Язык и Письменность</button>
       </div>
 
       <!-- Tab 1: Dogmas -->
@@ -360,7 +442,7 @@
       </div>
 
       <div class="modal-actions" style="margin-top:14px;">
-        <button id="btn-traditions-close" class="modal-btn secondary">Закрыть</button>
+        <button id="btn-traditions-close" class="modal-btn secondary" data-i18n="btnTraditionsClose">Закрыть</button>
       </div>
     </div>
   </div>
@@ -456,7 +538,6 @@
       
       <div class="modal-tabs" style="display:flex; gap:10px; margin-bottom:12px; border-bottom:1px solid #30363d; padding-bottom:8px;">
         <button id="tab-btn-tree" class="tab-btn active" data-i18n="tabCultureTree">🌳 Древо Культур</button>
-        <button id="tab-btn-focus" class="tab-btn" data-i18n="tabCulturalFocus">🏛️ Культурный Фокус</button>
         <button id="tab-btn-ages" class="tab-btn" data-i18n="tabChroniclesOfAges">📜 Летопись Веков</button>
       </div>
 
@@ -464,25 +545,10 @@
         <div id="tree-container"></div>
       </div>
 
-      <div id="tab-panel-focus" class="hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #30363d; padding-bottom:6px;">
-          <h3 style="color:#f1c40f; margin:0; font-size:1.15rem; display:flex; align-items:center; gap:8px;">
-            <span>🏛️</span> <span data-i18n="culturalFocusModalTitle">Культурный Фокус и Национальные Идеи</span>
-          </h3>
-          <span style="font-size:0.78rem; background:rgba(215,189,226,0.15); color:#d7bde2; padding:3px 10px; border-radius:12px; border:1px solid rgba(215,189,226,0.3); font-weight:600;"><span data-i18n="costLabel">Стоимость:</span> 50 📜</span>
-        </div>
-        <p class="small-text" style="color: #8b949e; margin-bottom: 10px; text-align:left;" data-i18n="culturalFocusModalDesc">
-          Накопленные Очки Культуры позволяют принять общенациональный вектор развития державы:
-        </p>
-        <div id="cultural-focus-list" class="focus-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; max-height:360px; overflow-y:auto; text-align:left;">
-          <!-- Dynamically rendered by UIManager -->
-        </div>
-      </div>
-
       <div id="tab-panel-ages" class="hidden">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #30363d; padding-bottom:6px;">
           <h3 style="color:#f1c40f; margin:0; font-size:1.15rem; display:flex; align-items:center; gap:8px;">
-            <span>📜</span> <span>Летопись Веков</span>
+            <span>📜</span> <span data-i18n="tabChroniclesOfAges">Летопись Веков</span>
           </h3>
           <span id="chronicles-count-badge" style="font-size:0.78rem; background:rgba(241,196,15,0.15); color:#f1c40f; padding:3px 10px; border-radius:12px; border:1px solid rgba(241,196,15,0.3); font-weight:600;">Хроника событий</span>
         </div>
@@ -496,6 +562,48 @@
 
       <div class="modal-actions" style="margin-top:14px;">
         <button id="btn-tree-close" class="modal-btn secondary">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dedicated Cultural Focus Modal -->
+  <div id="cultural-focus-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 660px; max-width: 95vw;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #30363d; padding-bottom:6px;">
+        <h3 style="color:#f1c40f; margin:0; font-size:1.25rem; display:flex; align-items:center; gap:8px;">
+          <span>🎯</span> <span data-i18n="culturalFocusModalTitle">Культурный Фокус и Национальные Идеи</span>
+        </h3>
+        <span style="font-size:0.8rem; background:rgba(215,189,226,0.18); color:#d7bde2; padding:4px 12px; border-radius:12px; border:1px solid rgba(215,189,226,0.35); font-weight:700;"><span data-i18n="costLabel">Стоимость:</span> 50 📜</span>
+      </div>
+      <p class="small-text" style="color: #8b949e; margin-bottom: 12px; text-align:left;" data-i18n="culturalFocusModalDesc">
+        Накопленные Очки Культуры позволяют принять общенациональный вектор развития державы:
+      </p>
+      <div id="cultural-focus-list" class="focus-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; max-height:380px; overflow-y:auto; text-align:left;">
+        <!-- Dynamically rendered by UIManager -->
+      </div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button id="btn-focus-modal-close" class="modal-btn secondary">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dedicated Vassals Management Modal -->
+  <div id="vassals-management-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 720px; max-width: 95vw;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #30363d; padding-bottom:6px;">
+        <h3 style="color:#f1c40f; margin:0; font-size:1.25rem; display:flex; align-items:center; gap:8px;">
+          <span>👑</span> <span data-i18n="vassalsModalTitle">Управление Вассалами и Сателлитами</span>
+        </h3>
+        <span style="font-size:0.8rem; background:rgba(142,68,173,0.25); color:#d7bde2; padding:4px 12px; border-radius:12px; border:1px solid #9b59b6; font-weight:700;" data-i18n="vassalOverextensionPerk">-15% Сверхрасширения</span>
+      </div>
+      <p class="small-text" style="color: #8b949e; margin-bottom: 12px; text-align:left;" data-i18n="vassalsModalDesc">
+        Передайте провинции под управление вассальных государств для снижения имперского бремени (-15% за вассала):
+      </p>
+      <div id="vassals-provinces-list" style="display:flex; flex-direction:column; gap:12px; max-height:420px; overflow-y:auto; text-align:left; padding-right:6px;">
+        <!-- Dynamically rendered by UIManager -->
+      </div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button id="btn-vassals-modal-close" class="modal-btn secondary" data-i18n="btnClose">Закрыть</button>
       </div>
     </div>
   </div>
@@ -630,6 +738,62 @@
       </div>
       <div class="modal-actions" style="justify-content: center;">
         <button id="btn-battle-modal-close" class="modal-btn primary" style="min-width: 140px;">Принять</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 11: Esc Pause Menu Modal -->
+  <div id="pause-menu-overlay" class="modal-overlay hidden">
+    <div id="pause-menu-modal" class="modal-card pause-card" style="width: 440px; max-width: 92vw; text-align: center; border-color: #f1c40f; box-shadow: 0 0 35px rgba(241, 196, 15, 0.35);">
+      <div style="font-size: 2.8rem; margin-bottom: 6px;">⏸️</div>
+      <h2 id="pause-title" style="color: #f1c40f; margin: 0 0 8px; font-size: 1.6rem;" data-i18n="pauseMenuTitle">Пауза</h2>
+      <p id="pause-desc" style="color: #e6edf3; font-size: 1rem; margin-bottom: 18px; line-height: 1.5;" data-i18n="pauseMenuPrompt">Меню паузы</p>
+      <div style="margin-bottom: 18px;">
+        <button id="btn-pause-lang" class="modal-btn secondary" style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.88rem; padding: 6px 14px; cursor:pointer;" title="Сменить язык / Switch Language">🌐 RU</button>
+      </div>
+      <div class="modal-actions" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+        <button id="btn-pause-resume" class="modal-btn primary" style="width: 100%; min-height: 44px;" data-i18n="pauseMenuResume">Продолжить игру</button>
+        <button id="btn-pause-settings" class="modal-btn secondary" style="width: 100%; min-height: 44px;" data-i18n="pauseMenuSettings">Настройки графики</button>
+        <button id="btn-pause-exit" class="modal-btn danger" style="width: 100%; min-height: 44px;" data-i18n="pauseMenuExit">В главное меню</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 12: Settings & Graphics Quality -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-card settings-card" style="width: 520px; max-width: 92vw; text-align: center; border-color: #58a6ff; box-shadow: 0 0 40px rgba(88, 166, 255, 0.35);">
+      <div style="font-size: 2.8rem; margin-bottom: 6px;">⚙️</div>
+      <h2 id="settings-title" style="color: #58a6ff; margin: 0 0 8px; font-size: 1.6rem;" data-i18n="settingsTitle">Настройки графики и игры</h2>
+      <p id="settings-desc" style="color: #8b949e; font-size: 0.92rem; margin-bottom: 20px; line-height: 1.5;" data-i18n="settingsDesc">Настройте визуальные эффекты под производительность вашего устройства</p>
+
+      <div class="settings-section" style="margin-bottom: 20px; text-align: left; background: rgba(0,0,0,0.35); padding: 16px; border-radius: 8px; border: 1px solid #30363d;">
+        <h4 style="color: #f1c40f; margin: 0 0 10px; font-size: 1rem;" data-i18n="graphicsQualityLabel">Качество графики:</h4>
+        <div class="graphics-quality-options" style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button id="btn-quality-low" class="modal-btn secondary quality-btn" data-quality="LOW" style="flex: 1; min-width: 120px; text-align: center;">
+            <div style="font-weight: 700;" data-i18n="qualityLowTitle">⚡ LOW</div>
+            <div style="font-size: 0.75rem; color: #8b949e;" data-i18n="qualityLowDesc">60 FPS • Без теней и рек</div>
+          </button>
+          <button id="btn-quality-med" class="modal-btn secondary quality-btn" data-quality="MEDIUM" style="flex: 1; min-width: 120px; text-align: center;">
+            <div style="font-weight: 700;" data-i18n="qualityMedTitle">⚖️ MEDIUM</div>
+            <div style="font-size: 0.75rem; color: #8b949e;" data-i18n="qualityMedDesc">Баланс • Биомы и караваны</div>
+          </button>
+          <button id="btn-quality-high" class="modal-btn primary quality-btn active" data-quality="HIGH" style="flex: 1; min-width: 120px; text-align: center;">
+            <div style="font-weight: 700;" data-i18n="qualityHighTitle">🌟 HIGH (AAA)</div>
+            <div style="font-size: 0.75rem; color: #8b949e;" data-i18n="qualityHighDesc">Полные шейдеры тумана и рек</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="settings-section" style="margin-bottom: 20px; text-align: left; background: rgba(0,0,0,0.35); padding: 16px; border-radius: 8px; border: 1px solid #30363d;">
+        <h4 style="color: #f1c40f; margin: 0 0 10px; font-size: 1rem;" data-i18n="languageSettingsLabel">Язык интерфейса:</h4>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <button id="btn-settings-lang-ru" class="modal-btn secondary lang-choice-btn" data-lang="ru">🇷🇺 Русский</button>
+          <button id="btn-settings-lang-en" class="modal-btn secondary lang-choice-btn" data-lang="en">🇬🇧 English</button>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="justify-content: center; gap: 14px;">
+        <button id="btn-settings-close" class="modal-btn primary" style="min-width: 140px;" data-i18n="btnSettingsClose">Сохранить и закрыть</button>
       </div>
     </div>
   </div>
