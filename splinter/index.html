@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Раскол Древних Империй — 4X Прототип</title>
-  <script type="module" crossorigin src="assets/index-x5hpvOXC.js"></script>
-  <link rel="stylesheet" crossorigin href="assets/index-DRx4-UQd.css">
+  <script type="module" crossorigin src="/assets/index-B8BWkFxf.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-C3Xo0eCk.css">
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -77,6 +77,7 @@
       <button id="btn-culture-tree" data-i18n="btnCultureTree">🌳 Древо</button>
       <button id="btn-cultural-focus" data-i18n="btnCulturalFocus">🎯 Фокус</button>
       <button id="btn-vassals" class="hud-action-btn" data-i18n="btnVassals" title="Управление вассалами и сателлитами" data-i18n-title="btnVassalsTooltip">👑 Вассалы</button>
+      <button id="btn-dynasty" class="hud-action-btn" data-i18n="btnDynasty" title="Монаршая Династия и Престолонаследие" data-i18n-title="btnDynastyTooltip">👑 Династия</button>
       <button id="btn-lang-toggle" class="btn-icon" title="Сменить язык / Switch Language">🌐 RU</button>
     </div>
   </div>
@@ -604,6 +605,28 @@
       </div>
       <div class="modal-actions" style="margin-top:16px;">
         <button id="btn-vassals-modal-close" class="modal-btn secondary" data-i18n="btnClose">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Dynasty & Royal Succession Modal -->
+  <div id="dynasty-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 760px; max-width: 95vw;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #30363d; padding-bottom:8px; flex-wrap:wrap; gap:8px;">
+        <h3 style="color:#f1c40f; margin:0; font-size:1.3rem; display:flex; align-items:center; gap:8px;">
+          <span>👑</span> <span data-i18n="dynastyModalTitle">Династия и Престолонаследие</span>
+        </h3>
+        <button id="btn-dynasty-adopt" class="modal-btn primary" style="padding:6px 14px; font-size:0.85rem;" data-i18n="dynastyAdoptHeirBtn">
+          👶 Усыновить наследника (50 💰, 30 📜)
+        </button>
+      </div>
+
+      <div id="dynasty-modal-content" style="display:flex; flex-direction:column; gap:16px; max-height:480px; overflow-y:auto; padding-right:6px; text-align:left;">
+        <!-- Dynamically rendered by UIManager: Sovereign, Heirs, Legacy -->
+      </div>
+
+      <div class="modal-actions" style="margin-top:16px;">
+        <button id="btn-dynasty-modal-close" class="modal-btn secondary" data-i18n="btnClose">Закрыть</button>
       </div>
     </div>
   </div>
