@@ -504,7 +504,7 @@
           <text x="247" y="128" fill="#fef08a" font-size="8" font-weight="bold">⚔</text>
           
           <rect x="180" y="14" width="130" height="20" rx="4" fill="rgba(212,164,55,0.22)" stroke="rgba(212,164,55,0.4)" stroke-width="1"/>
-          <text x="190" y="28" fill="#f3c65f" font-size="9" font-weight="bold">SANDS OF FATE v1.1</text>
+          <text x="190" y="28" fill="#f3c65f" font-size="9" font-weight="bold">SANDS OF FATE v1.2</text>
         </svg>
       </div>
       <div class="card-content">
@@ -514,8 +514,8 @@
       <div class="card-tags">
         <span class="tag gold">Grand Strategy</span>
         <span class="tag gold">4X</span>
-        <span class="tag">Diplomacy</span>
-        <span class="tag">Archive [2 versions]</span>
+        <span class="tag">Touch / Mobile</span>
+        <span class="tag">Archive [3 versions]</span>
       </div>
     </div>
 
@@ -839,8 +839,11 @@
       <p>Select a strategy version:</p>
       <div class="version-btns">
         <button class="btn-version primary" onclick="launchHegemonyLatest()">
-          <span>⚡ <b>v1.1</b> (Polygonal Voronoi Map, Sandstorms & A* AI)</span>
+          <span>⚡ <b>v1.2</b> (Mobile Touch, Radial Menu & Pinch-Zoom)</span>
           <small style="color:inherit">Latest</small>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('hegemony_v2.html', 'Hegemony: Sands of Fate (v1.1)')">
+          <span>v1.1 (Polygonal Voronoi Map, Sandstorms & A* AI)</span>
         </button>
         <button class="btn-version" onclick="chooseVersion('hegemony.html', 'Hegemony: Sands of Fate (v1.0)')">
           <span>v1.0 (Classic 8x8 Grid Map & Core Mechanics)</span>
@@ -978,8 +981,8 @@
     }
 
     function launchHegemonyLatest() {
-      const target = 'hegemony_v2.html';
-      chooseVersion(target, 'Hegemony: Sands of Fate (v1.1)');
+      const target = 'hegemony_v3.html';
+      chooseVersion(target, 'Hegemony: Sands of Fate (v1.2)');
     }
 
     function launchBankLatest() {
