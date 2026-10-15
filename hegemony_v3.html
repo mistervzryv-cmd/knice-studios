@@ -1,0 +1,3118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Гегемония: Пески Судьбы</title>
+<style>
+  :root {
+    --bg-deep: #0b0907;
+    --bg-panel: #16120e;
+    --bg-panel-alt: #211b14;
+    --bg-card: #282017;
+    --gold-bright: #f3c65f;
+    --gold-main: #d4a437;
+    --gold-dim: #8a6823;
+    --sand-light: #f0dfc3;
+    --sand-muted: #b39d7b;
+    --crimson: #d94136;
+    --emerald: #2ea866;
+    --sapphire: #3688d9;
+    --border-gold: 1px solid rgba(212, 164, 55, 0.38);
+    --shadow-heavy: 0 10px 30px rgba(0, 0, 0, 0.85);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  body {
+    background-color: var(--bg-deep);
+    background-image: 
+      radial-gradient(circle at 50% 20%, rgba(212, 164, 55, 0.08) 0%, transparent 60%),
+      repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.01) 0px, rgba(255, 255, 255, 0.01) 2px, transparent 2px, transparent 8px);
+    color: var(--sand-light);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    inset: 0;
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg-deep); }
+  ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+
+  /* КНОПКИ */
+  .btn {
+    background: linear-gradient(180deg, #3a2d1d 0%, #22190f 100%);
+    color: var(--sand-light);
+    border: 1px solid var(--gold-main);
+    padding: 10px 18px;
+    font-family: inherit;
+    font-size: 0.92rem;
+    font-weight: bold;
+    letter-spacing: 0.6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.16s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 44px;
+  }
+
+  .btn:active {
+    transform: scale(0.97);
+  }
+
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: linear-gradient(180deg, #d4a437 0%, #9b7019 100%);
+    color: #120d07;
+    border-color: #ffe08a;
+  }
+
+  .btn-danger {
+    background: linear-gradient(180deg, #6e1f19 0%, #42110e 100%);
+    border-color: #d94136;
+  }
+
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    min-height: 38px;
+  }
+
+  /* ГЛАВНОЕ МЕНЮ */
+  #main-menu {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: radial-gradient(circle at center, #251c12 0%, #090705 85%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    overflow-y: auto;
+  }
+
+  .menu-ornament {
+    width: 780px;
+    max-width: 100%;
+    background: linear-gradient(180deg, rgba(33, 27, 20, 0.97), rgba(16, 13, 9, 0.99));
+    border: 2px solid var(--gold-main);
+    box-shadow: 0 0 50px rgba(212, 164, 55, 0.25);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    position: relative;
+    max-height: 94vh;
+    overflow-y: auto;
+  }
+
+  .menu-lang-bar {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+  }
+
+  .menu-title {
+    font-size: 2.1rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold-bright);
+    text-shadow: 0 3px 12px rgba(243, 198, 95, 0.45);
+    margin-bottom: 4px;
+    margin-top: 10px;
+  }
+
+  .menu-subtitle {
+    font-size: 0.85rem;
+    color: var(--sand-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .faction-select-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+    text-align: left;
+  }
+
+  .faction-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(212, 164, 55, 0.25);
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .faction-card.selected {
+    border: 2px solid var(--gold-bright);
+    background: rgba(212, 164, 55, 0.16);
+    box-shadow: 0 0 16px rgba(212, 164, 55, 0.28);
+  }
+
+  .faction-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    font-size: 0.98rem;
+    margin-bottom: 4px;
+  }
+
+  .faction-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid #fff;
+    flex-shrink: 0;
+  }
+
+  .faction-bonus {
+    font-size: 0.78rem;
+    color: var(--sand-muted);
+    line-height: 1.35;
+  }
+
+  .menu-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* ВЕРХНЯЯ ПАНЕЛЬ */
+  #topbar {
+    height: 54px;
+    background: linear-gradient(180deg, #1f1912 0%, #120e0a 100%);
+    border-bottom: var(--border-gold);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    flex-shrink: 0;
+    z-index: 100;
+    position: relative;
+  }
+
+  .brand-block {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .brand-title {
+    font-size: 0.96rem;
+    font-weight: bold;
+    color: var(--gold-bright);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .player-badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.76rem;
+    font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
+  }
+
+  .stats-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stat-pill {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(212, 164, 55, 0.3);
+    padding: 4px 8px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  .stat-val {
+    font-weight: bold;
+    color: var(--gold-bright);
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+
+  .stat-delta {
+    font-size: 0.74rem;
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+
+  .delta-pos { color: #5cd68d; }
+  .delta-neg { color: #ff6b6b; }
+
+  /* МОБИЛЬНОЕ ВЫПАДАЮЩЕЕ МЕНЮ РЕСУРСОВ */
+  #mobile-stats-toggle {
+    display: none;
+    background: rgba(212, 164, 55, 0.15);
+    border: 1px solid var(--gold-main);
+    color: var(--gold-bright);
+    border-radius: 5px;
+    padding: 5px 9px;
+    font-size: 0.82rem;
+    font-weight: bold;
+    cursor: pointer;
+    align-items: center;
+    gap: 5px;
+  }
+
+  #mobile-stats-dropdown {
+    display: none;
+    position: absolute;
+    top: 54px;
+    left: 0;
+    right: 0;
+    background: #19140f;
+    border-bottom: 2px solid var(--gold-main);
+    padding: 12px 14px;
+    z-index: 150;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.85);
+    animation: slideDown 0.2s ease-out;
+  }
+
+  #mobile-stats-dropdown.active {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* РАБОЧАЯ ОБЛАСТЬ */
+  #workspace {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 320px 1fr 340px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .side-panel {
+    background: var(--bg-panel);
+    border-right: var(--border-gold);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 20;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .side-panel.right {
+    border-right: none;
+    border-left: var(--border-gold);
+  }
+
+  .panel-header {
+    padding: 10px 14px;
+    background: linear-gradient(90deg, rgba(212, 164, 55, 0.16), transparent);
+    border-bottom: var(--border-gold);
+    font-size: 0.88rem;
+    font-weight: bold;
+    color: var(--gold-bright);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .panel-body {
+    padding: 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tabs-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-bottom: var(--border-gold);
+    background: #100c09;
+    flex-shrink: 0;
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--sand-muted);
+    padding: 10px 4px;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    min-height: 42px;
+  }
+
+  .tab-btn.active {
+    color: var(--gold-bright);
+    border-bottom-color: var(--gold-bright);
+    background: rgba(212, 164, 55, 0.08);
+  }
+
+  /* ЦЕНТРАЛЬНАЯ КАРТА (SVG) */
+  #map-Grouping {
+    position: relative;
+    background: radial-gradient(circle at center, #261d13 0%, #0d0a07 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    touch-action: none; /* Для гладкого сенсорного пана и зума */
+    width: 100%;
+    height: 100%;
+  }
+
+  #map-banner {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 16px;
+    background: rgba(22, 18, 14, 0.94);
+    border: var(--border-gold);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: var(--sand-light);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+    z-index: 30;
+    max-width: 90%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #map-svg-wrap {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: grab;
+  }
+
+  #map-svg-wrap:active {
+    cursor: grabbing;
+  }
+
+  #map-svg {
+    width: 100%;
+    height: 100%;
+    background: #110c08;
+    box-shadow: var(--shadow-heavy);
+    will-change: transform;
+  }
+
+  .prov-poly {
+    cursor: pointer;
+    transition: filter 0.14s ease, stroke-width 0.14s ease;
+    stroke-linejoin: round;
+  }
+
+  .prov-poly:hover {
+    filter: brightness(1.22);
+  }
+
+  .prov-poly.selected {
+    stroke: #ffffff !important;
+    stroke-width: 3.5px !important;
+    filter: brightness(1.3) drop-shadow(0 0 8px rgba(255,255,255,0.6));
+  }
+
+  .prov-poly.valid-target {
+    stroke: #ff5e57 !important;
+    stroke-width: 3.2px !important;
+    stroke-dasharray: 6 3;
+    animation: svgPulse 1.2s infinite ease-in-out;
+  }
+
+  @keyframes svgPulse {
+    0%, 100% { filter: brightness(1.1); }
+    50% { filter: brightness(1.45); }
+  }
+
+  .prov-label-group {
+    pointer-events: none;
+    text-anchor: middle;
+  }
+
+  .prov-title-svg {
+    font-size: 10px;
+    fill: rgba(255, 255, 255, 0.92);
+    font-weight: bold;
+    paint-order: stroke;
+    stroke: #0b0805;
+    stroke-width: 2.8px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .prov-army-svg {
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 11px;
+    fill: #ffffff;
+    font-weight: bold;
+    paint-order: stroke;
+    stroke: #000000;
+    stroke-width: 3px;
+  }
+
+  .prov-income-svg {
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 9.5px;
+    fill: #f3c65f;
+    font-weight: bold;
+    paint-order: stroke;
+    stroke: #000000;
+    stroke-width: 2.6px;
+  }
+
+  /* МОБИЛЬНОЕ РАДИАЛЬНОЕ МЕНЮ ДЕЙСТВИЙ */
+  #radial-action-menu {
+    position: absolute;
+    z-index: 80;
+    pointer-events: none;
+    display: none;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+  }
+
+  #radial-action-menu.active {
+    display: block;
+    animation: radialPop 0.22s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    pointer-events: auto;
+  }
+
+  @keyframes radialPop {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.35); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+
+  .radial-btn {
+    position: absolute;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #382a1a 0%, #1c150d 100%);
+    border: 2px solid var(--gold-main);
+    color: var(--sand-light);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.85);
+    transition: transform 0.15s, background 0.15s;
+    user-select: none;
+  }
+
+  .radial-btn:active {
+    transform: scale(0.9);
+    background: var(--gold-dim);
+  }
+
+  .radial-btn .icon {
+    font-size: 1.15rem;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  /* Расположение по кругу (радиус 74px) */
+  .r-top    { top: 12px; left: 74px; }
+  .r-right  { top: 74px; left: 136px; }
+  .r-bottom { top: 136px; left: 74px; }
+  .r-left   { top: 74px; left: 12px; }
+  .r-center {
+    top: 76px; left: 76px; width: 48px; height: 48px;
+    background: #110d08; border-color: rgba(255,255,255,0.4);
+    font-size: 0.65rem; text-align: center;
+  }
+
+  /* ИНФОБЛОКИ */
+  .info-box {
+    background: var(--bg-panel-alt);
+    border: 1px solid rgba(212, 164, 55, 0.25);
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .info-box-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--gold-main);
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(212, 164, 55, 0.2);
+    padding-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .kv-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.84rem;
+    padding: 5px 0;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+  }
+
+  .kv-row:last-child { border-bottom: none; }
+
+  .action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .march-control {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--gold-main);
+    cursor: pointer;
+    height: 28px;
+  }
+
+  .diplo-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(212, 164, 55, 0.28);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .diplo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .relation-bar-wrap {
+    height: 7px;
+    background: #120e0a;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+
+  .relation-bar-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+  }
+
+  .status-tag {
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .status-PEACE { background: rgba(255, 255, 255, 0.12); color: var(--sand-light); }
+  .status-WAR { background: rgba(217, 65, 54, 0.3); color: #ff857d; border: 1px solid #d94136; }
+  .status-ALLIANCE { background: rgba(54, 136, 217, 0.3); color: #8ac4ff; border: 1px solid #3688d9; }
+  .status-TRADE { background: rgba(212, 164, 55, 0.25); color: var(--gold-bright); border: 1px solid var(--gold-main); }
+  .status-VASSAL { background: rgba(155, 89, 182, 0.3); color: #e0aaff; border: 1px solid #9b59b6; }
+
+  .log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.8rem;
+  }
+
+  .log-entry {
+    padding: 7px 9px;
+    background: rgba(0, 0, 0, 0.35);
+    border-left: 3px solid var(--gold-dim);
+    border-radius: 3px;
+    line-height: 1.35;
+  }
+
+  .log-entry.war { border-left-color: var(--crimson); }
+  .log-entry.good { border-left-color: var(--emerald); }
+  .log-entry.diplo { border-left-color: var(--sapphire); }
+
+  .end-turn-footer {
+    padding: 12px 14px;
+    border-top: var(--border-gold);
+    background: #120d09;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* МОДАЛЬНЫЕ ОКНА */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 2500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .modal-backdrop.active {
+    display: flex;
+  }
+
+  .modal-window {
+    width: 580px;
+    max-width: 96vw;
+    background: linear-gradient(180deg, #251d14 0%, #14100b 100%);
+    border: 2px solid var(--gold-main);
+    border-radius: 10px;
+    box-shadow: var(--shadow-heavy);
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-title {
+    font-size: 1.28rem;
+    color: var(--gold-bright);
+    border-bottom: var(--border-gold);
+    padding-bottom: 8px;
+  }
+
+  .dice-arena {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+    background: rgba(0,0,0,0.45);
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(212, 164, 55, 0.25);
+    text-align: center;
+  }
+
+  .dice-box {
+    font-size: 2rem;
+    margin: 4px 0;
+  }
+
+  .storm-alert-box {
+    background: rgba(217, 115, 54, 0.2);
+    border: 1px solid #f39c12;
+    color: #ffd384;
+    padding: 8px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  /* НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ ДЛЯ МОБИЛОК */
+  #mobile-bottom-bar {
+    display: none;
+    height: 54px;
+    background: #140f0b;
+    border-top: var(--border-gold);
+    z-index: 100;
+    grid-template-columns: repeat(5, 1fr);
+    flex-shrink: 0;
+  }
+
+  .mob-nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--sand-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 0.68rem;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+
+  .mob-nav-btn.active {
+    color: var(--gold-bright);
+    background: rgba(212, 164, 55, 0.12);
+  }
+
+  .mob-nav-btn .icon {
+    font-size: 1.15rem;
+  }
+
+  /* КНОПКА ЗАКРЫТИЯ ВЫДВИЖНОЙ ПАНЕЛИ НА МОБИЛКЕ */
+  .panel-close-btn {
+    display: none;
+    background: transparent;
+    border: 1px solid var(--gold-dim);
+    color: var(--sand-light);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  /* ==========================================================================
+     АДАПТИВНОСТЬ ПОД ТЕЛЕФОНЫ И ПЛАНШЕТЫ (MEDIA QUERIES)
+     ========================================================================== */
+  @media (max-width: 900px) {
+    #workspace {
+      grid-template-columns: 1fr;
+      position: relative;
+    }
+
+    #mobile-bottom-bar {
+      display: grid;
+    }
+
+    #mobile-stats-toggle {
+      display: inline-flex;
+    }
+
+    .stats-bar .stat-pill:not(.always-visible) {
+      display: none;
+    }
+
+    /* Боковые панели превращаются в полноэкранные/полуэкранные шторки */
+    .side-panel {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 120;
+      transform: translateY(105%);
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.9);
+      border: none;
+    }
+
+    .side-panel.mobile-open {
+      transform: translateY(0);
+    }
+
+    .panel-close-btn {
+      display: inline-block;
+    }
+
+    .faction-select-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .menu-title {
+      font-size: 1.6rem;
+    }
+
+    .modal-window {
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      border-radius: 0;
+      border: none;
+      padding: 20px;
+      justify-content: space-between;
+    }
+
+    .modal-backdrop {
+      padding: 0;
+    }
+  }
+
+  @media (max-width: 480px) {
+    #topbar {
+      padding: 0 8px;
+    }
+    .brand-title {
+      font-size: 0.85rem;
+    }
+    .player-badge {
+      max-width: 90px;
+      font-size: 0.7rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ГЛАВНОЕ МЕНЮ -->
+<div id="main-menu">
+  <div class="menu-ornament">
+    <div class="menu-lang-bar">
+      <button class="btn btn-sm" onclick="toggleLanguage()" id="menu-lang-btn">🌐 EN / RU</button>
+    </div>
+    <div class="menu-title" data-i18n="menu.title">Гегемония: Пески Судьбы</div>
+    <div class="menu-subtitle" data-i18n="menu.subtitle">Полигональная Стратегия</div>
+    <p style="font-size:0.86rem; color:var(--sand-light); margin-bottom:16px; line-height:1.45;" data-i18n="menu.intro">
+      Четыре великие державы сражаются за господство над Великим Архипелагом Оазисов. 
+      Управляйте караванами сквозь песчаные бури, проводите военные походы и сокрушите соперников!
+    </p>
+
+    <div style="text-align:left; font-size:0.82rem; color:var(--gold-main); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;" data-i18n="menu.choose_faction">
+      Выберите правящую державу:
+    </div>
+    <div class="faction-select-grid" id="menu-factions"></div>
+
+    <div class="menu-buttons">
+      <button class="btn btn-primary" onclick="startGame()" data-i18n="menu.btn_start">⚔ Начать Великий Поход</button>
+      <button class="btn" onclick="openCodexModal()" data-i18n="menu.btn_codex">📜 Кодекс</button>
+      <button class="btn" onclick="openCreditsModal()" data-i18n="menu.btn_credits">🏛 Авторы</button>
+    </div>
+  </div>
+</div>
+
+<!-- ВЕРХНЯЯ ПАНЕЛЬ ИМПЕРИИ -->
+<header id="topbar">
+  <div class="brand-block">
+    <span class="brand-title" data-i18n="top.brand">☀ ПЕСКИ</span>
+    <span id="player-faction-badge" class="player-badge">Аль-Заркан</span>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-pill always-visible">
+      <span data-i18n="top.gold">🪙</span>
+      <span class="stat-val" id="stat-gold">500</span>
+      <span class="stat-delta delta-pos" id="stat-income">(+0)</span>
+    </div>
+    <div class="stat-pill always-visible" id="turn-indicator-pill">
+      <span id="turn-indicator" style="font-size:0.82rem; font-weight:bold;">Х. 1</span>
+    </div>
+    <div class="stat-pill">
+      <span data-i18n="top.authority">👑</span>
+      <span class="stat-val" id="stat-authority">50</span>
+    </div>
+    <div class="stat-pill">
+      <span data-i18n="top.army">⚔</span>
+      <span class="stat-val" id="stat-army">0</span>
+    </div>
+    <div class="stat-pill">
+      <span data-i18n="top.stability">⚖</span>
+      <span class="stat-val" id="stat-stability">85%</span>
+    </div>
+
+    <!-- Мобильная кнопка выпадающего меню -->
+    <button id="mobile-stats-toggle" onclick="toggleMobileStatsDropdown()">
+      <span>📊 Инфо ▾</span>
+    </button>
+
+    <button class="btn btn-sm" onclick="toggleLanguage()" id="top-lang-btn">🌐 EN</button>
+    <button class="btn btn-sm" onclick="showMainMenu()" data-i18n="top.menu">☰</button>
+  </div>
+
+  <!-- Выпадающее меню статистики для мобилок -->
+  <div id="mobile-stats-dropdown">
+    <div class="stat-pill">
+      <span data-i18n="top.authority">👑 Авторитет:</span>
+      <span class="stat-val" id="stat-authority-mob">50</span>
+    </div>
+    <div class="stat-pill">
+      <span data-i18n="top.army">⚔ Общая армия:</span>
+      <span class="stat-val" id="stat-army-mob">0</span>
+    </div>
+    <div class="stat-pill">
+      <span data-i18n="top.stability">⚖ Стабильность:</span>
+      <span class="stat-val" id="stat-stability-mob">85%</span>
+    </div>
+    <div class="stat-pill">
+      <span data-i18n="footer.victory_cond">Победа:</span>
+      <span class="stat-val" id="stat-victory-mob">0 / 24</span>
+    </div>
+  </div>
+</header>
+
+<!-- РАБОЧАЯ ОБЛАСТЬ -->
+<main id="workspace">
+  <!-- ЛЕВАЯ ПАНЕЛЬ (ИНСПЕКТОР) -->
+  <aside class="side-panel" id="panel-left">
+    <div class="panel-header">
+      <span data-i18n="left.header">🗺 Провинция и Гарнизон</span>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span id="prov-coords" style="font-size:0.75rem; color:var(--sand-muted);">#0</span>
+        <button class="panel-close-btn" onclick="closeAllMobilePanels()">✖</button>
+      </div>
+    </div>
+    <div class="panel-body" id="province-inspector"></div>
+  </aside>
+
+  <!-- ЦЕНТРАЛЬНАЯ КАРТА (SVG ПОЛИГОНЫ) -->
+  <section id="map-Grouping">
+    <div id="map-banner">
+      <span id="banner-mode-text">Коснитесь провинции для выбора</span>
+      <button class="btn btn-sm" id="cancel-march-btn" style="display:none;" onclick="cancelMarchMode()" data-i18n="map.cancel_march">✖ Отмена</button>
+    </div>
+
+    <div id="map-svg-wrap">
+      <svg id="map-svg" viewBox="0 0 1000 780" preserveAspectRatio="xMidYMid meet">
+        <g id="map-viewport">
+          <!-- Генерируется через JS -->
+        </g>
+      </svg>
+    </div>
+
+    <!-- Мобильное радиальное меню действий -->
+    <div id="radial-action-menu">
+      <button class="radial-btn r-top" onclick="triggerRadialAction('recruit')" title="Нанять войска">
+        <span class="icon">⚔</span>
+        <span>Наем</span>
+      </button>
+      <button class="radial-btn r-right" onclick="triggerRadialAction('march')" title="Отправить в поход">
+        <span class="icon">🚩</span>
+        <span>Поход</span>
+      </button>
+      <button class="radial-btn r-bottom" onclick="triggerRadialAction('build')" title="Инфраструктура">
+        <span class="icon">🏗</span>
+        <span>Стройка</span>
+      </button>
+      <button class="radial-btn r-left" onclick="triggerRadialAction('inspect')" title="Подробности">
+        <span class="icon">ℹ</span>
+        <span>Инфо</span>
+      </button>
+      <button class="radial-btn r-center" onclick="closeRadialMenu()">
+        <span>✖</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ПРАВАЯ ПАНЕЛЬ (ДИПЛОМАТИЯ / УКАЗЫ / ХРОНИКИ) -->
+  <aside class="side-panel right" id="panel-right">
+    <div class="tabs-bar">
+      <button class="tab-btn active" id="tab-btn-diplo" onclick="switchRightTab('diplo', this)" data-i18n="tabs.diplo">🤝 Дипломатия</button>
+      <button class="tab-btn" id="tab-btn-policy" onclick="switchRightTab('policy', this)" data-i18n="tabs.policy">📜 Указы</button>
+      <button class="tab-btn" id="tab-btn-log" onclick="switchRightTab('log', this)" data-i18n="tabs.log">🏺 Хроники</button>
+    </div>
+
+    <div class="panel-body" id="right-tab-content"></div>
+
+    <div class="end-turn-footer">
+      <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:var(--sand-muted);">
+        <span data-i18n="footer.victory_cond">Победа: 24 из 42 провинций</span>
+        <span id="victory-progress">0 / 24</span>
+      </div>
+      <button class="btn btn-primary" style="width:100%; padding:11px; font-size:1.02rem;" onclick="endTurn()" data-i18n="footer.end_turn">
+        ⏳ Завершить Ход
+      </button>
+      <button class="panel-close-btn" style="width:100%; margin-top:4px;" onclick="closeAllMobilePanels()">Вернуться к Карте</button>
+    </div>
+  </aside>
+</main>
+
+<!-- МОБИЛЬНАЯ ПАНЕЛЬ НАВИГАЦИИ (НИЖНЯЯ) -->
+<nav id="mobile-bottom-bar">
+  <button class="mob-nav-btn active" id="mob-nav-map" onclick="mobileNavigateTo('map')">
+    <span class="icon">🗺</span>
+    <span>Карта</span>
+  </button>
+  <button class="mob-nav-btn" id="mob-nav-prov" onclick="mobileNavigateTo('prov')">
+    <span class="icon">🏛</span>
+    <span>Регион</span>
+  </button>
+  <button class="mob-nav-btn" id="mob-nav-diplo" onclick="mobileNavigateTo('diplo')">
+    <span class="icon">🤝</span>
+    <span>Дипломатия</span>
+  </button>
+  <button class="mob-nav-btn" id="mob-nav-policy" onclick="mobileNavigateTo('policy')">
+    <span class="icon">📜</span>
+    <span>Указы</span>
+  </button>
+  <button class="mob-nav-btn" style="color:var(--gold-bright);" onclick="endTurn()">
+    <span class="icon">⏳</span>
+    <span>Ход</span>
+  </button>
+</nav>
+
+<!-- МОДАЛЬНОЕ ОКНО -->
+<div class="modal-backdrop" id="modal-overlay">
+  <div class="modal-window" id="modal-content"></div>
+</div>
+
+<script>
+/* ============================================================================
+   СЛОВАРЬ ЛОКАЛИЗАЦИИ (RU / EN)
+   ============================================================================ */
+const I18N = {
+  ru: {
+    "menu.title": "Гегемония: Пески Судьбы",
+    "menu.subtitle": "Полигональная Стратегия",
+    "menu.intro": "Четыре великие державы сражаются за господство над Великим Архипелагом Оазисов. Управляйте снабжением караванов сквозь песчаные бури, проводите походы и сокрушите соперников!",
+    "menu.choose_faction": "Выберите правящую державу:",
+    "menu.ruler": "Правитель",
+    "menu.btn_start": "⚔ Начать Поход",
+    "menu.btn_codex": "📜 Кодекс",
+    "menu.btn_credits": "🏛 Авторы",
+    "top.brand": "☀ ПЕСКИ",
+    "top.turn_fmt": "Х. {turn} • {year} г.",
+    "top.gold": "🪙",
+    "top.authority": "👑 Авторитет:",
+    "top.army": "⚔ Армия:",
+    "top.stability": "⚖ Стаб.:",
+    "top.menu": "☰",
+    "left.header": "🗺 Провинция и Гарнизон",
+    "map.banner_default": "Коснитесь провинции для выбора",
+    "map.banner_march": "Коснитесь соседней цели для марша {troops} бойцов",
+    "map.cancel_march": "✖ Отмена",
+    "tabs.diplo": "🤝 Дипломатия",
+    "tabs.policy": "📜 Указы",
+    "tabs.log": "🏺 Хроники",
+    "footer.victory_cond": "Победа: 24 провинции",
+    "footer.end_turn": "⏳ Завершить Ход",
+
+    "faction.0.name": "Султанат Аль-Заркан",
+    "faction.0.ruler": "Султан Тарик Золотой",
+    "faction.0.desc": "Богатейшая империя золотых барханов. Караваны дают +20% дохода.",
+    "faction.1.name": "Империя Кхал-Шадар",
+    "faction.1.ruler": "Владыка Малкар Кровавый",
+    "faction.1.desc": "Железные легионы каньонов. Завоеватели: +18% к силе атаки.",
+    "faction.2.name": "Теократия Сапфирового Лотоса",
+    "faction.2.ruler": "Оракул Амарис",
+    "faction.2.desc": "Хранители святилищ. +20% к обороне провинций и высокая стабильность.",
+    "faction.3.name": "Ковенант Изумрудных Песков",
+    "faction.3.ruler": "Шейх Касим Ветролом",
+    "faction.3.desc": "Владыки кочевников. Вдвое меньшее истощение в пустыне и дешевый наем.",
+    "faction.neutral": "Вольные племена",
+
+    "terrain.OASIS.name": "Оазис (Убежище)",
+    "terrain.OASIS.desc": "Источник жизни. Доход (+22), 100% защита от бурь и истощения.",
+    "terrain.DUNES.name": "Великие Дюны",
+    "terrain.DUNES.desc": "Знойные пески (+10), 8% потерь от истощения при переходе.",
+    "terrain.CANYON.name": "Скальный Каньон",
+    "terrain.CANYON.desc": "Рудники и ущелья (+16), бонус обороны +25%.",
+    "terrain.RIVER.name": "Речная Долина",
+    "terrain.RIVER.desc": "Плодородное русло (+19). Штраф -20% при форсировании реки.",
+    "terrain.RUINS.name": "Руины Древних",
+    "terrain.RUINS.desc": "Город Первой Эры. Доход (+26) и крепкие стены (+18%).",
+
+    "insp.terrain": "Ландшафт:",
+    "insp.income": "Доход провинции:",
+    "insp.per_turn": "/ ход",
+    "insp.garrison": "Гарнизон:",
+    "insp.warriors": "бойцов",
+    "insp.stability": "Стабильность:",
+    "insp.def_bonus": "Бонус обороны:",
+    "insp.supply_prot": "Защита складов:",
+    "insp.neighbors_cnt": "Границ:",
+    "insp.storm_active": "🌪 ПЕСЧАНАЯ БУРЯ (ещё {turns} х.): Караваны заблокированы (-50% дохода), армия несет потери!",
+    "insp.oasis_safe": "🌴 Оазис-Убежище: бури не наносят урона гарнизону.",
+    "insp.recruit_title": "⚔ Наем Легионов",
+    "insp.recruit_100": "+100 Воинов ({cost}🪙)",
+    "insp.recruit_300": "+300 Воинов ({cost}🪙)",
+    "insp.march_title": "🚩 Поход Армии",
+    "insp.march_size": "Численность отряда:",
+    "insp.march_btn": "🎯 Выбрать цель на карте",
+    "insp.march_min": "Минимум 20 бойцов для формирования отряда.",
+    "insp.build_title": "🏗 Склады и Инфраструктура",
+    "insp.b_market": "⚖ Караван-сарай (Ур. {lvl}/3)",
+    "insp.b_fort": "🏰 Цитадель (Ур. {lvl}/3)",
+    "insp.b_temple": "☀ Храм Солнца (Ур. {lvl}/2)",
+    "insp.recon_title": "⚔ Военная Разведка",
+    "insp.recon_river": "⚠ Штурм требует форсирования реки (-20% атаки)!",
+    "insp.recon_open": "Провинция доступна для штурма из соседних полигонов.",
+    "insp.quick_atk": "Быстрая атака:",
+    "insp.atk_from": "⚔ Из «{name}» ({troops} бойцов)",
+    "insp.no_adj_army": "Рядом нет ваших армий с численностью > 30 бойцов.",
+
+    "treaty.PEACE": "Мир",
+    "treaty.WAR": "Война",
+    "treaty.ALLIANCE": "Альянс",
+    "treaty.TRADE": "Торговля",
+    "treaty.VASSAL": "Вассал",
+    "diplo.destroyed": "Пала",
+    "diplo.ae_label": "Агрессивное расширение (AE):",
+    "diplo.provs": "Земель:",
+    "diplo.army": "Армия:",
+    "diplo.rel": "Отношения:",
+    "diplo.btn_peace": "🕊 Мир",
+    "diplo.btn_war": "⚔ Война",
+    "diplo.btn_gift": "🎁 Караван (80🪙)",
+    "diplo.btn_trade": "⚖ Торговля",
+    "diplo.btn_ally": "🛡 Альянс",
+    "diplo.btn_vassal": "👑 Вассалитет",
+
+    "policy.title": "👑 Государственные Указы",
+    "policy.desc": "Тратьте Политический Авторитет (👑) и Казну для стабилизации державы.",
+    "policy.tax": "🪙 Чрезвычайный Сбор (+220🪙, -8% стаб.)",
+    "policy.festival": "☀ Праздник Солнца (+18% стаб. везде)",
+    "policy.levy": "⚔ Призыв Кочевников (+80 воинов везде)",
+    "policy.envoys": "🕊 Посольство (-15 Агрессии, +15 отн.)",
+    "policy.summary": "📊 Обзор Державы",
+    "policy.lands": "Земель под контролем:",
+    "policy.atk_bonus": "Бонус полководца к атаке:",
+    "policy.vassals": "Вассалы:",
+
+    "modal.war_title": "⚔ Нарушение границ: {faction}",
+    "modal.war_desc": "Провинция <b>{prov}</b> принадлежит державе <b>{faction}</b> (статус: {treaty}). Вторжение приведет к немедленной <b>Войне</b>!",
+    "modal.btn_retreat": "Отступить",
+    "modal.btn_declare_atk": "🔥 В бой!",
+    "modal.battle_win": "🏆 Победа: «{prov}»",
+    "modal.battle_loss": "💀 Поражение: «{prov}»",
+    "modal.battle_meta": "Рельеф: <b>{terrain}</b> {river} • Истощение перехода: <b style='color:#ff857d'>-{attr} бойцов</b>",
+    "modal.river_tag": "• <span style='color:#ff857d'>Форсирование реки (-20%)</span>",
+    "modal.your_legions": "Ваши Легионы",
+    "modal.def_garrison": "Гарнизон Обороны",
+    "modal.power": "Сила:",
+    "modal.battle_win_desc": "Ваши воины сокрушили гарнизон и подняли знамя над <b>{prov}</b>! Осталось <b>{rem}</b> воинов.",
+    "modal.battle_loss_desc": "Оборона врага выстояла. У врага осталось <b>{rem}</b> защитников.",
+    "modal.btn_ok": "Принять",
+    "modal.btn_close": "Закрыть",
+    "modal.codex_title": "📜 Кодекс Правителя 3.0",
+    "modal.codex_body": "<p><b>1. Сенсорное управление картой:</b> Перетаскивайте карту пальцем (drag/pan) и масштабируйте двумя пальцами (pinch-to-zoom). Для колеса мыши и тачпада зум также поддерживается.</p><p><b>2. Радиальное Меню Действий:</b> Коснитесь любой провинции — вокруг нее откроется круговое меню для быстрого найма, отправки армии, стройки и просмотра разведки.</p><p><b>3. Песчаные Бури и Оазисы:</b> Бури 🌪 блокируют караваны (-50% дохода) и истощают гарнизон по формуле L_storm. Оазисы дают 100% иммунитет.</p><p><b>4. ИИ с поиском пути A*:</b> Компьютерные соперники прокладывают маршруты по графу через оптимальные регионы.</p>",
+    "modal.credits_title": "🏛 Архитектура Hegemony 3.0",
+    "modal.credits_body": "<p><b>«Гегемония: Пески Судьбы 3.0 Mobile Edition»</b> — полностью автономная браузерная стратегия.<br><br>Стек: Vanilla HTML5, CSS Grid/Flexbox, SVG с GPU-ускорением через requestAnimationFrame, бессиблиотечная диаграмма Вороного с релаксацией Ллойда и граф A*.</p>",
+
+    "log.start": "Вы возглавили державу {faction}.",
+    "log.recruit": "В {prov} нанято {count} воинов.",
+    "log.build_market": "В {prov} построен Караван-сарай (Ур. {lvl}).",
+    "log.build_fort": "В {prov} укреплена Цитадель (Ур. {lvl}).",
+    "log.build_temple": "В {prov} освящен Храм Солнца.",
+    "log.move": "{faction} перевела {count} воинов в {prov}.",
+    "log.capture": "⚔ {attacker} захватила {prov} у «{defender}»!",
+    "log.eliminated": "💀 Держава {faction} уничтожена!",
+    "log.repelled": "🛡 Штурм {prov} войсками {attacker} отбит!",
+    "log.war": "🔥 {f1} объявляет войну державе {f2}!",
+    "log.ally_join": "🛡 {ally} вступает в войну в защиту {defender}!",
+    "log.gift": "🎁 Караван прибыл к «{target}» (+25 к отн.).",
+    "log.peace_paid": "🕊 Заключен мир с «{target}» (выкуп 120🪙).",
+    "log.peace_white": "🕊 Заключен белый мир с «{target}».",
+    "log.peace_refused": "✖ «{target}» отвергла предложение мира.",
+    "log.trade_ok": "⚖ Торговый Пакт с «{target}» (+22🪙/ход).",
+    "log.trade_no": "✖ «{target}» против торговли.",
+    "log.ally_ok": "🛡 Альянс заключен с «{target}»!",
+    "log.ally_no": "✖ Для Альянса с «{target}» нужно отн. >= +40.",
+    "log.vassal_ok": "👑 «{target}» стала вашим вассалом!",
+    "log.vassal_no": "✖ «{target}» отвергла вассалитет.",
+    "log.edict_tax": "📜 Сбор пошлин дал +220🪙.",
+    "log.edict_fest": "☀ Праздник Солнца поднял стабильность.",
+    "log.edict_levy": "⚔ Набрано +80 бойцов в каждой провинции.",
+    "log.edict_env": "🕊 Послы снизили напряженность с соседями.",
+    "log.storm_hit": "🌪 Буря в {prov}: потеряно {loss} воинов!",
+    "log.rebel_win": "🔥 Мятеж в {prov} сверг гарнизон {faction}!",
+    "log.rebel_crush": "⚔ Гарнизон {prov} подавил мятеж.",
+    "log.coalition": "🚨 Коалиция: «{ai}» ополчилась против вас!"
+  },
+
+  en: {
+    "menu.title": "Hegemony: Sands of Fate",
+    "menu.subtitle": "Polygonal Strategy",
+    "menu.intro": "Four superpowers contest the Great Oasis Archipelago. Guide caravan logistics through raging sandstorms, mount military campaigns, and establish ultimate dominion!",
+    "menu.choose_faction": "Select Your Dynasty:",
+    "menu.ruler": "Ruler",
+    "menu.btn_start": "⚔ Begin Campaign",
+    "menu.btn_codex": "📜 Codex",
+    "menu.btn_credits": "🏛 Credits",
+    "top.brand": "☀ SANDS",
+    "top.turn_fmt": "T. {turn} • {year}",
+    "top.gold": "🪙",
+    "top.authority": "👑 Auth:",
+    "top.army": "⚔ Army:",
+    "top.stability": "⚖ Stab.:",
+    "top.menu": "☰",
+    "left.header": "🗺 Province & Army",
+    "map.banner_default": "Tap a province to select",
+    "map.banner_march": "Tap adjacent target to march {troops} troops",
+    "map.cancel_march": "✖ Cancel",
+    "tabs.diplo": "🤝 Diplomacy",
+    "tabs.policy": "📜 Edicts",
+    "tabs.log": "🏺 Chronicles",
+    "footer.victory_cond": "Victory: 24 provinces",
+    "footer.end_turn": "⏳ End Turn",
+
+    "faction.0.name": "Sultanate of Al-Zarkan",
+    "faction.0.ruler": "Sultan Tariq the Golden",
+    "faction.0.desc": "Merchant dynasty of golden sands. Caravans yield +20% income.",
+    "faction.1.name": "Empire of Khal-Shadar",
+    "faction.1.ruler": "Overlord Malkar the Bloodied",
+    "faction.1.desc": "Iron canyon legions. Fierce conquerors: +18% combat attack.",
+    "faction.2.name": "Sapphire Lotus Theocracy",
+    "faction.2.ruler": "Oracle Amaris",
+    "faction.2.desc": "Temple guardians. +20% province defense and high stability.",
+    "faction.3.name": "Emerald Sands Covenant",
+    "faction.3.ruler": "Sheikh Qasim Windbreaker",
+    "faction.3.desc": "Nomad masters. -50% desert attrition, 20% cheaper recruiting.",
+    "faction.neutral": "Free Tribes",
+
+    "terrain.OASIS.name": "Oasis (Sanctuary)",
+    "terrain.OASIS.desc": "Life source. Income (+22), 100% immune to sandstorms & attrition.",
+    "terrain.DUNES.name": "Great Dunes",
+    "terrain.DUNES.desc": "Scorching sands (+10), 8% thirst attrition on entrance.",
+    "terrain.CANYON.name": "Rocky Canyon",
+    "terrain.CANYON.desc": "Mines and gorges (+16), +25% defense bonus.",
+    "terrain.RIVER.name": "River Valley",
+    "terrain.RIVER.desc": "Fertile banks (+19). -20% attack crossing river penalty.",
+    "terrain.RUINS.name": "Ancient Ruins",
+    "terrain.RUINS.desc": "First Era city. High income (+26) and reinforced walls (+18%).",
+
+    "insp.terrain": "Terrain:",
+    "insp.income": "Province Income:",
+    "insp.per_turn": "/ turn",
+    "insp.garrison": "Garrison:",
+    "insp.warriors": "warriors",
+    "insp.stability": "Stability:",
+    "insp.def_bonus": "Defense Bonus:",
+    "insp.supply_prot": "Storage Shield:",
+    "insp.neighbors_cnt": "Borders:",
+    "insp.storm_active": "🌪 SANDSTORM ({turns} turns left): Trade halted (-50% income), armies suffer attrition!",
+    "insp.oasis_safe": "🌴 Oasis Haven: 100% protected from all storms.",
+    "insp.recruit_title": "⚔ Recruit Legions",
+    "insp.recruit_100": "+100 Troops ({cost}🪙)",
+    "insp.recruit_300": "+300 Troops ({cost}🪙)",
+    "insp.march_title": "🚩 March Detachment",
+    "insp.march_size": "Marching Force:",
+    "insp.march_btn": "🎯 Choose target on map",
+    "insp.march_min": "At least 20 troops needed to march.",
+    "insp.build_title": "🏗 Supply & Buildings",
+    "insp.b_market": "⚖ Caravanserai (Lv. {lvl}/3)",
+    "insp.b_fort": "🏰 Citadel (Lv. {lvl}/3)",
+    "insp.b_temple": "☀ Sun Temple (Lv. {lvl}/2)",
+    "insp.recon_title": "⚔ Reconnaissance",
+    "insp.recon_river": "⚠ Attacking requires river crossing (-20% attack)!",
+    "insp.recon_open": "Target accessible from adjacent polygons.",
+    "insp.quick_atk": "Rapid assault:",
+    "insp.atk_from": "⚔ From '{name}' ({troops} troops)",
+    "insp.no_adj_army": "No adjacent player army with > 30 troops.",
+
+    "treaty.PEACE": "Peace",
+    "treaty.WAR": "War",
+    "treaty.ALLIANCE": "Alliance",
+    "treaty.TRADE": "Trade",
+    "treaty.VASSAL": "Vassal",
+    "diplo.destroyed": "Fallen",
+    "diplo.ae_label": "Aggressive Expansion (AE):",
+    "diplo.provs": "Lands:",
+    "diplo.army": "Army:",
+    "diplo.rel": "Relations:",
+    "diplo.btn_peace": "🕊 Peace",
+    "diplo.btn_war": "⚔ War",
+    "diplo.btn_gift": "🎁 Caravan (80🪙)",
+    "diplo.btn_trade": "⚖ Trade",
+    "diplo.btn_ally": "🛡 Alliance",
+    "diplo.btn_vassal": "👑 Vassalize",
+
+    "policy.title": "👑 Royal Edicts",
+    "policy.desc": "Spend Political Authority (👑) and Gold to fortify your empire.",
+    "policy.tax": "🪙 Emergency Caravan Toll (+220🪙, -8% stab.)",
+    "policy.festival": "☀ Sun Festival (+18% stab. realm-wide)",
+    "policy.levy": "⚔ Nomad Levy (+80 troops everywhere)",
+    "policy.envoys": "🕊 Royal Envoys (-15 AE, +15 relations)",
+    "policy.summary": "📊 Dynasty Summary",
+    "policy.lands": "Controlled Polygons:",
+    "policy.atk_bonus": "Commander Attack Bonus:",
+    "policy.vassals": "Vassals:",
+
+    "modal.war_title": "⚔ Border Violation: {faction}",
+    "modal.war_desc": "Province <b>{prov}</b> belongs to <b>{faction}</b> (status: {treaty}). Crossing their border triggers immediate <b>War</b>!",
+    "modal.btn_retreat": "Retreat",
+    "modal.btn_declare_atk": "🔥 Declare War & Attack",
+    "modal.battle_win": "🏆 Victory at '{prov}'",
+    "modal.battle_loss": "💀 Defeat at '{prov}'",
+    "modal.battle_meta": "Terrain: <b>{terrain}</b> {river} • Attrition losses: <b style='color:#ff857d'>-{attr} troops</b>",
+    "modal.river_tag": "• <span style='color:#ff857d'>River Crossing (-20%)</span>",
+    "modal.your_legions": "Your Forces",
+    "modal.def_garrison": "Defenders",
+    "modal.power": "Power:",
+    "modal.battle_win_desc": "Your warriors routed the garrison and took <b>{prov}</b>! <b>{rem}</b> warriors stand.",
+    "modal.battle_loss_desc": "The enemy fortress held firm. Enemy has <b>{rem}</b> troops left.",
+    "modal.btn_ok": "Acknowledge",
+    "modal.btn_close": "Close",
+    "modal.codex_title": "📜 Ruler's Codex 3.0",
+    "modal.codex_body": "<p><b>1. Mobile Map Controls:</b> Drag with one finger to pan the map. Pinch with two fingers to zoom smoothly. Mouse wheel is also supported.</p><p><b>2. Radial Action Menu:</b> Tap any province on the map to trigger a responsive radial menu around it for instant recruitment, marches, and construction.</p><p><b>3. Sandstorms:</b> Raging storms 🌪 devastate troops outside Oases according to the L_storm formula and slash caravan revenue by 50%.</p><p><b>4. AI with A* Paths:</b> Rivals navigate corridors across the Voronoi graph to strike strategic high-value targets.</p>",
+    "modal.credits_title": "🏛 Architecture Hegemony 3.0",
+    "modal.credits_body": "<p><b>«Hegemony: Sands of Fate 3.0 Mobile Edition»</b> — fully client-side 4X Grand Strategy engine.<br><br>Features GPU-accelerated SVG transform viewport via requestAnimationFrame, zero-dependency Voronoi diagram generation with Lloyd relaxation, and dual touch-gesture pan-zoom.</p>",
+
+    "log.start": "You lead the dynasty of {faction}.",
+    "log.recruit": "Recruited {count} troops in {prov}.",
+    "log.build_market": "Built Caravanserai (Lv. {lvl}) in {prov}.",
+    "log.build_fort": "Reinforced Citadel (Lv. {lvl}) in {prov}.",
+    "log.build_temple": "Consecrated Sun Temple in {prov}.",
+    "log.move": "{faction} relocated {count} warriors to {prov}.",
+    "log.capture": "⚔ {attacker} seized {prov} from «{defender}»!",
+    "log.eliminated": "💀 Dynasty {faction} has fallen!",
+    "log.repelled": "🛡 Attack on {prov} by {attacker} was repelled!",
+    "log.war": "🔥 {f1} declared war on {f2}!",
+    "log.ally_join": "🛡 {ally} entered the war defending {defender}!",
+    "log.gift": "🎁 Caravan reached «{target}» (+25 rel.).",
+    "log.peace_paid": "🕊 Peace bought from «{target}» for 120🪙.",
+    "log.peace_white": "🕊 White peace signed with «{target}».",
+    "log.peace_refused": "✖ «{target}» refused peace terms.",
+    "log.trade_ok": "⚖ Trade pact signed with «{target}» (+22🪙/t).",
+    "log.trade_no": "✖ «{target}» refused trade agreement.",
+    "log.ally_ok": "🛡 Military alliance formed with «{target}»!",
+    "log.ally_no": "✖ Alliance with «{target}» requires relations >= +40.",
+    "log.vassal_ok": "👑 «{target}» surrendered as your vassal!",
+    "log.vassal_no": "✖ «{target}» refused vassalage demand.",
+    "log.edict_tax": "📜 Caravan levy collected +220🪙.",
+    "log.edict_fest": "☀ Sun Festival stabilized the realm.",
+    "log.edict_levy": "⚔ Conscripted +80 warriors per province.",
+    "log.edict_env": "🕊 Envoys tempered neighboring tensions.",
+    "log.storm_hit": "🌪 Storm hit {prov}: -{loss} warriors!",
+    "log.rebel_win": "🔥 Revolt in {prov} overthrew {faction}!",
+    "log.rebel_crush": "⚔ Garrison in {prov} crushed the revolt.",
+    "log.coalition": "🚨 Coalition: «{ai}» moves against you!"
+  }
+};
+
+function t(key, vars = {}) {
+  const dict = I18N[gameState.lang] || I18N.ru;
+  let str = dict[key] || key;
+  for (const [k, v] of Object.entries(vars)) {
+    str = str.replaceAll(`{${k}}`, v);
+  }
+  return str;
+}
+
+function toggleLanguage() {
+  gameState.lang = gameState.lang === "ru" ? "en" : "ru";
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    if (key) el.textContent = t(key);
+  });
+  const topLangBtn = document.getElementById("top-lang-btn");
+  if (topLangBtn) topLangBtn.textContent = gameState.lang === "ru" ? "🌐 EN" : "🌐 RU";
+  const menuLangBtn = document.getElementById("menu-lang-btn");
+  if (menuLangBtn) menuLangBtn.textContent = gameState.lang === "ru" ? "🌐 EN / RU" : "🌐 RU / EN";
+  renderMenuFactions();
+  updateAllUI();
+}
+
+/* ============================================================================
+   КОНФИГУРАЦИЯ ФРАКЦИЙ И ЛАНДШАФТОВ
+   ============================================================================ */
+const FACTIONS_CONFIG = [
+  { id: 0, color: "#d4a437", emblem: "🦁", incomeMod: 1.20, attackMod: 1.0, defenseMod: 1.0, attritionMod: 1.0, recruitDiscount: 1.0 },
+  { id: 1, color: "#d94136", emblem: "🦂", incomeMod: 1.0, attackMod: 1.18, defenseMod: 1.0, attritionMod: 1.0, recruitDiscount: 0.95 },
+  { id: 2, color: "#3688d9", emblem: "🪷", incomeMod: 1.05, attackMod: 1.0, defenseMod: 1.20, attritionMod: 0.9, recruitDiscount: 1.0 },
+  { id: 3, color: "#2ea866", emblem: "🐍", incomeMod: 1.0, attackMod: 1.05, defenseMod: 1.0, attritionMod: 0.5, recruitDiscount: 0.80 }
+];
+
+const TERRAIN_TYPES = {
+  OASIS: { key: "OASIS", icon: "🌴", baseIncome: 22, defenseBonus: 0.10, attrition: 0.00, riverPenalty: 0.0 },
+  DUNES: { key: "DUNES", icon: "🏜", baseIncome: 10, defenseBonus: 0.00, attrition: 0.08, riverPenalty: 0.0 },
+  CANYON: { key: "CANYON", icon: "⛰", baseIncome: 16, defenseBonus: 0.25, attrition: 0.04, riverPenalty: 0.0 },
+  RIVER: { key: "RIVER", icon: "🌊", baseIncome: 19, defenseBonus: 0.15, attrition: 0.03, riverPenalty: 0.20 },
+  RUINS: { key: "RUINS", icon: "🏛", baseIncome: 26, defenseBonus: 0.18, attrition: 0.05, riverPenalty: 0.0 }
+};
+
+const PROVINCE_NAMES_DICT = {
+  ru: [
+    "Аль-Кадиш", "Зар-Туран", "Оазис Миражей", "Кхал-Дара", "Врата Солнца", "Пепельный Каньон", "Сапфировый Брод",
+    "Тель-Аммон", "Дюны Шепота", "Бастион Скорпиона", "Эль-Фарук", "Долина Царей", "Караван-Сарай", "Ущелье Кобры",
+    "Аш-Шамс", "Руины Ирама", "Золотой Источник", "Касба Ветров", "Нар-Кхалид", "Око Бури", "Белый Обелиск",
+    "Трон Пустыни", "Дар-эс-Салам", "Кровавый Уступ", "Храм Рассвета", "Пески Забвения", "Акаба-Нур", "Изумрудный Плес",
+    "Цитадель Мира", "Горн Ифрита", "Султан-Кала", "Нижний Брод", "Верхний Тарим", "Колодец Духов", "Скала Орла",
+    "Старый Вавилон", "Оазис Пальм", "Черный Базальт", "Красный Бархан", "Звездный Каньон", "Малый Заркан", "Твердыня Шадара"
+  ],
+  en: [
+    "Al-Qadish", "Zar-Turan", "Mirage Oasis", "Khal-Dara", "Sun Gate", "Ash Canyon", "Sapphire Ford",
+    "Tel-Ammon", "Whispering Dunes", "Scorpion Bastion", "El-Faruk", "Valley of Kings", "Caravanserai", "Cobra Gorge",
+    "Ash-Shams", "Ruins of Iram", "Golden Spring", "Wind Kasbah", "Nar-Khalid", "Eye of the Storm", "White Obelisk",
+    "Throne of Sands", "Dar-es-Salam", "Crimson Ledge", "Dawn Temple", "Oblivion Sands", "Aqaba-Nur", "Emerald Reach",
+    "Peace Citadel", "Ifrit's Forge", "Sultan-Kala", "Lower Ford", "Upper Tarim", "Well of Spirits", "Eagle Rock",
+    "Old Babylon", "Palm Oasis", "Black Basalt", "Red Dune", "Star Canyon", "Lesser Zarkan", "Shadar Fortress"
+  ]
+};
+
+function getProvName(tile) {
+  const list = PROVINCE_NAMES_DICT[gameState.lang] || PROVINCE_NAMES_DICT.ru;
+  return list[tile.nameIndex % list.length] || `Prov #${tile.id}`;
+}
+
+/* ============================================================================
+   СОСТОЯНИЕ ИГРЫ (GAME STATE)
+   ============================================================================ */
+let gameState = {
+  lang: "ru",
+  turn: 1,
+  year: 1240,
+  selectedPlayerFaction: 0,
+  factions: [],
+  grid: [],
+  relations: {},
+  treaties: {},
+  vassalMaster: {},
+  selectedTileId: null,
+  marchSourceId: null,
+  marchTroops: 0,
+  rightTab: "diplo",
+  logs: [],
+  gameOver: false
+};
+
+/* ============================================================================
+   СИСТЕМА СЕНСОРНОГО МАСШТАБИРОВАНИЯ И ПЕРЕМЕЩЕНИЯ (TOUCH PAN & PINCH-ZOOM)
+   ============================================================================ */
+const viewState = {
+  x: 0,
+  y: 0,
+  scale: 1,
+  minScale: 0.7,
+  maxScale: 3.2,
+  isDragging: false,
+  touchStartX: 0,
+  touchStartY: 0,
+  touchDist: 0,
+  hasMoved: false,
+  targetEl: null,
+  rafId: null
+};
+
+function initTouchMapControls() {
+  const wrap = document.getElementById("map-svg-wrap");
+  const svg = document.getElementById("map-svg");
+  if (!wrap || !svg) return;
+
+  function renderTransform() {
+    const group = document.getElementById("map-viewport");
+    if (group) {
+      group.setAttribute("transform", `translate(${viewState.x}, ${viewState.y}) scale(${viewState.scale})`);
+    }
+    viewState.rafId = null;
+  }
+
+  function scheduleRender() {
+    if (!viewState.rafId) {
+      viewState.rafId = requestAnimationFrame(renderTransform);
+    }
+  }
+
+  // --- TOUCH HANDLERS ---
+  wrap.addEventListener("touchstart", (e) => {
+    closeRadialMenu();
+    if (e.touches.length === 1) {
+      viewState.isDragging = true;
+      viewState.hasMoved = false;
+      viewState.touchStartX = e.touches[0].clientX - viewState.x;
+      viewState.touchStartY = e.touches[0].clientY - viewState.y;
+    } else if (e.touches.length === 2) {
+      viewState.isDragging = false;
+      viewState.hasMoved = true;
+      viewState.touchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  }, { passive: true });
+
+  wrap.addEventListener("touchmove", (e) => {
+    if (e.touches.length === 1 && viewState.isDragging) {
+      const curX = e.touches[0].clientX - viewState.touchStartX;
+      const curY = e.touches[0].clientY - viewState.touchStartY;
+      if (Math.abs(curX - viewState.x) > 4 || Math.abs(curY - viewState.y) > 4) {
+        viewState.hasMoved = true;
+      }
+      viewState.x = curX;
+      viewState.y = curY;
+      clampPanLimits();
+      scheduleRender();
+    } else if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      if (viewState.touchDist > 0) {
+        const factor = dist / viewState.touchDist;
+        const newScale = Math.max(viewState.minScale, Math.min(viewState.maxScale, viewState.scale * factor));
+        
+        // Масштабирование относительно центра между пальцами
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        const rect = wrap.getBoundingClientRect();
+        const svgMidX = midX - rect.left;
+        const svgMidY = midY - rect.top;
+
+        viewState.x = svgMidX - (svgMidX - viewState.x) * (newScale / viewState.scale);
+        viewState.y = svgMidY - (svgMidY - viewState.y) * (newScale / viewState.scale);
+        viewState.scale = newScale;
+        viewState.touchDist = dist;
+        clampPanLimits();
+        scheduleRender();
+      }
+    }
+  }, { passive: true });
+
+  wrap.addEventListener("touchend", (e) => {
+    if (e.touches.length === 0) {
+      viewState.isDragging = false;
+    } else if (e.touches.length === 1) {
+      viewState.isDragging = true;
+      viewState.touchStartX = e.touches[0].clientX - viewState.x;
+      viewState.touchStartY = e.touches[0].clientY - viewState.y;
+    }
+  }, { passive: true });
+
+  // --- MOUSE PAN & WHEEL ZOOM (ДЛЯ ПК И ТАЧПАДОВ) ---
+  let isMouseDown = false;
+  let mouseStartX = 0, mouseStartY = 0;
+
+  wrap.addEventListener("mousedown", (e) => {
+    if (e.button !== 0) return;
+    isMouseDown = true;
+    viewState.hasMoved = false;
+    mouseStartX = e.clientX - viewState.x;
+    mouseStartY = e.clientY - viewState.y;
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!isMouseDown) return;
+    const curX = e.clientX - mouseStartX;
+    const curY = e.clientY - mouseStartY;
+    if (Math.abs(curX - viewState.x) > 3 || Math.abs(curY - viewState.y) > 3) {
+      viewState.hasMoved = true;
+    }
+    viewState.x = curX;
+    viewState.y = curY;
+    clampPanLimits();
+    scheduleRender();
+  });
+
+  window.addEventListener("mouseup", () => {
+    isMouseDown = false;
+  });
+
+  wrap.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.15 : 0.87;
+    const newScale = Math.max(viewState.minScale, Math.min(viewState.maxScale, viewState.scale * factor));
+    const rect = wrap.getBoundingClientRect();
+    const cursorX = e.clientX - rect.left;
+    const cursorY = e.clientY - rect.top;
+
+    viewState.x = cursorX - (cursorX - viewState.x) * (newScale / viewState.scale);
+    viewState.y = cursorY - (cursorY - viewState.y) * (newScale / viewState.scale);
+    viewState.scale = newScale;
+    clampPanLimits();
+    scheduleRender();
+  }, { passive: false });
+}
+
+function clampPanLimits() {
+  const maxOffset = 500 * viewState.scale;
+  viewState.x = Math.max(-maxOffset, Math.min(maxOffset, viewState.x));
+  viewState.y = Math.max(-maxOffset, Math.min(maxOffset, viewState.y));
+}
+
+/* ============================================================================
+   ПРОЦЕДУРНАЯ ГЕНЕРАЦИЯ ПОЛИГОНОВ ВОРОНОГО (VORONOI + LLOYD)
+   ============================================================================ */
+function clipPoly(poly, A, B, C) {
+  const out = [];
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i];
+    const b = poly[(i + 1) % poly.length];
+    const da = A * a.x + B * a.y - C;
+    const db = A * b.x + B * b.y - C;
+    if (da <= 1e-6) {
+      if (db <= 1e-6) {
+        out.push(b);
+      } else {
+        const t = da / (da - db);
+        out.push({ x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) });
+      }
+    } else {
+      if (db <= 1e-6) {
+        const t = da / (da - db);
+        out.push({ x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) });
+        out.push(b);
+      }
+    }
+  }
+  return out;
+}
+
+function getCentroid(poly) {
+  let cx = 0, cy = 0;
+  for (const p of poly) { cx += p.x; cy += p.y; }
+  return { x: Math.round(cx / poly.length), y: Math.round(cy / poly.length) };
+}
+
+function generateVoronoiMap(count = 42, W = 1000, H = 780) {
+  const cols = 7, rows = 6;
+  const cellW = (W - 80) / cols;
+  const cellH = (H - 80) / rows;
+  let points = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      points.push({
+        x: 40 + c * cellW + cellW * (0.2 + Math.random() * 0.6),
+        y: 40 + r * cellH + cellH * (0.2 + Math.random() * 0.6)
+      });
+    }
+  }
+
+  // 2 итерации Ллойда
+  for (let pass = 0; pass < 2; pass++) {
+    const nextPoints = [];
+    for (let i = 0; i < points.length; i++) {
+      let poly = [{x: 0, y: 0}, {x: W, y: 0}, {x: W, y: H}, {x: 0, y: H}];
+      const pi = points[i];
+      for (let j = 0; j < points.length; j++) {
+        if (i === j) continue;
+        const pj = points[j];
+        const A = pj.x - pi.x;
+        const B = pj.y - pi.y;
+        const C = (pj.x * pj.x + pj.y * pj.y - pi.x * pi.x - pi.y * pi.y) / 2;
+        poly = clipPoly(poly, A, B, C);
+      }
+      nextPoints.push(getCentroid(poly));
+    }
+    points = nextPoints;
+  }
+
+  const polygons = [];
+  const centroids = [];
+  for (let i = 0; i < points.length; i++) {
+    let poly = [{x: 0, y: 0}, {x: W, y: 0}, {x: W, y: H}, {x: 0, y: H}];
+    const pi = points[i];
+    for (let j = 0; j < points.length; j++) {
+      if (i === j) continue;
+      const pj = points[j];
+      const A = pj.x - pi.x;
+      const B = pj.y - pi.y;
+      const C = (pj.x * pj.x + pj.y * pj.y - pi.x * pi.x - pi.y * pi.y) / 2;
+      poly = clipPoly(poly, A, B, C);
+    }
+    polygons.push(poly);
+    centroids.push(getCentroid(poly));
+  }
+
+  // Графовые соседи
+  const neighbors = Array.from({length: count}, () => []);
+  for (let i = 0; i < count; i++) {
+    for (let j = i + 1; j < count; j++) {
+      let shared = 0;
+      for (const v1 of polygons[i]) {
+        for (const v2 of polygons[j]) {
+          if (Math.hypot(v1.x - v2.x, v1.y - v2.y) < 2.0) {
+            shared++;
+            break;
+          }
+        }
+      }
+      if (shared >= 2) {
+        neighbors[i].push(j);
+        neighbors[j].push(i);
+      }
+    }
+  }
+
+  for (let i = 0; i < count; i++) {
+    if (neighbors[i].length < 2) {
+      const sorted = points.map((p, idx) => ({ idx, dist: Math.hypot(p.x - points[i].x, p.y - points[i].y) }))
+        .filter(item => item.idx !== i)
+        .sort((a, b) => a.dist - b.dist);
+      for (let k = 0; k < 2; k++) {
+        const target = sorted[k].idx;
+        if (!neighbors[i].includes(target)) {
+          neighbors[i].push(target);
+          neighbors[target].push(i);
+        }
+      }
+    }
+  }
+
+  return { polygons, centroids, neighbors };
+}
+
+/* ============================================================================
+   АЛГОРИТМ ПОИСКА ПУТИ A*
+   ============================================================================ */
+function findPathAStar(startId, targetId, factionId) {
+  if (startId === targetId) return [startId];
+  const targetCentroid = gameState.grid[targetId].centroid;
+
+  const openSet = new Set([startId]);
+  const cameFrom = new Map();
+  const gScore = new Map();
+  const fScore = new Map();
+
+  gScore.set(startId, 0);
+  fScore.set(startId, Math.hypot(gameState.grid[startId].centroid.x - targetCentroid.x, gameState.grid[startId].centroid.y - targetCentroid.y) / 100);
+
+  while (openSet.size > 0) {
+    let current = null;
+    let lowestF = Infinity;
+    for (const node of openSet) {
+      const f = fScore.get(node) !== undefined ? fScore.get(node) : Infinity;
+      if (f < lowestF) { lowestF = f; current = node; }
+    }
+
+    if (current === targetId) {
+      const path = [current];
+      while (cameFrom.has(current)) {
+        current = cameFrom.get(current);
+        path.unshift(current);
+      }
+      return path;
+    }
+
+    openSet.delete(current);
+    const currTile = gameState.grid[current];
+
+    for (const neighborId of currTile.neighbors) {
+      const neighbor = gameState.grid[neighborId];
+      let stepCost = 1.0;
+      stepCost += neighbor.terrain.attrition * 15;
+      if (neighbor.stormTurns > 0) stepCost += 12;
+      if (neighbor.terrain.riverPenalty > 0) stepCost += 5;
+      if (neighbor.owner !== null && neighbor.owner !== factionId) {
+        stepCost += (neighbor.army > 200 ? 10 : 4);
+      }
+
+      const currentG = gScore.has(current) ? gScore.get(current) : Infinity;
+      const tentativeG = currentG + stepCost;
+      const neighborG = gScore.has(neighborId) ? gScore.get(neighborId) : Infinity;
+
+      if (tentativeG < neighborG) {
+        cameFrom.set(neighborId, current);
+        gScore.set(neighborId, tentativeG);
+        const h = Math.hypot(neighbor.centroid.x - targetCentroid.x, neighbor.centroid.y - targetCentroid.y) / 100;
+        fScore.set(neighborId, tentativeG + h);
+        openSet.add(neighborId);
+      }
+    }
+  }
+  return [];
+}
+
+/* ============================================================================
+   ПЕСЧАНЫЕ БУРИ И ИСТОЩЕНИЕ КАРАВАНОВ (L_storm)
+   ============================================================================ */
+function processSandstorms() {
+  gameState.grid.forEach(tile => {
+    if (tile.stormTurns > 0) tile.stormTurns--;
+  });
+
+  if (Math.random() < 0.45) {
+    const nonOasisTiles = gameState.grid.filter(t => t.terrain.key !== "OASIS" && t.stormTurns === 0);
+    if (nonOasisTiles.length > 0) {
+      const chosen = nonOasisTiles[Math.floor(Math.random() * nonOasisTiles.length)];
+      chosen.stormTurns = 2 + Math.floor(Math.random() * 2);
+    }
+  }
+
+  gameState.grid.forEach(tile => {
+    if (tile.stormTurns > 0) {
+      if (tile.terrain.key === "OASIS") {
+        tile.stormTurns = 0;
+        return;
+      }
+      const factionAttrMod = tile.owner !== null ? gameState.factions[tile.owner].attritionMod : 1.0;
+      const shelterFactor = tile.fortLevel * 0.22 + tile.marketLevel * 0.18 + (tile.stability / 250);
+      const stormVulnerability = Math.max(0.12, 1.0 - shelterFactor);
+      const L_storm = Math.floor(tile.army * 0.12 * factionAttrMod * stormVulnerability);
+
+      if (L_storm > 0 && tile.army > 15) {
+        tile.army = Math.max(10, tile.army - L_storm);
+        if (tile.owner === gameState.selectedPlayerFaction) {
+          addLog("log.storm_hit", { prov: getProvName(tile), loss: L_storm }, "war");
+        }
+      }
+    }
+  });
+}
+
+/* ============================================================================
+   ДИПЛОМАТИЯ И ЭКОНОМИКА
+   ============================================================================ */
+function getPairKey(a, b) { return a < b ? `${a}_${b}` : `${b}_${a}`; }
+function getRelation(a, b) {
+  if (a === b) return 100;
+  return gameState.relations[getPairKey(a, b)] !== undefined ? gameState.relations[getPairKey(a, b)] : 0;
+}
+function changeRelation(a, b, delta) {
+  if (a === b || a === null || b === null) return;
+  const key = getPairKey(a, b);
+  gameState.relations[key] = Math.max(-100, Math.min(100, (gameState.relations[key] || 0) + delta));
+}
+function getTreaty(a, b) {
+  if (a === b) return "ALLIANCE";
+  return gameState.treaties[getPairKey(a, b)] || "PEACE";
+}
+function setTreaty(a, b, status) {
+  if (a === b) return;
+  gameState.treaties[getPairKey(a, b)] = status;
+}
+function areNeighbors(id1, id2) { return gameState.grid[id1].neighbors.includes(id2); }
+function getNeighbors(id) { return gameState.grid[id].neighbors.map(nId => gameState.grid[nId]); }
+function getFactionProvinces(fId) { return gameState.grid.filter(t => t.owner === fId); }
+function getFactionTotalArmy(fId) { return getFactionProvinces(fId).reduce((sum, t) => sum + t.army, 0); }
+
+function getProvinceIncome(tile) {
+  let base = tile.terrain.baseIncome + tile.marketLevel * 12 + tile.templeLevel * 5;
+  if (tile.owner !== null) {
+    const f = gameState.factions[tile.owner];
+    base = Math.round(base * f.incomeMod * (0.5 + (tile.stability / 200)));
+  }
+  if (tile.stormTurns > 0) base = Math.floor(base * 0.5);
+  return base;
+}
+
+function getFactionNetIncome(fId) {
+  const provs = getFactionProvinces(fId);
+  let gross = provs.reduce((sum, t) => sum + getProvinceIncome(t), 0);
+  for (let other = 0; other < 4; other++) {
+    if (other !== fId && gameState.factions[other].alive && getTreaty(fId, other) === "TRADE") {
+      gross += 22;
+    }
+  }
+  for (let vId in gameState.vassalMaster) {
+    const masterId = gameState.vassalMaster[vId];
+    if (Number(vId) === fId && masterId !== undefined) {
+      gross = Math.round(gross * 0.72);
+    } else if (masterId === fId && gameState.factions[vId].alive) {
+      const vProvs = getFactionProvinces(Number(vId));
+      gross += Math.round(vProvs.reduce((s, t) => s + getProvinceIncome(t), 0) * 0.28);
+    }
+  }
+  const upkeep = Math.floor(getFactionTotalArmy(fId) / 35);
+  return gross - upkeep;
+}
+
+function getFactionAvgStability(fId) {
+  const provs = getFactionProvinces(fId);
+  if (!provs.length) return 0;
+  return Math.round(provs.reduce((s, t) => s + t.stability, 0) / provs.length);
+}
+
+function addLog(key, vars = {}, type = "") {
+  gameState.logs.unshift({ turn: gameState.turn, key, vars, type });
+  if (gameState.logs.length > 40) gameState.logs.pop();
+}
+
+/* ============================================================================
+   МОБИЛЬНЫЕ ПЕРЕКЛЮЧАТЕЛИ И НАВИГАЦИЯ
+   ============================================================================ */
+function toggleMobileStatsDropdown() {
+  const el = document.getElementById("mobile-stats-dropdown");
+  if (el) el.classList.toggle("active");
+}
+
+function closeAllMobilePanels() {
+  document.getElementById("panel-left").classList.remove("mobile-open");
+  document.getElementById("panel-right").classList.remove("mobile-open");
+  document.querySelectorAll(".mob-nav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("mob-nav-map").classList.add("active");
+  const dd = document.getElementById("mobile-stats-dropdown");
+  if (dd) dd.classList.remove("active");
+}
+
+function mobileNavigateTo(view) {
+  const pLeft = document.getElementById("panel-left");
+  const pRight = document.getElementById("panel-right");
+  document.querySelectorAll(".mob-nav-btn").forEach(b => b.classList.remove("active"));
+
+  if (view === 'map') {
+    closeAllMobilePanels();
+  } else if (view === 'prov') {
+    pRight.classList.remove("mobile-open");
+    pLeft.classList.add("mobile-open");
+    document.getElementById("mob-nav-prov").classList.add("active");
+    renderProvinceInspector();
+  } else if (view === 'diplo') {
+    pLeft.classList.remove("mobile-open");
+    pRight.classList.add("mobile-open");
+    document.getElementById("mob-nav-diplo").classList.add("active");
+    switchRightTab('diplo', document.getElementById('tab-btn-diplo'));
+  } else if (view === 'policy') {
+    pLeft.classList.remove("mobile-open");
+    pRight.classList.add("mobile-open");
+    document.getElementById("mob-nav-policy").classList.add("active");
+    switchRightTab('policy', document.getElementById('tab-btn-policy'));
+  }
+}
+
+/* ============================================================================
+   МОБИЛЬНОЕ РАДИАЛЬНОЕ МЕНЮ
+   ============================================================================ */
+function openRadialMenu(tileId) {
+  const tile = gameState.grid[tileId];
+  if (!tile) return;
+
+  const menu = document.getElementById("radial-action-menu");
+  const wrap = document.getElementById("map-svg-wrap");
+  const rect = wrap.getBoundingClientRect();
+
+  // Преобразуем координаты центроида SVG в экранные пиксели с учетом transform
+  const screenX = tile.centroid.x * viewState.scale + viewState.x;
+  const screenY = tile.centroid.y * viewState.scale + viewState.y;
+
+  // Ограничиваем меню пределами экрана
+  const clampedX = Math.max(90, Math.min(rect.width - 90, screenX));
+  const clampedY = Math.max(90, Math.min(rect.height - 90, screenY));
+
+  menu.style.left = `${clampedX}px`;
+  menu.style.top = `${clampedY}px`;
+  menu.classList.add("active");
+}
+
+function closeRadialMenu() {
+  const menu = document.getElementById("radial-action-menu");
+  if (menu) menu.classList.remove("active");
+}
+
+function triggerRadialAction(action) {
+  const tileId = gameState.selectedTileId;
+  const tile = gameState.grid[tileId];
+  closeRadialMenu();
+  if (!tile) return;
+
+  if (action === 'recruit') {
+    const pFaction = gameState.factions[gameState.selectedPlayerFaction];
+    const cost100 = Math.round(70 * pFaction.recruitDiscount);
+    if (tile.owner === gameState.selectedPlayerFaction && pFaction.gold >= cost100) {
+      recruitTroops(tile.id, 100, cost100);
+    } else {
+      mobileNavigateTo('prov');
+    }
+  } else if (action === 'march') {
+    if (tile.owner === gameState.selectedPlayerFaction && tile.army > 20) {
+      startMarchMode(tile.id);
+    } else {
+      mobileNavigateTo('prov');
+    }
+  } else if (action === 'build') {
+    mobileNavigateTo('prov');
+  } else if (action === 'inspect') {
+    mobileNavigateTo('prov');
+  }
+}
+
+/* ============================================================================
+   ИНИЦИАЛИЗАЦИЯ И РЕНДЕР КАРТЫ
+   ============================================================================ */
+function initNewCampaign(playerFactionId) {
+  gameState.turn = 1;
+  gameState.year = 1240;
+  gameState.selectedPlayerFaction = playerFactionId;
+  gameState.marchSourceId = null;
+  gameState.logs = [];
+  gameState.vassalMaster = {};
+  gameState.gameOver = false;
+
+  gameState.factions = FACTIONS_CONFIG.map(cfg => ({
+    ...cfg,
+    name: t(`faction.${cfg.id}.name`),
+    ruler: t(`faction.${cfg.id}.ruler`),
+    desc: t(`faction.${cfg.id}.desc`),
+    isPlayer: cfg.id === playerFactionId,
+    gold: 450,
+    authority: 50,
+    aggressiveExpansion: 0,
+    leaderBonusAttack: 0,
+    alive: true
+  }));
+
+  gameState.relations = {};
+  gameState.treaties = {};
+  for (let i = 0; i < 4; i++) {
+    for (let j = i + 1; j < 4; j++) {
+      const key = getPairKey(i, j);
+      gameState.relations[key] = 10;
+      gameState.treaties[key] = "PEACE";
+    }
+  }
+
+  const mapData = generateVoronoiMap(42);
+  const terrainKeys = ["DUNES", "DUNES", "DUNES", "OASIS", "CANYON", "CANYON", "RIVER", "RIVER", "RUINS"];
+
+  gameState.grid = [];
+  for (let i = 0; i < 42; i++) {
+    const tKey = (i < 4) ? "OASIS" : terrainKeys[Math.floor(Math.random() * terrainKeys.length)];
+    gameState.grid.push({
+      id: i,
+      nameIndex: i,
+      polygon: mapData.polygons[i],
+      centroid: mapData.centroids[i],
+      neighbors: mapData.neighbors[i],
+      terrain: TERRAIN_TYPES[tKey],
+      owner: null,
+      army: 130 + Math.floor(Math.random() * 120),
+      stability: 75 + Math.floor(Math.random() * 20),
+      marketLevel: 0,
+      fortLevel: 0,
+      templeLevel: 0,
+      stormTurns: 0
+    });
+  }
+
+  const capitals = [0, 6, 35, 41];
+  capitals.forEach((capId, fId) => {
+    const cap = gameState.grid[capId];
+    cap.owner = fId;
+    cap.terrain = TERRAIN_TYPES.OASIS;
+    cap.army = 620;
+    cap.fortLevel = 1;
+    cap.marketLevel = 1;
+    cap.stability = 95;
+
+    cap.neighbors.slice(0, 2).forEach(nId => {
+      const n = gameState.grid[nId];
+      if (n.owner === null) {
+        n.owner = fId;
+        n.army = 280;
+        n.stability = 85;
+      }
+    });
+  });
+
+  gameState.selectedTileId = capitals[playerFactionId];
+  addLog("log.start", { faction: t(`faction.${playerFactionId}.name`) }, "good");
+  updateAllUI();
+}
+
+function renderMenuFactions() {
+  const container = document.getElementById("menu-factions");
+  if (!container) return;
+  container.innerHTML = FACTIONS_CONFIG.map(f => `
+    <div class="faction-card ${f.id === gameState.selectedPlayerFaction ? 'selected' : ''}" onclick="selectMenuFaction(${f.id})">
+      <div class="faction-card-header">
+        <span class="faction-swatch" style="background:${f.color}"></span>
+        <span>${f.emblem} ${t('faction.' + f.id + '.name')}</span>
+      </div>
+      <div style="font-size:0.75rem; color:var(--gold-main); margin-bottom:3px;">${t('menu.ruler')}: ${t('faction.' + f.id + '.ruler')}</div>
+      <div class="faction-bonus">${t('faction.' + f.id + '.desc')}</div>
+    </div>
+  `).join("");
+}
+
+function selectMenuFaction(id) {
+  gameState.selectedPlayerFaction = id;
+  renderMenuFactions();
+}
+
+function showMainMenu() { document.getElementById("main-menu").style.display = "flex"; }
+function startGame() {
+  document.getElementById("main-menu").style.display = "none";
+  initNewCampaign(gameState.selectedPlayerFaction);
+}
+
+function updateAllUI() {
+  const pId = gameState.selectedPlayerFaction;
+  const pFaction = gameState.factions[pId];
+  if (!pFaction) return;
+
+  const badge = document.getElementById("player-faction-badge");
+  badge.textContent = `${pFaction.emblem} ${t('faction.' + pId + '.name')}`;
+  badge.style.background = pFaction.color;
+  badge.style.color = "#0b0907";
+
+  document.getElementById("turn-indicator").textContent = `Х. ${gameState.turn}`;
+  document.getElementById("stat-gold").textContent = pFaction.gold;
+
+  const netInc = getFactionNetIncome(pId);
+  const incEl = document.getElementById("stat-income");
+  incEl.textContent = `(${netInc >= 0 ? '+' : ''}${netInc})`;
+  incEl.className = `stat-delta ${netInc >= 0 ? 'delta-pos' : 'delta-neg'}`;
+
+  document.getElementById("stat-authority").textContent = pFaction.authority;
+  document.getElementById("stat-army").textContent = getFactionTotalArmy(pId);
+  document.getElementById("stat-stability").textContent = `${getFactionAvgStability(pId)}%`;
+
+  // Мобильный выпадающий блок
+  const mobAuth = document.getElementById("stat-authority-mob");
+  if (mobAuth) {
+    mobAuth.textContent = pFaction.authority;
+    document.getElementById("stat-army-mob").textContent = getFactionTotalArmy(pId);
+    document.getElementById("stat-stability-mob").textContent = `${getFactionAvgStability(pId)}%`;
+    document.getElementById("stat-victory-mob").textContent = `${getFactionProvinces(pId).length} / 24`;
+  }
+
+  const pProvsCount = getFactionProvinces(pId).length;
+  document.getElementById("victory-progress").textContent = `${pProvsCount} / 24`;
+
+  renderMapSVG();
+  renderProvinceInspector();
+  renderRightTab();
+}
+
+function renderMapSVG() {
+  const group = document.getElementById("map-viewport");
+  if (!group) return;
+  group.innerHTML = "";
+
+  gameState.grid.forEach(tile => {
+    const isSelected = tile.id === gameState.selectedTileId;
+    const isValidTarget = gameState.marchSourceId !== null && areNeighbors(gameState.marchSourceId, tile.id);
+
+    let fillColor = "#1c1712";
+    let strokeColor = "rgba(212, 164, 55, 0.28)";
+
+    if (tile.owner !== null) {
+      fillColor = gameState.factions[tile.owner].color;
+      strokeColor = "rgba(0, 0, 0, 0.6)";
+    }
+
+    const pathD = `M ${tile.polygon.map(pt => `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`).join(' L ')} Z`;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", pathD);
+    path.setAttribute("fill", fillColor);
+    path.setAttribute("fill-opacity", tile.owner !== null ? "0.62" : "0.35");
+    path.setAttribute("stroke", strokeColor);
+    path.setAttribute("stroke-width", "1.6");
+    path.setAttribute("class", `prov-poly ${isSelected ? 'selected' : ''} ${isValidTarget ? 'valid-target' : ''}`);
+    path.onclick = (e) => {
+      if (!viewState.hasMoved) onTileClick(tile.id, e);
+    };
+    group.appendChild(path);
+
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("class", "prov-label-group");
+    g.setAttribute("transform", `translate(${tile.centroid.x}, ${tile.centroid.y})`);
+
+    const titleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    titleText.setAttribute("class", "prov-title-svg");
+    titleText.setAttribute("y", "-13");
+    titleText.textContent = `${tile.terrain.icon} ${getProvName(tile)}`;
+    g.appendChild(titleText);
+
+    const armyText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    armyText.setAttribute("class", "prov-army-svg");
+    armyText.setAttribute("y", "2");
+    armyText.textContent = `⚔ ${tile.army}`;
+    g.appendChild(armyText);
+
+    const incText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    incText.setAttribute("class", "prov-income-svg");
+    incText.setAttribute("y", "14");
+    incText.textContent = `+${getProvinceIncome(tile)}🪙${tile.stormTurns > 0 ? ' 🌪' : ''}`;
+    g.appendChild(incText);
+
+    group.appendChild(g);
+  });
+}
+
+function onTileClick(tileId) {
+  if (gameState.marchSourceId !== null && areNeighbors(gameState.marchSourceId, tileId)) {
+    closeRadialMenu();
+    executePlayerMarch(gameState.marchSourceId, tileId, gameState.marchTroops);
+    return;
+  }
+
+  cancelMarchMode();
+  gameState.selectedTileId = tileId;
+  updateAllUI();
+
+  // Открываем радиальное меню над провинцией
+  openRadialMenu(tileId);
+}
+
+function renderProvinceInspector() {
+  const box = document.getElementById("province-inspector");
+  const tile = gameState.grid[gameState.selectedTileId];
+  if (!tile) {
+    box.innerHTML = `<p>${t('map.banner_default')}</p>`;
+    return;
+  }
+
+  document.getElementById("prov-coords").textContent = `#${tile.id}`;
+  const pId = gameState.selectedPlayerFaction;
+  const pFaction = gameState.factions[pId];
+  const isOwned = tile.owner === pId;
+  const ownerName = tile.owner === null ? t("faction.neutral") : `${gameState.factions[tile.owner].emblem} ${t('faction.' + tile.owner + '.name')}`;
+
+  const recruitCost100 = Math.round(70 * pFaction.recruitDiscount);
+  const recruitCost300 = Math.round(195 * pFaction.recruitDiscount);
+
+  let html = `
+    <div class="info-box">
+      <div class="info-box-title">
+        <span>${tile.terrain.icon} ${getProvName(tile)}</span>
+        <span style="color:${tile.owner !== null ? gameState.factions[tile.owner].color : '#b39d7b'}">${ownerName}</span>
+      </div>
+      <div class="kv-row"><span>${t('insp.terrain')}</span><b>${t('terrain.' + tile.terrain.key + '.name')}</b></div>
+      <div class="kv-row"><span>${t('insp.income')}</span><b style="color:var(--gold-bright)">+${getProvinceIncome(tile)} 🪙 ${t('insp.per_turn')}</b></div>
+      <div class="kv-row"><span>${t('insp.garrison')}</span><b>⚔ ${tile.army} ${t('insp.warriors')}</b></div>
+      <div class="kv-row"><span>${t('insp.stability')}</span><b style="color:${tile.stability < 45 ? '#ff6b6b' : '#5cd68d'}">${tile.stability}%</b></div>
+      <div class="kv-row"><span>${t('insp.def_bonus')}</span><b>+${Math.round((tile.terrain.defenseBonus + tile.fortLevel * 0.25) * 100)}%</b></div>
+      <div class="kv-row"><span>${t('insp.supply_prot')}</span><b>+${Math.round((tile.fortLevel * 0.22 + tile.marketLevel * 0.18) * 100)}%</b></div>
+      <div class="kv-row"><span>${t('insp.neighbors_cnt')}</span><b>${tile.neighbors.length}</b></div>
+      <p style="font-size:0.78rem; color:var(--sand-muted); margin-top:6px;">${t('terrain.' + tile.terrain.key + '.desc')}</p>
+    </div>
+  `;
+
+  if (tile.stormTurns > 0) {
+    html += `<div class="storm-alert-box">${t('insp.storm_active', { turns: tile.stormTurns })}</div>`;
+  } else if (tile.terrain.key === "OASIS") {
+    html += `<div style="background:rgba(46,168,102,0.18); border:1px solid #2ea866; color:#a3f2c5; padding:7px 10px; border-radius:6px; font-size:0.78rem;">${t('insp.oasis_safe')}</div>`;
+  }
+
+  if (isOwned) {
+    html += `
+      <div class="info-box">
+        <div class="info-box-title"><span>${t('insp.recruit_title')}</span></div>
+        <div class="action-grid">
+          <button class="btn btn-sm" ${pFaction.gold < recruitCost100 ? 'disabled' : ''} onclick="recruitTroops(${tile.id}, 100, ${recruitCost100})">
+            ${t('insp.recruit_100', { cost: recruitCost100 })}
+          </button>
+          <button class="btn btn-sm" ${pFaction.gold < recruitCost300 ? 'disabled' : ''} onclick="recruitTroops(${tile.id}, 300, ${recruitCost300})">
+            ${t('insp.recruit_300', { cost: recruitCost300 })}
+          </button>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-box-title"><span>${t('insp.march_title')}</span></div>
+        ${tile.army > 20 ? `
+          <div class="march-control">
+            <div style="display:flex; justify-content:space-between; font-size:0.84rem;">
+              <span>${t('insp.march_size')}</span>
+              <b id="march-count-label" style="color:var(--gold-bright)">${Math.max(10, Math.floor(tile.army * 0.75))} ${t('insp.warriors')}</b>
+            </div>
+            <input type="range" id="march-slider" min="10" max="${tile.army - 10}" value="${Math.max(10, Math.floor(tile.army * 0.75))}"
+              oninput="document.getElementById('march-count-label').textContent = this.value + ' ' + t('insp.warriors')">
+            <button class="btn btn-primary btn-sm" onclick="startMarchMode(${tile.id})">
+              ${t('insp.march_btn')}
+            </button>
+          </div>
+        ` : `<p style="font-size:0.8rem; color:var(--sand-muted);">${t('insp.march_min')}</p>`}
+      </div>
+
+      <div class="info-box">
+        <div class="info-box-title"><span>${t('insp.build_title')}</span></div>
+        <div class="kv-row">
+          <span>${t('insp.b_market', { lvl: tile.marketLevel })}</span>
+          <button class="btn btn-sm" ${tile.marketLevel >= 3 || pFaction.gold < 130 ? 'disabled' : ''} onclick="buildStructure(${tile.id}, 'market', 130)">
+            +12🪙 (130🪙)
+          </button>
+        </div>
+        <div class="kv-row">
+          <span>${t('insp.b_fort', { lvl: tile.fortLevel })}</span>
+          <button class="btn btn-sm" ${tile.fortLevel >= 3 || pFaction.gold < 150 ? 'disabled' : ''} onclick="buildStructure(${tile.id}, 'fort', 150)">
+            +25% (150🪙)
+          </button>
+        </div>
+        <div class="kv-row">
+          <span>${t('insp.b_temple', { lvl: tile.templeLevel })}</span>
+          <button class="btn btn-sm" ${tile.templeLevel >= 2 || pFaction.gold < 120 ? 'disabled' : ''} onclick="buildStructure(${tile.id}, 'temple', 120)">
+            +Стаб (120🪙)
+          </button>
+        </div>
+      </div>
+    `;
+  } else {
+    const myNeighbors = getNeighbors(tile.id).filter(n => n.owner === pId && n.army > 30);
+    html += `
+      <div class="info-box">
+        <div class="info-box-title"><span>${t('insp.recon_title')}</span></div>
+        <p style="font-size:0.82rem; color:var(--sand-light); margin-bottom:8px;">
+          ${tile.terrain.riverPenalty > 0 ? t('insp.recon_river') : t('insp.recon_open')}
+        </p>
+        ${myNeighbors.length > 0 ? `
+          <div style="font-size:0.8rem; color:var(--gold-main); margin-bottom:6px;">${t('insp.quick_atk')}</div>
+          ${myNeighbors.map(n => `
+            <button class="btn btn-danger btn-sm" style="width:100%; margin-bottom:6px;" onclick="executePlayerMarch(${n.id}, ${tile.id}, ${n.army - 20})">
+              ${t('insp.atk_from', { name: getProvName(n), troops: n.army - 20 })}
+            </button>
+          `).join("")}
+        ` : `<p style="font-size:0.8rem; color:var(--sand-muted);">${t('insp.no_adj_army')}</p>`}
+      </div>
+    `;
+  }
+
+  box.innerHTML = html;
+}
+
+function switchRightTab(tabName, btnEl) {
+  gameState.rightTab = tabName;
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  if (btnEl) btnEl.classList.add("active");
+  renderRightTab();
+}
+
+function renderRightTab() {
+  const container = document.getElementById("right-tab-content");
+  const pId = gameState.selectedPlayerFaction;
+  const pFaction = gameState.factions[pId];
+
+  if (gameState.rightTab === "diplo") {
+    let html = `<div style="font-size:0.82rem; color:var(--sand-muted); margin-bottom:4px;">
+      ${t('diplo.ae_label')} <b style="color:${pFaction.aggressiveExpansion > 35 ? '#ff6b6b' : 'var(--gold-bright)'}">${pFaction.aggressiveExpansion}</b>
+    </div>`;
+
+    gameState.factions.forEach(f => {
+      if (f.id === pId) return;
+      const rel = getRelation(pId, f.id);
+      const treaty = getTreaty(pId, f.id);
+      const fProvs = getFactionProvinces(f.id).length;
+      const fArmy = getFactionTotalArmy(f.id);
+      const relPercent = Math.round((rel + 100) / 2);
+      const relColor = rel >= 25 ? "#2ea866" : (rel <= -25 ? "#d94136" : "#d4a437");
+
+      html += `
+        <div class="diplo-card" style="opacity:${f.alive ? 1 : 0.45}">
+          <div class="diplo-header">
+            <span style="font-weight:bold; color:${f.color}">${f.emblem} ${t('faction.' + f.id + '.name')}</span>
+            <span class="status-tag status-${treaty}">${f.alive ? t('treaty.' + treaty) : t('diplo.destroyed')}</span>
+          </div>
+          <div style="font-size:0.78rem; color:var(--sand-muted); display:flex; justify-content:space-between;">
+            <span>${t('diplo.provs')} <b>${fProvs}</b> • ${t('diplo.army')} <b>⚔${fArmy}</b></span>
+            <span>${t('diplo.rel')} <b style="color:${relColor}">${rel > 0 ? '+' + rel : rel}</b></span>
+          </div>
+          <div class="relation-bar-wrap">
+            <div class="relation-bar-fill" style="width:${relPercent}%; background:${relColor};"></div>
+          </div>
+          ${f.alive ? `
+            <div class="action-grid">
+              ${treaty === "WAR" ? `
+                <button class="btn btn-sm" onclick="proposePeace(${f.id})">${t('diplo.btn_peace')}</button>
+              ` : `
+                <button class="btn btn-danger btn-sm" onclick="declareWarBetween(${pId}, ${f.id}); updateAllUI();">${t('diplo.btn_war')}</button>
+              `}
+              <button class="btn btn-sm" ${pFaction.gold < 80 ? 'disabled' : ''} onclick="sendCaravanGift(${f.id})">${t('diplo.btn_gift')}</button>
+              ${treaty === "PEACE" ? `
+                <button class="btn btn-sm" onclick="proposeTrade(${f.id})">${t('diplo.btn_trade')}</button>
+              ` : ''}
+              ${(treaty === "PEACE" || treaty === "TRADE") ? `
+                <button class="btn btn-sm" onclick="proposeAlliance(${f.id})">${t('diplo.btn_ally')}</button>
+              ` : ''}
+              ${treaty !== "VASSAL" && treaty !== "WAR" ? `
+                <button class="btn btn-sm" style="grid-column: span 2;" onclick="demandVassalage(${f.id})">${t('diplo.btn_vassal')}</button>
+              ` : ''}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  } else if (gameState.rightTab === "policy") {
+    container.innerHTML = `
+      <div class="info-box">
+        <div class="info-box-title"><span>${t('policy.title')}</span></div>
+        <p style="font-size:0.8rem; color:var(--sand-muted); margin-bottom:10px;">
+          ${t('policy.desc')}
+        </p>
+
+        <div style="display:flex; flex-direction:column; gap:9px;">
+          <button class="btn btn-sm" style="justify-content:space-between;" ${pFaction.authority < 25 ? 'disabled' : ''} onclick="enactEdict('tax')">
+            <span>${t('policy.tax')}</span>
+            <b>25 👑</b>
+          </button>
+
+          <button class="btn btn-sm" style="justify-content:space-between;" ${pFaction.authority < 30 || pFaction.gold < 100 ? 'disabled' : ''} onclick="enactEdict('festival')">
+            <span>${t('policy.festival')}</span>
+            <b>30 👑 + 100🪙</b>
+          </button>
+
+          <button class="btn btn-sm" style="justify-content:space-between;" ${pFaction.authority < 35 ? 'disabled' : ''} onclick="enactEdict('levy')">
+            <span>${t('policy.levy')}</span>
+            <b>35 👑</b>
+          </button>
+
+          <button class="btn btn-sm" style="justify-content:space-between;" ${pFaction.authority < 25 ? 'disabled' : ''} onclick="enactEdict('envoys')">
+            <span>${t('policy.envoys')}</span>
+            <b>25 👑</b>
+          </button>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-box-title"><span>${t('policy.summary')}</span></div>
+        <div class="kv-row"><span>${t('menu.ruler')}:</span><b>${t('faction.' + pId + '.ruler')}</b></div>
+        <div class="kv-row"><span>${t('policy.lands')}</span><b>${getFactionProvinces(pId).length} / 42</b></div>
+        <div class="kv-row"><span>${t('policy.atk_bonus')}</span><b>+${Math.round((pFaction.leaderBonusAttack || 0) * 100)}%</b></div>
+        <div class="kv-row"><span>${t('policy.vassals')}</span><b>${Object.keys(gameState.vassalMaster).filter(k => gameState.vassalMaster[k] === pId).length}</b></div>
+      </div>
+    `;
+  } else {
+    container.innerHTML = `
+      <div class="log-list">
+        ${gameState.logs.map(l => `<div class="log-entry ${l.type}"><b>[${t('top.turn_fmt', { turn: l.turn, year: 1240 + (l.turn - 1) * 2 })}]</b> ${t(l.key, l.vars)}</div>`).join("")}
+      </div>
+    `;
+  }
+}
+
+/* ============================================================================
+   БОЕВАЯ СИСТЕМА И МАРШ
+   ============================================================================ */
+function recruitTroops(tileId, amount, cost) {
+  const pFaction = gameState.factions[gameState.selectedPlayerFaction];
+  const tile = gameState.grid[tileId];
+  if (pFaction.gold < cost || tile.owner !== pFaction.id) return;
+
+  pFaction.gold -= cost;
+  tile.army += amount;
+  addLog("log.recruit", { prov: getProvName(tile), count: amount }, "good");
+  updateAllUI();
+}
+
+function buildStructure(tileId, type, cost) {
+  const pFaction = gameState.factions[gameState.selectedPlayerFaction];
+  const tile = gameState.grid[tileId];
+  if (pFaction.gold < cost || tile.owner !== pFaction.id) return;
+
+  pFaction.gold -= cost;
+  if (type === "market") {
+    tile.marketLevel++;
+    addLog("log.build_market", { prov: getProvName(tile), lvl: tile.marketLevel }, "good");
+  } else if (type === "fort") {
+    tile.fortLevel++;
+    addLog("log.build_fort", { prov: getProvName(tile), lvl: tile.fortLevel }, "good");
+  } else if (type === "temple") {
+    tile.templeLevel++;
+    tile.stability = Math.min(100, tile.stability + 20);
+    addLog("log.build_temple", { prov: getProvName(tile) }, "good");
+  }
+  updateAllUI();
+}
+
+function startMarchMode(tileId) {
+  closeRadialMenu();
+  closeAllMobilePanels();
+  const slider = document.getElementById("march-slider");
+  const troops = slider ? parseInt(slider.value, 10) : 50;
+  gameState.marchSourceId = tileId;
+  gameState.marchTroops = troops;
+
+  document.getElementById("banner-mode-text").textContent = t("map.banner_march", { troops });
+  document.getElementById("cancel-march-btn").style.display = "inline-flex";
+  renderMapSVG();
+}
+
+function cancelMarchMode() {
+  gameState.marchSourceId = null;
+  document.getElementById("banner-mode-text").textContent = t("map.banner_default");
+  document.getElementById("cancel-march-btn").style.display = "none";
+  renderMapSVG();
+}
+
+function executePlayerMarch(sourceId, targetId, troopsCount) {
+  const source = gameState.grid[sourceId];
+  const target = gameState.grid[targetId];
+  const pId = gameState.selectedPlayerFaction;
+
+  if (!areNeighbors(sourceId, targetId) || source.owner !== pId || troopsCount <= 0 || source.army <= troopsCount) {
+    cancelMarchMode();
+    return;
+  }
+
+  if (target.owner !== null && target.owner !== pId) {
+    const treaty = getTreaty(pId, target.owner);
+    if (treaty !== "WAR") {
+      openWarConfirmModal(sourceId, targetId, troopsCount);
+      return;
+    }
+  }
+
+  cancelMarchMode();
+  resolveMovementOrBattle(source, target, troopsCount, true);
+  gameState.selectedTileId = target.id;
+  updateAllUI();
+}
+
+function openWarConfirmModal(sourceId, targetId, troopsCount) {
+  const target = gameState.grid[targetId];
+  const defenderFaction = gameState.factions[target.owner];
+  const modal = document.getElementById("modal-overlay");
+  const content = document.getElementById("modal-content");
+
+  content.innerHTML = `
+    <div class="modal-title">${t('modal.war_title', { faction: t('faction.' + defenderFaction.id + '.name') })}</div>
+    <p style="line-height:1.5;">
+      ${t('modal.war_desc', { prov: getProvName(target), faction: t('faction.' + defenderFaction.id + '.name'), treaty: t('treaty.' + getTreaty(gameState.selectedPlayerFaction, target.owner)) })}
+    </p>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;">
+      <button class="btn" onclick="closeModal(); cancelMarchMode();">${t('modal.btn_retreat')}</button>
+      <button class="btn btn-danger" onclick="confirmWarAndAttack(${sourceId}, ${targetId}, ${troopsCount})">${t('modal.btn_declare_atk')}</button>
+    </div>
+  `;
+  modal.classList.add("active");
+}
+
+function confirmWarAndAttack(sourceId, targetId, troopsCount) {
+  closeModal();
+  const pId = gameState.selectedPlayerFaction;
+  const target = gameState.grid[targetId];
+  declareWarBetween(pId, target.owner);
+  cancelMarchMode();
+  resolveMovementOrBattle(gameState.grid[sourceId], target, troopsCount, true);
+  gameState.selectedTileId = targetId;
+  updateAllUI();
+}
+
+function resolveMovementOrBattle(sourceTile, targetTile, sentTroops, showModalForPlayer) {
+  const attackerId = sourceTile.owner;
+  const attackerFaction = gameState.factions[attackerId];
+  sourceTile.army -= sentTroops;
+
+  if (targetTile.owner === attackerId) {
+    targetTile.army += sentTroops;
+    addLog("log.move", { faction: t('faction.' + attackerFaction.id + '.name'), count: sentTroops, prov: getProvName(targetTile) });
+    return;
+  }
+
+  const stormPenalty = targetTile.stormTurns > 0 ? 0.12 : 0;
+  const attritionRate = (targetTile.terrain.attrition + stormPenalty) * attackerFaction.attritionMod;
+  const attritionLoss = Math.floor(sentTroops * attritionRate);
+  const effectiveAttackerTroops = Math.max(5, sentTroops - attritionLoss);
+
+  const atkDice = 1 + Math.floor(Math.random() * 6);
+  const defDice = 1 + Math.floor(Math.random() * 6);
+
+  let atkMultiplier = attackerFaction.attackMod + (attackerFaction.leaderBonusAttack || 0) + (atkDice * 0.07);
+  if (targetTile.terrain.riverPenalty > 0) {
+    atkMultiplier -= targetTile.terrain.riverPenalty;
+  }
+
+  const defFactionMod = targetTile.owner !== null ? gameState.factions[targetTile.owner].defenseMod : 1.0;
+  const defMultiplier = defFactionMod + targetTile.terrain.defenseBonus + (targetTile.fortLevel * 0.25) + (defDice * 0.07);
+
+  const atkPower = Math.round(effectiveAttackerTroops * atkMultiplier);
+  const defPower = Math.round(targetTile.army * defMultiplier);
+
+  const attackerWon = atkPower >= defPower;
+  let remainingAttackers = 0;
+  let remainingDefenders = 0;
+
+  if (attackerWon) {
+    const lossRatio = Math.min(0.88, (defPower / Math.max(1, atkPower)) * 0.72);
+    remainingAttackers = Math.max(10, Math.round(effectiveAttackerTroops * (1 - lossRatio)));
+    const oldOwner = targetTile.owner;
+
+    targetTile.owner = attackerId;
+    targetTile.army = remainingAttackers;
+    targetTile.stability = Math.max(30, targetTile.stability - 25);
+
+    attackerFaction.aggressiveExpansion += 8;
+    for (let f = 0; f < 4; f++) {
+      if (f !== attackerId) changeRelation(attackerId, f, -8);
+    }
+
+    const defName = oldOwner === null ? t("faction.neutral") : t('faction.' + oldOwner + '.name');
+    addLog("log.capture", { attacker: t('faction.' + attackerFaction.id + '.name'), prov: getProvName(targetTile), defender: defName }, "war");
+
+    if (oldOwner !== null && getFactionProvinces(oldOwner).length === 0) {
+      gameState.factions[oldOwner].alive = false;
+      addLog("log.eliminated", { faction: t('faction.' + oldOwner + '.name') }, "war");
+    }
+  } else {
+    const lossRatio = Math.min(0.85, (atkPower / Math.max(1, defPower)) * 0.70);
+    remainingDefenders = Math.max(10, Math.round(targetTile.army * (1 - lossRatio)));
+    const survivorsRetreat = Math.max(0, Math.round(effectiveAttackerTroops * 0.20));
+    targetTile.army = remainingDefenders;
+    sourceTile.army += survivorsRetreat;
+
+    addLog("log.repelled", { attacker: t('faction.' + attackerFaction.id + '.name'), prov: getProvName(targetTile) }, "war");
+  }
+
+  if (showModalForPlayer) {
+    showBattleReportModal({
+      provinceName: getProvName(targetTile),
+      terrainName: t('terrain.' + targetTile.terrain.key + '.name'),
+      riverPenalty: targetTile.terrain.riverPenalty > 0,
+      sentTroops,
+      attritionLoss,
+      atkDice,
+      defDice,
+      atkPower,
+      defPower,
+      attackerWon,
+      remainingAttackers,
+      remainingDefenders
+    });
+  }
+
+  checkVictoryConditions();
+}
+
+function showBattleReportModal(b) {
+  const modal = document.getElementById("modal-overlay");
+  const content = document.getElementById("modal-content");
+  const diceFaces = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+
+  content.innerHTML = `
+    <div class="modal-title">${b.attackerWon ? t('modal.battle_win', { prov: b.provinceName }) : t('modal.battle_loss', { prov: b.provinceName })}</div>
+    <div style="font-size:0.86rem; color:var(--sand-muted);">
+      ${t('modal.battle_meta', { terrain: b.terrainName, river: b.riverPenalty ? t('modal.river_tag') : '', attr: b.attritionLoss })}
+    </div>
+
+    <div class="dice-arena">
+      <div>
+        <div style="font-weight:bold; color:var(--gold-bright);">${t('modal.your_legions')}</div>
+        <div class="dice-box">${diceFaces[b.atkDice]} (${b.atkDice})</div>
+        <div style="font-size:0.85rem;">${t('modal.power')} <b>${b.atkPower}</b></div>
+      </div>
+      <div style="font-size:1.5rem; color:var(--gold-main);">⚔ VS 🛡</div>
+      <div>
+        <div style="font-weight:bold; color:#ff857d;">${t('modal.def_garrison')}</div>
+        <div class="dice-box">${diceFaces[b.defDice]} (${b.defDice})</div>
+        <div style="font-size:0.85rem;">${t('modal.power')} <b>${b.defPower}</b></div>
+      </div>
+    </div>
+
+    <p style="font-size:0.92rem; line-height:1.45;">
+      ${b.attackerWon 
+        ? t('modal.battle_win_desc', { prov: b.provinceName, rem: b.remainingAttackers }) 
+        : t('modal.battle_loss_desc', { rem: b.remainingDefenders })}
+    </p>
+
+    <div style="display:flex; justify-content:flex-end;">
+      <button class="btn btn-primary" onclick="closeModal()">${t('modal.btn_ok')}</button>
+    </div>
+  `;
+  modal.classList.add("active");
+}
+
+/* ============================================================================
+   ДИПЛОМАТИЧЕСКИЕ ДЕЙСТВИЯ И УКАЗЫ
+   ============================================================================ */
+function declareWarBetween(f1, f2) {
+  if (getTreaty(f1, f2) === "WAR") return;
+  setTreaty(f1, f2, "WAR");
+  changeRelation(f1, f2, -45);
+  if (gameState.vassalMaster[f1] === f2) delete gameState.vassalMaster[f1];
+  if (gameState.vassalMaster[f2] === f1) delete gameState.vassalMaster[f2];
+
+  addLog("log.war", { f1: t('faction.' + f1 + '.name'), f2: t('faction.' + f2 + '.name') }, "war");
+
+  for (let other = 0; other < 4; other++) {
+    if (other !== f1 && other !== f2 && gameState.factions[other].alive) {
+      if (getTreaty(f2, other) === "ALLIANCE" || gameState.vassalMaster[other] === f2) {
+        setTreaty(f1, other, "WAR");
+        addLog("log.ally_join", { ally: t('faction.' + other + '.name'), defender: t('faction.' + f2 + '.name') }, "war");
+      }
+    }
+  }
+}
+
+function sendCaravanGift(targetFactionId) {
+  const pId = gameState.selectedPlayerFaction;
+  const pFaction = gameState.factions[pId];
+  if (pFaction.gold < 80) return;
+
+  pFaction.gold -= 80;
+  changeRelation(pId, targetFactionId, 25);
+  addLog("log.gift", { target: t('faction.' + targetFactionId + '.name') }, "diplo");
+  updateAllUI();
+}
+
+function proposePeace(targetId) {
+  const pId = gameState.selectedPlayerFaction;
+  const pFaction = gameState.factions[pId];
+  const rel = getRelation(pId, targetId);
+  const myArmy = getFactionTotalArmy(pId);
+  const theirArmy = getFactionTotalArmy(targetId);
+
+  if (myArmy >= theirArmy * 0.9 || rel > -30 || pFaction.gold >= 120) {
+    if (myArmy < theirArmy * 0.9 && pFaction.gold >= 120) {
+      pFaction.gold -= 120;
+      addLog("log.peace_paid", { target: t('faction.' + targetId + '.name') }, "diplo");
+    } else {
+      addLog("log.peace_white", { target: t('faction.' + targetId + '.name') }, "diplo");
+    }
+    setTreaty(pId, targetId, "PEACE");
+    changeRelation(pId, targetId, 20);
+  } else {
+    addLog("log.peace_refused", { target: t('faction.' + targetId + '.name') }, "war");
+  }
+  updateAllUI();
+}
+
+function proposeTrade(targetId) {
+  const pId = gameState.selectedPlayerFaction;
+  const rel = getRelation(pId, targetId);
+  if (rel >= 0) {
+    setTreaty(pId, targetId, "TRADE");
+    changeRelation(pId, targetId, 15);
+    addLog("log.trade_ok", { target: t('faction.' + targetId + '.name') }, "diplo");
+  } else {
+    addLog("log.trade_no", { target: t('faction.' + targetId + '.name') }, "");
+  }
+  updateAllUI();
+}
+
+function proposeAlliance(targetId) {
+  const pId = gameState.selectedPlayerFaction;
+  const rel = getRelation(pId, targetId);
+  if (rel >= 40) {
+    setTreaty(pId, targetId, "ALLIANCE");
+    changeRelation(pId, targetId, 20);
+    addLog("log.ally_ok", { target: t('faction.' + targetId + '.name') }, "diplo");
+  } else {
+    addLog("log.ally_no", { target: t('faction.' + targetId + '.name') }, "");
+  }
+  updateAllUI();
+}
+
+function demandVassalage(targetId) {
+  const pId = gameState.selectedPlayerFaction;
+  const myArmy = getFactionTotalArmy(pId);
+  const theirArmy = getFactionTotalArmy(targetId);
+  const rel = getRelation(pId, targetId);
+
+  if (myArmy > theirArmy * 2.1 && rel >= 10) {
+    setTreaty(pId, targetId, "VASSAL");
+    gameState.vassalMaster[targetId] = pId;
+    addLog("log.vassal_ok", { target: t('faction.' + targetId + '.name') }, "good");
+  } else {
+    changeRelation(pId, targetId, -20);
+    addLog("log.vassal_no", { target: t('faction.' + targetId + '.name') }, "war");
+  }
+  updateAllUI();
+}
+
+function enactEdict(type) {
+  const pId = gameState.selectedPlayerFaction;
+  const pFaction = gameState.factions[pId];
+  const myProvs = getFactionProvinces(pId);
+
+  if (type === "tax" && pFaction.authority >= 25) {
+    pFaction.authority -= 25;
+    pFaction.gold += 220;
+    myProvs.forEach(t => t.stability = Math.max(15, t.stability - 8));
+    addLog("log.edict_tax", {}, "good");
+  } else if (type === "festival" && pFaction.authority >= 30 && pFaction.gold >= 100) {
+    pFaction.authority -= 30;
+    pFaction.gold -= 100;
+    myProvs.forEach(t => t.stability = Math.min(100, t.stability + 18));
+    addLog("log.edict_fest", {}, "good");
+  } else if (type === "levy" && pFaction.authority >= 35) {
+    pFaction.authority -= 35;
+    myProvs.forEach(t => t.army += 80);
+    addLog("log.edict_levy", {}, "good");
+  } else if (type === "envoys" && pFaction.authority >= 25) {
+    pFaction.authority -= 25;
+    pFaction.aggressiveExpansion = Math.max(0, pFaction.aggressiveExpansion - 15);
+    for (let i = 0; i < 4; i++) {
+      if (i !== pId) changeRelation(pId, i, 15);
+    }
+    addLog("log.edict_env", {}, "diplo");
+  }
+  updateAllUI();
+}
+
+/* ============================================================================
+   КОНЕЦ ХОДА И ХОД ИИ
+   ============================================================================ */
+function endTurn() {
+  if (gameState.gameOver) return;
+  cancelMarchMode();
+  closeRadialMenu();
+
+  gameState.factions.forEach(f => {
+    if (!f.alive) return;
+    f.gold = Math.max(0, f.gold + getFactionNetIncome(f.id));
+    f.authority = Math.min(100, f.authority + 6);
+    f.aggressiveExpansion = Math.max(0, f.aggressiveExpansion - 2);
+  });
+
+  processSandstorms();
+
+  gameState.grid.forEach(tile => {
+    if (tile.owner !== null) {
+      if (tile.templeLevel > 0) tile.stability = Math.min(100, tile.stability + 3);
+      if (tile.stability < 35 && Math.random() < 0.28) {
+        const rebels = 180 + Math.floor(Math.random() * 140);
+        if (rebels > tile.army) {
+          const oldOwner = tile.owner;
+          tile.owner = null;
+          tile.army = rebels;
+          tile.stability = 70;
+          addLog("log.rebel_win", { prov: getProvName(tile), faction: t('faction.' + oldOwner + '.name') }, "war");
+        } else {
+          tile.army = Math.max(20, tile.army - Math.floor(rebels * 0.5));
+          tile.stability += 15;
+          addLog("log.rebel_crush", { prov: getProvName(tile) }, "");
+        }
+      }
+    }
+  });
+
+  processAITurns();
+
+  gameState.turn++;
+  gameState.year += 2;
+
+  if (Math.random() < 0.45 && !gameState.gameOver) {
+    triggerRandomEvent();
+  }
+
+  checkVictoryConditions();
+  updateAllUI();
+}
+
+function processAITurns() {
+  const pId = gameState.selectedPlayerFaction;
+  const playerProvsCount = getFactionProvinces(pId).length;
+
+  gameState.factions.forEach(ai => {
+    if (!ai.alive || ai.isPlayer) return;
+    const aiProvs = getFactionProvinces(ai.id);
+    if (aiProvs.length === 0) {
+      ai.alive = false;
+      return;
+    }
+
+    if (playerProvsCount >= 14 && gameState.factions[pId].aggressiveExpansion >= 24) {
+      changeRelation(ai.id, pId, -10);
+      if (getRelation(ai.id, pId) < -35 && getTreaty(ai.id, pId) === "PEACE" && Math.random() < 0.35) {
+        declareWarBetween(ai.id, pId);
+        addLog("log.coalition", { ai: t('faction.' + ai.id + '.name') }, "war");
+      }
+    }
+
+    for (let other = 0; other < 4; other++) {
+      if (other === ai.id || !gameState.factions[other].alive) continue;
+      const rel = getRelation(ai.id, other);
+      const treaty = getTreaty(ai.id, other);
+      if (treaty === "WAR" && Math.random() < 0.22) {
+        setTreaty(ai.id, other, "PEACE");
+      } else if (treaty === "PEACE" && rel < -40 && Math.random() < 0.25) {
+        declareWarBetween(ai.id, other);
+      }
+    }
+
+    while (ai.gold >= 95) {
+      const targetProv = aiProvs[Math.floor(Math.random() * aiProvs.length)];
+      if (ai.gold >= 130 && targetProv.marketLevel < 2 && Math.random() < 0.35) {
+        ai.gold -= 130;
+        targetProv.marketLevel++;
+      } else {
+        const cost = Math.round(70 * ai.recruitDiscount);
+        if (ai.gold >= cost) {
+          ai.gold -= cost;
+          targetProv.army += 110;
+        } else break;
+      }
+    }
+
+    let movesLeft = 2;
+    for (const prov of aiProvs) {
+      if (movesLeft <= 0) break;
+      if (prov.army < 220) continue;
+
+      let bestTarget = null;
+      const neighbors = getNeighbors(prov.id);
+      const directTargets = neighbors.filter(n => {
+        if (n.owner === null) return prov.army > n.army * 1.25;
+        if (n.owner !== ai.id && getTreaty(ai.id, n.owner) === "WAR") return prov.army > n.army * 1.15;
+        return false;
+      });
+
+      if (directTargets.length > 0) {
+        directTargets.sort((a, b) => a.army - b.army);
+        bestTarget = directTargets[0];
+      } else {
+        const targets = gameState.grid.filter(t => t.owner !== ai.id && (t.terrain.key === "OASIS" || (t.owner !== null && getTreaty(ai.id, t.owner) === "WAR")));
+        if (targets.length > 0) {
+          const strategicTarget = targets[Math.floor(Math.random() * targets.length)];
+          const path = findPathAStar(prov.id, strategicTarget.id, ai.id);
+          if (path.length > 1) {
+            bestTarget = gameState.grid[path[1]];
+          }
+        }
+      }
+
+      if (bestTarget && bestTarget.id !== prov.id) {
+        const sendCount = Math.floor(prov.army * 0.72);
+        const involvesPlayer = bestTarget.owner === pId || prov.owner === pId;
+        resolveMovementOrBattle(prov, bestTarget, sendCount, involvesPlayer);
+        movesLeft--;
+      }
+    }
+  });
+}
+
+function triggerRandomEvent() {
+  const pId = gameState.selectedPlayerFaction;
+  const pFaction = gameState.factions[pId];
+  const myProvs = getFactionProvinces(pId);
+  if (myProvs.length === 0) return;
+  const randomProv = myProvs[Math.floor(Math.random() * myProvs.length)];
+
+  const events = [
+    {
+      titleRu: "🏺 Засыпанный Храм Первой Эры",
+      titleEn: "🏺 Buried First Era Temple",
+      descRu: `Песчаная буря в <b>${getProvName(randomProv)}</b> обнажила древнее святилище.`,
+      descEn: `A sandstorm in <b>${getProvName(randomProv)}</b> uncovered ancient holy relics.`,
+      options: [
+        {
+          labelRu: "Взять реликвии в казну (+180🪙)",
+          labelEn: "Seize relics for treasury (+180🪙)",
+          action: () => { pFaction.gold += 180; }
+        },
+        {
+          labelRu: "Изучить трактаты (+10% атаки, +20👑)",
+          labelEn: "Study ancient codex (+10% attack, +20👑)",
+          action: () => { pFaction.leaderBonusAttack += 0.10; pFaction.authority = Math.min(100, pFaction.authority + 20); }
+        }
+      ]
+    },
+    {
+      titleRu: "🌪 Великий Самум",
+      titleEn: "🌪 Great Simoom",
+      descRu: `Огненный ураган ударил по региону <b>${getProvName(randomProv)}</b>.`,
+      descEn: `Blazing hurricane strikes <b>${getProvName(randomProv)}</b>.`,
+      options: [
+        {
+          labelRu: "Укрепить колодцы (-80🪙, +15% стаб.)",
+          labelEn: "Reinforce wells (-80🪙, +15% stab.)",
+          action: () => { pFaction.gold = Math.max(0, pFaction.gold - 80); randomProv.stability = Math.min(100, randomProv.stability + 15); }
+        },
+        {
+          labelRu: "Оставить выживать (-20% стаб., -40 бойцов)",
+          labelEn: "Let them endure (-20% stab., -40 troops)",
+          action: () => { randomProv.stability = Math.max(10, randomProv.stability - 20); randomProv.army = Math.max(20, randomProv.army - 40); }
+        }
+      ]
+    }
+  ];
+
+  const ev = events[Math.floor(Math.random() * events.length)];
+  const isRu = gameState.lang === "ru";
+  const modal = document.getElementById("modal-overlay");
+  const content = document.getElementById("modal-content");
+
+  content.innerHTML = `
+    <div class="modal-title">${isRu ? ev.titleRu : ev.titleEn}</div>
+    <p style="line-height:1.45; font-size:0.95rem;">${isRu ? ev.descRu : ev.descEn}</p>
+    <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+      ${ev.options.map((opt, idx) => `
+        <button class="btn" style="justify-content:flex-start; text-align:left;" id="ev-opt-${idx}">
+          ➤ ${isRu ? opt.labelRu : opt.labelEn}
+        </button>
+      `).join("")}
+    </div>
+  `;
+
+  modal.classList.add("active");
+  ev.options.forEach((opt, idx) => {
+    document.getElementById(`ev-opt-${idx}`).onclick = () => {
+      opt.action();
+      closeModal();
+      updateAllUI();
+    };
+  });
+}
+
+function checkVictoryConditions() {
+  if (gameState.gameOver) return;
+  const pId = gameState.selectedPlayerFaction;
+  const myProvs = getFactionProvinces(pId).length;
+
+  if (myProvs === 0) {
+    gameState.gameOver = true;
+    showEndGameModal(false, gameState.lang === "ru" ? "Ваша последняя твердыня пала. Пески поглотили вашу династию..." : "Your last fortress has fallen. The sands of fate buried your dynasty...");
+  } else if (myProvs >= 24) {
+    gameState.gameOver = true;
+    showEndGameModal(true, gameState.lang === "ru" ? `Вы объединили ${myProvs} провинций и стали Гегемоном Песков!` : `You united ${myProvs} provinces and achieved total Hegemony!`);
+  }
+}
+
+function showEndGameModal(isVictory, message) {
+  const modal = document.getElementById("modal-overlay");
+  const content = document.getElementById("modal-content");
+  content.innerHTML = `
+    <div class="modal-title">${isVictory ? '👑 ' + (gameState.lang === 'ru' ? 'ВЕЛИКАЯ ГЕГЕМОНИЯ!' : 'TOTAL HEGEMONY!') : '💀 ' + (gameState.lang === 'ru' ? 'ПАДЕНИЕ ДИНАСТИИ' : 'FALL OF DYNASTY')}</div>
+    <p style="line-height:1.5; font-size:1rem;">${message}</p>
+    <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:14px;">
+      <button class="btn" onclick="closeModal()">${t('modal.btn_close')}</button>
+      <button class="btn btn-primary" onclick="closeModal(); showMainMenu();">${t('top.menu')}</button>
+    </div>
+  `;
+  modal.classList.add("active");
+}
+
+function openCodexModal() {
+  const modal = document.getElementById("modal-overlay");
+  const content = document.getElementById("modal-content");
+  content.innerHTML = `
+    <div class="modal-title">${t('modal.codex_title')}</div>
+    <div style="font-size:0.88rem; line-height:1.5; display:flex; flex-direction:column; gap:8px;">
+      ${t('modal.codex_body')}
+    </div>
+    <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+      <button class="btn btn-primary" onclick="closeModal()">${t('modal.btn_ok')}</button>
+    </div>
+  `;
+  modal.classList.add("active");
+}
+
+function openCreditsModal() {
+  const modal = document.getElementById("modal-overlay");
+  const content = document.getElementById("modal-content");
+  content.innerHTML = `
+    <div class="modal-title">${t('modal.credits_title')}</div>
+    <div style="font-size:0.88rem; line-height:1.5;">
+      ${t('modal.credits_body')}
+    </div>
+    <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+      <button class="btn btn-primary" onclick="closeModal()">${t('modal.btn_close')}</button>
+    </div>
+  `;
+  modal.classList.add("active");
+}
+
+function closeModal() {
+  document.getElementById("modal-overlay").classList.remove("active");
+}
+
+window.onload = () => {
+  initTouchMapControls();
+  renderMenuFactions();
+  initNewCampaign(0);
+};
+</script>
+</body>
+</html>
