@@ -98,6 +98,15 @@
       background: radial-gradient(circle at top, rgba(241, 196, 15, 0.12), transparent 70%);
     }
 
+    /* Hegemony Card Hover Accent */
+    .card.card-hegemony:hover {
+      border-color: #d4a437;
+      box-shadow: 0 16px 36px -8px rgba(212, 164, 55, 0.35), 0 0 16px rgba(243, 198, 95, 0.25);
+    }
+    .card.card-hegemony::before {
+      background: radial-gradient(circle at top, rgba(212, 164, 55, 0.12), transparent 70%);
+    }
+
     /* RTS Card Hover Accent */
     .card.card-rts:hover {
       border-color: #22c55e;
@@ -376,7 +385,7 @@
       </div>
     </div>
 
-    <!-- 2. Frontline 1944 -->
+    <!-- 2. Frontline 1944: Total War -->
     <div class="card" onclick="launchFrontlineLatest()">
       <div class="btn-dots" title="All versions" onclick="event.stopPropagation(); openModal('frontlineModal')">•••</div>
       <div class="card-preview">
@@ -396,7 +405,7 @@
         </svg>
       </div>
       <div class="card-content">
-        <div class="card-title">🪖 Frontline 1944</div>
+        <div class="card-title">🪖 Frontline 1944: Total War</div>
         <p class="card-desc">Military 2D action: battles for 5 heights, tank combat, artillery support, class selection, and tactical RTS controls.</p>
       </div>
       <div class="card-tags">
@@ -406,8 +415,8 @@
       </div>
     </div>
 
-    <!-- 3. Fracture of Empires: Ancient 4X (Directly after Frontline 1944) -->
-    <a href="./splinter/" class="card card-ancient" style="text-decoration: none; color: inherit; display: flex; flex-direction: column;">
+    <!-- 3. Fracture of Empires: Ancient 4X -->
+    <div class="card card-ancient" onclick="launchAncient4X()">
       <div class="card-preview">
         <div class="preview-badge"><span></span>4X STRATEGY LIVE</div>
         <svg viewBox="0 0 320 145" width="100%" height="100%">
@@ -456,9 +465,61 @@
         <span class="tag">Diplomacy</span>
         <span class="tag">Tech Tree</span>
       </div>
-    </a>
+    </div>
 
-    <!-- 4. Rasul World -->
+    <!-- 4. Hegemony: Sands of Fate -->
+    <div class="card card-hegemony" onclick="launchHegemonyLatest()">
+      <div class="btn-dots" title="All versions" onclick="event.stopPropagation(); openModal('hegemonyModal')">•••</div>
+      <div class="card-preview">
+        <div class="preview-badge"><span></span>4X GRAND STRATEGY</div>
+        <svg viewBox="0 0 320 145" width="100%" height="100%">
+          <defs>
+            <linearGradient id="desertSky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#1b120c"/>
+              <stop offset="60%" stop-color="#3d2714"/>
+              <stop offset="100%" stop-color="#6b441e"/>
+            </linearGradient>
+            <radialGradient id="sunGlow" cx="50%" cy="40%" r="50%">
+              <stop offset="0%" stop-color="#fde047" stop-opacity="0.9"/>
+              <stop offset="40%" stop-color="#f59e0b" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#b45309" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <rect width="320" height="145" fill="url(#desertSky)"/>
+          <circle cx="160" cy="50" r="38" fill="url(#sunGlow)"/>
+          <circle cx="160" cy="50" r="14" fill="#fef08a"/>
+          
+          <polygon points="120,80 145,52 170,80" fill="#92400e" opacity="0.8"/>
+          <polygon points="145,52 170,80 185,80" fill="#78350f" opacity="0.9"/>
+          
+          <path d="M0,105 Q70,75 160,95 T320,85 L320,145 L0,145 Z" fill="#b45309"/>
+          <path d="M0,118 Q90,95 200,120 T320,110 L320,145 L0,145 Z" fill="#78350f"/>
+          
+          <circle cx="85" cy="115" r="16" fill="#065f46" opacity="0.75"/>
+          <circle cx="85" cy="115" r="9" fill="#0284c7" opacity="0.85"/>
+          <text x="79" y="118" font-size="12">🌴</text>
+          
+          <path d="M100,120 Q160,110 240,125" fill="none" stroke="#fef08a" stroke-width="2" stroke-dasharray="3,3" opacity="0.85"/>
+          <circle cx="240" cy="125" r="4" fill="#f59e0b"/>
+          <text x="247" y="128" fill="#fef08a" font-size="8" font-weight="bold">⚔</text>
+          
+          <rect x="180" y="14" width="130" height="20" rx="4" fill="rgba(212,164,55,0.22)" stroke="rgba(212,164,55,0.4)" stroke-width="1"/>
+          <text x="190" y="28" fill="#f3c65f" font-size="9" font-weight="bold">SANDS OF FATE v1.1</text>
+        </svg>
+      </div>
+      <div class="card-content">
+        <div class="card-title">☀️ Hegemony: Sands of Fate</div>
+        <p class="card-desc">Turn-based 4X grand strategy across the Great Oasis Archipelago: caravan logistics, sandstorm attrition, tactical conquests, and high diplomacy.</p>
+      </div>
+      <div class="card-tags">
+        <span class="tag gold">Grand Strategy</span>
+        <span class="tag gold">4X</span>
+        <span class="tag">Diplomacy</span>
+        <span class="tag">Archive [2 versions]</span>
+      </div>
+    </div>
+
+    <!-- 5. Rasul World -->
     <div class="card" onclick="launchGame('rasulworld.html', 'Ideal World 2026')">
       <div class="card-preview">
         <div class="preview-badge"><span></span>GEOPOLITICS</div>
@@ -483,7 +544,7 @@
       </div>
     </div>
 
-    <!-- 5. Mega Evolution: Spore -->
+    <!-- 6. Mega Evolution: Spore -->
     <div class="card" onclick="launchMegaLatest()">
       <div class="btn-dots" title="All versions" onclick="event.stopPropagation(); openModal('megaModal')">•••</div>
       <div class="card-preview">
@@ -515,7 +576,7 @@
       </div>
     </div>
 
-    <!-- 6. 3D Flight Simulator -->
+    <!-- 7. 3D Flight Simulator -->
     <div class="card" onclick="launchFlightLatest()">
       <div class="btn-dots" title="All versions" onclick="event.stopPropagation(); openModal('flightModal')">•••</div>
       <div class="card-preview">
@@ -551,7 +612,7 @@
       </div>
     </div>
 
-    <!-- 7. HTML5 RTS (Master Edition & Complete Archive) -->
+    <!-- 8. HTML5 RTS -->
     <div class="card card-rts" onclick="launchRtsLatest()">
       <div class="btn-dots" title="All versions" onclick="event.stopPropagation(); openModal('rtsModal')">•••</div>
       <div class="card-preview">
@@ -560,25 +621,20 @@
           <rect width="320" height="145" fill="#0d1117"/>
           <rect x="20" y="20" width="280" height="105" rx="6" fill="#1e3a1f" stroke="#2d5a27" stroke-width="1.5"/>
           
-          <!-- Base Grid & River/Gold -->
           <circle cx="250" cy="50" r="12" fill="#a6851e"/>
           <circle cx="250" cy="50" r="7" fill="#ffe066"/>
           <circle cx="50" cy="95" r="14" fill="#13381b"/>
           <circle cx="65" cy="100" r="11" fill="#1e4f28"/>
           
-          <!-- Player Citadel Base -->
           <rect x="75" y="42" width="24" height="24" rx="3" fill="#4da6ff" stroke="#fff" stroke-width="1.5"/>
           <rect x="83" y="50" width="8" height="8" fill="#ffe45c"/>
           
-          <!-- Enemy Citadel -->
           <rect x="210" y="80" width="22" height="22" rx="3" fill="#ff4757" stroke="#fff" stroke-width="1.5"/>
           
-          <!-- Units & Combat -->
           <circle cx="120" cy="55" r="5" fill="#4da6ff"/>
           <polygon points="145,62 153,74 137,74" fill="#4da6ff"/>
           <polygon points="175,70 183,82 167,82" fill="#ff4757"/>
           
-          <!-- Selection box -->
           <rect x="110" y="45" width="48" height="35" fill="rgba(77,166,255,0.18)" stroke="#4da6ff" stroke-width="1.2" stroke-dasharray="3,3"/>
           
           <rect x="195" y="14" width="115" height="18" rx="4" fill="rgba(34,197,94,0.2)"/>
@@ -586,7 +642,7 @@
         </svg>
       </div>
       <div class="card-content">
-        <div class="card-title">⚔️ HTML5 RTS — Master Edition</div>
+        <div class="card-title">⚔️ Ironbound: Age of Conquest </div>
         <p class="card-desc">Classic real-time strategy: base building, worker logistics, combat mechanics, AI opponent, control groups, and tech upgrades.</p>
       </div>
       <div class="card-tags">
@@ -776,6 +832,24 @@
     </div>
   </div>
 
+  <!-- Modal: Hegemony: Sands of Fate Archive -->
+  <div class="modal-overlay" id="hegemonyModal">
+    <div class="choice-dialog">
+      <h3>☀️ Hegemony: Sands of Fate</h3>
+      <p>Select a strategy version:</p>
+      <div class="version-btns">
+        <button class="btn-version primary" onclick="launchHegemonyLatest()">
+          <span>⚡ <b>v1.1</b> (Polygonal Voronoi Map, Sandstorms & A* AI)</span>
+          <small style="color:inherit">Latest</small>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('hegemony.html', 'Hegemony: Sands of Fate (v1.0)')">
+          <span>v1.0 (Classic 8x8 Grid Map & Core Mechanics)</span>
+        </button>
+      </div>
+      <button class="btn-dialog-close" onclick="closeModal('hegemonyModal')">Cancel</button>
+    </div>
+  </div>
+
   <!-- Modal: Mega Evolution Archive -->
   <div class="modal-overlay" id="megaModal">
     <div class="choice-dialog">
@@ -842,7 +916,7 @@
   <!-- Modal: HTML5 RTS Archive -->
   <div class="modal-overlay" id="rtsModal">
     <div class="choice-dialog">
-      <h3>⚔️ HTML5 RTS — Full Archive</h3>
+      <h3>⚔️ Ironbound: Age of Conquest</h3>
       <p>Select an RTS build:</p>
       <div class="version-btns">
         <button class="btn-version primary" onclick="launchRtsLatest()">
@@ -900,9 +974,13 @@
     let currentGameUrl = '';
 
     function launchAncient4X() {
-      window.location.href = './splinter/';
+      chooseVersion('index.html', 'Fracture of Empires (Ancient 4X Strategy)');
     }
 
+    function launchHegemonyLatest() {
+      const target = 'hegemony_v2.html';
+      chooseVersion(target, 'Hegemony: Sands of Fate (v1.1)');
+    }
 
     function launchBankLatest() {
       const target = 'Knice_Bank_8_7_1.html';
