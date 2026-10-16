@@ -1,0 +1,2012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AETHERION: Nexus Command — 3D Grand Strategy</title>
+<style>
+  :root {
+    --bg-dark: rgba(8, 13, 24, 0.88);
+    --bg-panel: rgba(14, 23, 42, 0.85);
+    --cyan: #00f0ff;
+    --cyan-dim: rgba(0, 240, 255, 0.25);
+    --blue-ally: #38bdf8;
+    --red-enemy: #f43f5e;
+    --gold: #fbbf24;
+    --emerald: #10b981;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --font-ui: 'Segoe UI', Roboto, Helvetica, monospace, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #050811;
+    font-family: var(--font-ui);
+    color: var(--text-main);
+  }
+
+  #game-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    touch-action: none;
+  }
+
+  /* Scanline & Vignette Overlay */
+  .screen-fx {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    background: 
+      radial-gradient(circle at center, transparent 60%, rgba(2, 6, 18, 0.65) 100%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
+  }
+
+  /* MAIN MENU OVERLAY */
+  #main-menu {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, rgba(10, 20, 40, 0.72) 0%, rgba(4, 8, 18, 0.96) 100%);
+    backdrop-filter: blur(8px);
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+  }
+
+  #main-menu.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .menu-card {
+    width: min(520px, 92vw);
+    background: var(--bg-panel);
+    border: 1px solid var(--cyan-dim);
+    box-shadow: 0 0 40px rgba(0, 240, 255, 0.15), inset 0 0 20px rgba(0, 240, 255, 0.05);
+    border-radius: 8px;
+    padding: 32px 28px;
+    text-align: center;
+    position: relative;
+  }
+
+  .menu-card::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 15%; right: 15%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  }
+
+  .game-title {
+    font-size: clamp(1.8rem, 5vw, 2.7rem);
+    font-weight: 800;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 0 18px rgba(0, 240, 255, 0.6);
+    margin-bottom: 4px;
+  }
+
+  .game-subtitle {
+    font-size: 0.85rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 24px;
+  }
+
+  .menu-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+
+  .settings-group {
+    text-align: left;
+    background: rgba(5, 10, 22, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 22px;
+  }
+
+  .setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    font-size: 0.88rem;
+  }
+
+  .setting-row:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  select, input[type="range"] {
+    background: #0f172a;
+    color: var(--cyan);
+    border: 1px solid var(--cyan-dim);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    outline: none;
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #040814;
+    background: linear-gradient(135deg, #00f0ff 0%, #38bdf8 100%);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 28px rgba(0, 240, 255, 0.7);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  /* HUD LAYOUT */
+  #hud {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px;
+  }
+
+  .hud-top {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    pointer-events: auto;
+  }
+
+  .resource-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    background: var(--bg-panel);
+    border: 1px solid var(--cyan-dim);
+    border-radius: 6px;
+    padding: 8px 16px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+
+  .res-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.88rem;
+  }
+
+  .res-label {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .res-val {
+    font-weight: 700;
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .val-gold { color: var(--gold); }
+  .val-cyan { color: var(--cyan); }
+  .val-ally { color: var(--blue-ally); }
+  .val-enemy { color: var(--red-enemy); }
+
+  .top-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hud-btn {
+    background: var(--bg-panel);
+    color: var(--text-main);
+    border: 1px solid var(--cyan-dim);
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    backdrop-filter: blur(6px);
+  }
+
+  .hud-btn:hover {
+    background: rgba(0, 240, 255, 0.15);
+    border-color: var(--cyan);
+    color: #fff;
+  }
+
+  .hud-btn.active {
+    background: var(--cyan);
+    color: #050a18;
+    border-color: var(--cyan);
+  }
+
+  /* ALERT BANNER */
+  #alert-feed {
+    align-self: center;
+    margin-top: 6px;
+    min-height: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+  }
+
+  .alert-msg {
+    background: rgba(10, 18, 36, 0.9);
+    border-left: 3px solid var(--cyan);
+    border-right: 3px solid var(--cyan);
+    padding: 5px 16px;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+    animation: fadeAlert 0.25s ease-out;
+  }
+
+  @keyframes fadeAlert {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* BOTTOM HUD */
+  .hud-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+    pointer-events: auto;
+  }
+
+  .panel-box {
+    background: var(--bg-panel);
+    border: 1px solid var(--cyan-dim);
+    border-radius: 6px;
+    padding: 12px 16px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+  }
+
+  .inspector-panel {
+    min-width: 250px;
+    max-width: 340px;
+  }
+
+  .panel-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--cyan);
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+    padding-bottom: 4px;
+  }
+
+  .inspector-body {
+    font-size: 0.85rem;
+    color: var(--text-main);
+    line-height: 1.45;
+  }
+
+  .recruitment-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .unit-card {
+    background: rgba(8, 15, 30, 0.85);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 6px;
+    padding: 8px 12px;
+    min-width: 125px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+  }
+
+  .unit-card:hover:not(.disabled) {
+    border-color: var(--cyan);
+    background: rgba(0, 240, 255, 0.14);
+    transform: translateY(-2px);
+  }
+
+  .unit-card.disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .u-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .u-cost {
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .u-stats {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+
+  /* FLOATING 3D LABELS & HEALTHBARS */
+  #labels-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    overflow: hidden;
+  }
+
+  .world-label {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    text-align: center;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .prov-badge {
+    background: rgba(6, 12, 24, 0.82);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  }
+
+  .prov-cap-bar {
+    width: 54px;
+    height: 4px;
+    background: rgba(255,255,255,0.15);
+    margin: 3px auto 0;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .prov-cap-fill {
+    height: 100%;
+    transition: width 0.15s linear;
+  }
+
+  .unit-hp-wrap {
+    width: 34px;
+    height: 5px;
+    background: rgba(0, 0, 0, 0.75);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .unit-hp-fill {
+    height: 100%;
+  }
+
+  /* ENDGAME MODAL */
+  #end-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    background: rgba(3, 7, 18, 0.85);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #end-modal.hidden {
+    display: none;
+  }
+
+  @media (max-width: 700px) {
+    .resource-bar { gap: 10px; padding: 6px 10px; }
+    .res-val { font-size: 0.88rem; }
+    .unit-card { min-width: 104px; padding: 6px 8px; }
+    .inspector-panel { min-width: 100%; }
+  }
+</style>
+<!-- Load Three.js & OrbitControls from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+<canvas id="game-canvas"></canvas>
+<div class="screen-fx"></div>
+<div id="labels-container"></div>
+
+<!-- MAIN MENU -->
+<div id="main-menu">
+  <div class="menu-card">
+    <div class="game-title">AETHERION</div>
+    <div class="game-subtitle">Nexus Command // 4X Tactical 3D</div>
+    <p class="menu-desc">
+      Command orbital drop-forces across a procedural 3D archipelago. Capture provincial Nexus Citadels to expand your economy, deploy armored divisions, and eliminate the rival Sovereign AI.
+    </p>
+    <div class="settings-group">
+      <div class="setting-row">
+        <span>AI Aggression Matrix</span>
+        <select id="set-difficulty">
+          <option value="0.8">Cadet (Relaxed)</option>
+          <option value="1.0" selected>Commander (Balanced)</option>
+          <option value="1.35">Grand Marshal (Intense)</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <span>Terrain Seed Morphology</span>
+        <select id="set-map">
+          <option value="archipelago" selected>Twin Continents</option>
+          <option value="highlands">Shattered Highlands</option>
+          <option value="atoll">Caldera Ring</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <span>Synthesized Audio Volume</span>
+        <input type="range" id="set-volume" min="0" max="100" value="70">
+      </div>
+    </div>
+    <button class="btn-primary" id="btn-start">Initialize Theatre</button>
+  </div>
+</div>
+
+<!-- ENDGAME SCREEN -->
+<div id="end-modal" class="hidden">
+  <div class="menu-card">
+    <div class="game-title" id="end-title">VICTORY</div>
+    <div class="game-subtitle" id="end-subtitle">Sector Pacified</div>
+    <p class="menu-desc" id="end-stats"></p>
+    <button class="btn-primary" id="btn-restart">Deploy New Campaign</button>
+  </div>
+</div>
+
+<!-- HUD OVERLAY -->
+<div id="hud">
+  <div>
+    <div class="hud-top">
+      <div class="resource-bar">
+        <div class="res-item">
+          <span class="res-label">Cycle</span>
+          <span class="res-val val-cyan" id="hud-turn">1</span>
+        </div>
+        <div class="res-item">
+          <span class="res-label">Credits</span>
+          <span class="res-val val-gold" id="hud-gold">250</span>
+          <span style="font-size:0.75rem; color:var(--emerald);" id="hud-income">(+30/s)</span>
+        </div>
+        <div class="res-item">
+          <span class="res-label">Provinces</span>
+          <span class="res-val val-ally" id="hud-prov-ally">1</span>
+          <span style="color:var(--text-muted)">/</span>
+          <span class="res-val val-enemy" id="hud-prov-enemy">1</span>
+        </div>
+        <div class="res-item">
+          <span class="res-label">Forces</span>
+          <span class="res-val val-ally" id="hud-units-ally">2</span>
+          <span style="color:var(--text-muted)">vs</span>
+          <span class="res-val val-enemy" id="hud-units-enemy">2</span>
+        </div>
+      </div>
+
+      <div class="top-controls">
+        <button class="hud-btn" id="btn-select-all" title="Select All Player Units">Select All</button>
+        <button class="hud-btn" id="btn-speed">Speed: 1x</button>
+        <button class="hud-btn" id="btn-menu">Menu</button>
+      </div>
+    </div>
+    <div id="alert-feed"></div>
+  </div>
+
+  <div class="hud-bottom">
+    <div class="panel-box inspector-panel">
+      <div class="panel-title" id="insp-title">Tactical Command Link</div>
+      <div class="inspector-body" id="insp-body">
+        <b>Left-Click / Tap:</b> Select Unit or Province<br>
+        <b>Right-Click / Tap Ground:</b> Move Selected Units<br>
+        <b>Drag / Pinch:</b> Orbit, Pan & Zoom Camera
+      </div>
+    </div>
+
+    <div class="panel-box">
+      <div class="panel-title">Orbital Deployment (Spawns at Selected / Home Citadel)</div>
+      <div class="recruitment-panel">
+        <button class="unit-card" id="spawn-scout" data-type="scout">
+          <div class="u-name"><span>Vanguard Rover</span><span class="u-cost">75c</span></div>
+          <div class="u-stats">Fast Recon • Captures Nodes</div>
+        </button>
+        <button class="unit-card" id="spawn-tank" data-type="tank">
+          <div class="u-name"><span>Aegis Tank</span><span class="u-cost">140c</span></div>
+          <div class="u-stats">Heavy Armor • Long Cannon</div>
+        </button>
+        <button class="unit-card" id="spawn-mech" data-type="mech">
+          <div class="u-name"><span>Colossus Mech</span><span class="u-cost">240c</span></div>
+          <div class="u-stats">Twin Plasma • Siege Walker</div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/**
+ * ============================================================================
+ * 1. PROCEDURAL WEB AUDIO SYNTHESIZER (No external assets required)
+ * ============================================================================
+ */
+class SoundEngine {
+  constructor() {
+    this.ctx = null;
+    this.volume = 0.7;
+  }
+
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) this.ctx = new AudioCtx();
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  setVolume(val) {
+    this.volume = Math.max(0, Math.min(1, val));
+  }
+
+  playTone(freqStart, freqEnd, duration, type = 'sine', gainMult = 0.15) {
+    if (!this.ctx || this.volume <= 0.01) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freqStart, now);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqEnd), now + duration);
+
+    const peak = gainMult * this.volume;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(peak, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + duration + 0.02);
+  }
+
+  uiClick() {
+    this.playTone(720, 1080, 0.08, 'triangle', 0.12);
+  }
+
+  selectUnit() {
+    this.playTone(500, 880, 0.11, 'sine', 0.14);
+  }
+
+  moveOrder() {
+    this.playTone(620, 440, 0.14, 'triangle', 0.14);
+  }
+
+  spawnUnit() {
+    this.playTone(220, 660, 0.28, 'sawtooth', 0.12);
+  }
+
+  laserShot(isHeavy = false) {
+    if (isHeavy) {
+      this.playTone(280, 65, 0.22, 'sawtooth', 0.14);
+    } else {
+      this.playTone(820, 190, 0.13, 'square', 0.08);
+    }
+  }
+
+  explosion() {
+    if (!this.ctx || this.volume <= 0.01) return;
+    const now = this.ctx.currentTime;
+    const dur = 0.38;
+    const bufferSize = this.ctx.sampleRate * dur;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.12));
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(420, now);
+    filter.frequency.linearRampToValueAtTime(60, now + dur);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.28 * this.volume, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+    noise.start(now);
+  }
+
+  captureProvince(isAlly) {
+    if (isAlly) {
+      this.playTone(440, 880, 0.35, 'triangle', 0.18);
+    } else {
+      this.playTone(360, 160, 0.35, 'sawtooth', 0.18);
+    }
+  }
+}
+
+const sfx = new SoundEngine();
+
+/**
+ * ============================================================================
+ * 2. FAST 2D PERLIN / VALUE FBM NOISE FOR PROCEDURAL TERRAIN
+ * ============================================================================
+ */
+class ProceduralNoise {
+  constructor(seed = 1337) {
+    this.p = new Uint8Array(512);
+    let s = seed;
+    const perm = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) perm[i] = i;
+    for (let i = 255; i > 0; i--) {
+      s = (s * 16807) % 2147483647;
+      const j = s % (i + 1);
+      const tmp = perm[i];
+      perm[i] = perm[j];
+      perm[j] = tmp;
+    }
+    for (let i = 0; i < 512; i++) this.p[i] = perm[i & 255];
+  }
+
+  fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+  lerp(t, a, b) { return a + t * (b - a); }
+  grad(hash, x, y) {
+    const h = hash & 7;
+    const u = h < 4 ? x : y;
+    const v = h < 4 ? y : x;
+    return ((h & 1) ? -u : u) + ((h & 2) ? -2.0 * v : 2.0 * v);
+  }
+
+  noise2D(x, y) {
+    const X = Math.floor(x) & 255;
+    const Y = Math.floor(y) & 255;
+    x -= Math.floor(x);
+    y -= Math.floor(y);
+    const u = this.fade(x);
+    const v = this.fade(y);
+    const A = this.p[X] + Y;
+    const B = this.p[X + 1] + Y;
+    return this.lerp(v,
+      this.lerp(u, this.grad(this.p[A], x, y), this.grad(this.p[B], x - 1, y)),
+      this.lerp(u, this.grad(this.p[A + 1], x, y - 1), this.grad(this.p[B + 1], x - 1, y - 1))
+    );
+  }
+
+  fbm(x, y, octaves = 4) {
+    let val = 0;
+    let amp = 0.5;
+    let freq = 1.0;
+    for (let i = 0; i < octaves; i++) {
+      val += amp * this.noise2D(x * freq, y * freq);
+      freq *= 2.05;
+      amp *= 0.5;
+    }
+    return val;
+  }
+}
+
+/**
+ * ============================================================================
+ * 3. UNIT SPECIFICATIONS & GAME CONSTANTS
+ * ============================================================================
+ */
+const FACTION = {
+  NEUTRAL: 0,
+  PLAYER: 1,
+  ENEMY: 2
+};
+
+const FACTION_COLORS = {
+  [FACTION.NEUTRAL]: 0x94a3b8,
+  [FACTION.PLAYER]: 0x00f0ff,
+  [FACTION.ENEMY]: 0xff2a5f
+};
+
+const UNIT_SPECS = {
+  scout: {
+    name: 'Vanguard Rover',
+    cost: 75,
+    hp: 95,
+    damage: 14,
+    range: 13,
+    cooldown: 0.75,
+    speed: 14.5,
+    radius: 1.5,
+    captureRate: 1.5
+  },
+  tank: {
+    name: 'Aegis Siege Tank',
+    cost: 140,
+    hp: 240,
+    damage: 36,
+    range: 20,
+    cooldown: 1.35,
+    speed: 9.2,
+    radius: 2.1,
+    captureRate: 1.0
+  },
+  mech: {
+    name: 'Colossus Assault Mech',
+    cost: 240,
+    hp: 440,
+    damage: 62,
+    range: 23,
+    cooldown: 1.5,
+    speed: 7.4,
+    radius: 2.6,
+    captureRate: 1.2
+  }
+};
+
+const MAP_SIZE = 180;
+const WATER_LEVEL = -0.35;
+
+/**
+ * ============================================================================
+ * 4. CORE GAME APPLICATION
+ * ============================================================================
+ */
+class GrandStrategyGame {
+  constructor() {
+    this.canvas = document.getElementById('game-canvas');
+    this.labelsContainer = document.getElementById('labels-container');
+
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x050812);
+    this.scene.fog = new THREE.FogExp2(0x050812, 0.0038);
+
+    this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 600);
+    this.camera.position.set(0, 95, 115);
+
+    this.renderer = new THREE.WebGLRenderer({
+      canvas: this.canvas,
+      antialias: true,
+      powerPreference: 'high-performance'
+    });
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    this.controls = new THREE.OrbitControls(this.camera, this.canvas);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.07;
+    this.controls.maxPolarAngle = Math.PI / 2 - 0.08;
+    this.controls.minDistance = 28;
+    this.controls.maxDistance = 210;
+    this.controls.target.set(0, 0, 10);
+
+    this.raycaster = new THREE.Raycaster();
+    this.pointer = new THREE.Vector2();
+
+    // Game State
+    this.noise = new ProceduralNoise(4242);
+    this.mapMode = 'archipelago';
+    this.difficulty = 1.0;
+    this.gameSpeed = 1;
+    this.isRunning = false;
+
+    this.turnCycle = 1;
+    this.cycleTimer = 0;
+    this.aiDecisionTimer = 0;
+
+    this.credits = {
+      [FACTION.PLAYER]: 260,
+      [FACTION.ENEMY]: 260
+    };
+
+    this.provinces = [];
+    this.units = [];
+    this.projectiles = [];
+    this.particles = [];
+    this.selectionRings = [];
+    this.moveMarkers = [];
+
+    this.selectedUnits = [];
+    this.selectedProvince = null;
+
+    this.terrainMesh = null;
+    this.waterMesh = null;
+    this.worldGroup = new THREE.Group();
+    this.scene.add(this.worldGroup);
+
+    this.setupLighting();
+    this.setupStarfield();
+    this.generateBattlefield('archipelago');
+    this.bindEvents();
+
+    this.clock = new THREE.Clock();
+    this.animate();
+  }
+
+  setupLighting() {
+    const hemiLight = new THREE.HemisphereLight(0x88ccff, 0x0f172a, 0.75);
+    this.scene.add(hemiLight);
+
+    this.dirLight = new THREE.DirectionalLight(0xfff4e0, 1.15);
+    this.dirLight.position.set(75, 120, 65);
+    this.dirLight.castShadow = true;
+    this.dirLight.shadow.mapSize.width = 2048;
+    this.dirLight.shadow.mapSize.height = 2048;
+    const d = 105;
+    this.dirLight.shadow.camera.left = -d;
+    this.dirLight.shadow.camera.right = d;
+    this.dirLight.shadow.camera.top = d;
+    this.dirLight.shadow.camera.bottom = -d;
+    this.dirLight.shadow.bias = -0.0005;
+    this.scene.add(this.dirLight);
+  }
+
+  setupStarfield() {
+    const starGeo = new THREE.BufferGeometry();
+    const count = 900;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const r = 240 + Math.random() * 140;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI * 0.48;
+      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = r * Math.cos(phi) + 15;
+      positions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0x7dd3fc, size: 1.4, transparent: true, opacity: 0.75 });
+    this.scene.add(new THREE.Points(starGeo, starMat));
+  }
+
+  /**
+   * Computes procedural terrain elevation at any (x, z) world coordinate
+   */
+  getTerrainHeight(x, z) {
+    const nx = x * 0.022;
+    const nz = z * 0.022;
+    let n = this.noise.fbm(nx, nz, 4);
+
+    // Distance falloff near map edges so islands sit in water
+    const distFromCenter = Math.hypot(x, z) / (MAP_SIZE * 0.5);
+    let mask = 1.0 - Math.pow(Math.max(0, distFromCenter), 2.3);
+
+    if (this.mapMode === 'atoll') {
+      const ringDist = Math.abs(distFromCenter - 0.55);
+      mask = Math.max(0.15, 1.0 - ringDist * 2.1);
+    } else if (this.mapMode === 'highlands') {
+      n += 0.14;
+    }
+
+    // Flatten slightly around strategic province hubs
+    let h = (n * 14.5 + 3.2) * mask - 2.0;
+
+    // Create navigable land bridges between central areas
+    const bridgeFactor = Math.exp(-Math.pow(x * 0.035, 2)) * 2.2;
+    h += bridgeFactor;
+
+    return h;
+  }
+
+  /**
+   * Builds the low-poly vertex-colored 3D terrain, water plane, and provinces
+   */
+  generateBattlefield(mapType) {
+    this.mapMode = mapType;
+    this.noise = new ProceduralNoise(Math.floor(Math.random() * 89999 + 10000));
+
+    // Clear previous objects
+    while (this.worldGroup.children.length > 0) {
+      const obj = this.worldGroup.children[0];
+      this.worldGroup.remove(obj);
+    }
+    this.labelsContainer.innerHTML = '';
+    this.provinces = [];
+    this.units = [];
+    this.projectiles = [];
+    this.particles = [];
+    this.selectedUnits = [];
+    this.selectedProvince = null;
+
+    // 1. Procedural Low-Poly Heightmap Mesh
+    const segments = 110;
+    const geo = new THREE.PlaneGeometry(MAP_SIZE, MAP_SIZE, segments, segments);
+    geo.rotateX(-Math.PI / 2);
+
+    const posAttr = geo.attributes.position;
+    const colors = [];
+    const color = new THREE.Color();
+
+    for (let i = 0; i < posAttr.count; i++) {
+      const vx = posAttr.getX(i);
+      const vz = posAttr.getZ(i);
+      const vy = this.getTerrainHeight(vx, vz);
+      posAttr.setY(i, vy);
+
+      if (vy < WATER_LEVEL + 0.35) {
+        color.setHex(0xc2b280); // Coastal sand
+      } else if (vy < 2.6) {
+        color.setHex(0x1e3f32); // Lowland cyber-steppe
+      } else if (vy < 5.5) {
+        color.setHex(0x2a4d3e); // Highland Emerald
+      } else if (vy < 8.2) {
+        color.setHex(0x475569); // Basalt rock
+      } else {
+        color.setHex(0xe2e8f0); // Frosted peaks
+      }
+      colors.push(color.r, color.g, color.b);
+    }
+
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    geo.computeVertexNormals();
+
+    const terrainMat = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      flatShading: true,
+      roughness: 0.82,
+      metalness: 0.12
+    });
+
+    this.terrainMesh = new THREE.Mesh(geo, terrainMat);
+    this.terrainMesh.receiveShadow = true;
+    this.worldGroup.add(this.terrainMesh);
+
+    // 2. Stylized Translucent Water Plane + Grid
+    const waterGeo = new THREE.PlaneGeometry(MAP_SIZE * 2.2, MAP_SIZE * 2.2, 32, 32);
+    waterGeo.rotateX(-Math.PI / 2);
+    const waterMat = new THREE.MeshStandardMaterial({
+      color: 0x0284c7,
+      transparent: true,
+      opacity: 0.72,
+      roughness: 0.2,
+      metalness: 0.65
+    });
+    this.waterMesh = new THREE.Mesh(waterGeo, waterMat);
+    this.waterMesh.position.y = WATER_LEVEL;
+    this.worldGroup.add(this.waterMesh);
+
+    const gridHelper = new THREE.GridHelper(MAP_SIZE, 36, 0x00f0ff, 0x0c4a6e);
+    gridHelper.position.y = WATER_LEVEL + 0.04;
+    gridHelper.material.transparent = true;
+    gridHelper.material.opacity = 0.22;
+    this.worldGroup.add(gridHelper);
+
+    // 3. Create Strategic Provinces (Citadel Nodes)
+    this.initProvinces();
+
+    // 4. Spawn Initial Armies
+    const playerHome = this.provinces.find(p => p.owner === FACTION.PLAYER);
+    const enemyHome = this.provinces.find(p => p.owner === FACTION.ENEMY);
+
+    if (playerHome) {
+      this.spawnUnit('scout', FACTION.PLAYER, playerHome.x - 5, playerHome.z - 5);
+      this.spawnUnit('tank', FACTION.PLAYER, playerHome.x + 5, playerHome.z - 4);
+      this.selectedProvince = playerHome;
+    }
+    if (enemyHome) {
+      this.spawnUnit('scout', FACTION.ENEMY, enemyHome.x - 5, enemyHome.z + 5);
+      this.spawnUnit('tank', FACTION.ENEMY, enemyHome.x + 5, enemyHome.z + 4);
+    }
+
+    this.updateHUD();
+  }
+
+  /**
+   * Places 7 Strategic Provinces across the terrain, ensuring each stands on solid ground
+   */
+  initProvinces() {
+    const layout = [
+      { name: 'Aegis Prime', x: 0, z: 62, owner: FACTION.PLAYER, income: 20 },
+      { name: 'Valkyrie Hub', x: -46, z: 32, owner: FACTION.NEUTRAL, income: 14 },
+      { name: 'Helios Spire', x: 46, z: 32, owner: FACTION.NEUTRAL, income: 14 },
+      { name: 'Nexus Core', x: 0, z: 0, owner: FACTION.NEUTRAL, income: 26 },
+      { name: 'Orion Bastion', x: -46, z: -32, owner: FACTION.NEUTRAL, income: 14 },
+      { name: 'Kronos Outpost', x: 46, z: -32, owner: FACTION.NEUTRAL, income: 14 },
+      { name: 'Nemesis Citadel', x: 0, z: -62, owner: FACTION.ENEMY, income: 20 }
+    ];
+
+    layout.forEach((cfg, idx) => {
+      const y = Math.max(WATER_LEVEL + 0.8, this.getTerrainHeight(cfg.x, cfg.z));
+      const group = new THREE.Group();
+      group.position.set(cfg.x, y, cfg.z);
+
+      // Base platform
+      const baseGeo = new THREE.CylinderGeometry(5.2, 6.2, 1.2, 6);
+      const baseMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, flatShading: true });
+      const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+      baseMesh.castShadow = true;
+      baseMesh.receiveShadow = true;
+      group.add(baseMesh);
+
+      // Territory Border Ring
+      const ringGeo = new THREE.RingGeometry(13.2, 14.0, 32);
+      ringGeo.rotateX(-Math.PI / 2);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: FACTION_COLORS[cfg.owner],
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.55
+      });
+      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+      ringMesh.position.y = 0.25;
+      group.add(ringMesh);
+
+      // Glowing Energy Pylon / Spire
+      const spireGeo = new THREE.ConeGeometry(1.8, 7.5, 4);
+      const spireMat = new THREE.MeshStandardMaterial({
+        color: FACTION_COLORS[cfg.owner],
+        emissive: FACTION_COLORS[cfg.owner],
+        emissiveIntensity: 0.45,
+        flatShading: true
+      });
+      const spireMesh = new THREE.Mesh(spireGeo, spireMat);
+      spireMesh.position.y = 4.2;
+      spireMesh.castShadow = true;
+      group.add(spireMesh);
+
+      this.worldGroup.add(group);
+
+      // Floating HTML Badge
+      const labelEl = document.createElement('div');
+      labelEl.className = 'world-label';
+      labelEl.innerHTML = `
+        <div class="prov-badge" id="pbadge-${idx}">${cfg.name} (+${cfg.income})</div>
+        <div class="prov-cap-bar"><div class="prov-cap-fill" id="pfill-${idx}"></div></div>
+      `;
+      this.labelsContainer.appendChild(labelEl);
+
+      const prov = {
+        id: idx,
+        name: cfg.name,
+        x: cfg.x,
+        y: y,
+        z: cfg.z,
+        owner: cfg.owner,
+        income: cfg.income,
+        captureProgress: 100,
+        capturingFaction: cfg.owner,
+        group,
+        spireMesh,
+        ringMesh,
+        labelEl,
+        badgeEl: labelEl.querySelector(`#pbadge-${idx}`),
+        fillEl: labelEl.querySelector(`#pfill-${idx}`)
+      };
+
+      baseMesh.userData = { province: prov };
+      spireMesh.userData = { province: prov };
+
+      this.provinces.push(prov);
+      this.refreshProvinceVisuals(prov);
+    });
+  }
+
+  refreshProvinceVisuals(prov) {
+    const colHex = FACTION_COLORS[prov.owner];
+    prov.spireMesh.material.color.setHex(colHex);
+    prov.spireMesh.material.emissive.setHex(colHex);
+    prov.ringMesh.material.color.setHex(colHex);
+
+    const cssColor = prov.owner === FACTION.PLAYER ? '#00f0ff' :
+                     prov.owner === FACTION.ENEMY ? '#ff2a5f' : '#94a3b8';
+    prov.badgeEl.style.borderColor = cssColor;
+    prov.badgeEl.style.color = cssColor;
+    prov.fillEl.style.width = `${Math.max(0, Math.min(100, prov.captureProgress))}%`;
+    prov.fillEl.style.background = cssColor;
+  }
+
+  /**
+   * Builds a composite 3D low-poly military model for a unit
+   */
+  createUnitMesh(type, faction) {
+    const group = new THREE.Group();
+    const mainColor = FACTION_COLORS[faction];
+    const hullMat = new THREE.MeshStandardMaterial({
+      color: mainColor,
+      roughness: 0.45,
+      metalness: 0.35,
+      flatShading: true
+    });
+    const darkMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      roughness: 0.7,
+      flatShading: true
+    });
+
+    let turret = new THREE.Group();
+
+    if (type === 'scout') {
+      // Fast 6-wheel Recon Rover
+      const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.75, 2.5), hullMat);
+      chassis.position.y = 0.65;
+      chassis.castShadow = true;
+      group.add(chassis);
+
+      const cockpit = new THREE.Mesh(new THREE.ConeGeometry(0.85, 1.3, 4), darkMat);
+      cockpit.rotation.x = Math.PI / 2;
+      cockpit.position.set(0, 0.85, 0.5);
+      group.add(cockpit);
+
+      const gun = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 1.4, 6), darkMat);
+      gun.rotation.x = Math.PI / 2;
+      gun.position.set(0, 1.15, 0.7);
+      turret.add(gun);
+    } else if (type === 'tank') {
+      // Heavy Siege Tank with tracks & cannon turret
+      const leftTrack = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.75, 3.4), darkMat);
+      leftTrack.position.set(-1.1, 0.4, 0);
+      const rightTrack = leftTrack.clone();
+      rightTrack.position.x = 1.1;
+      group.add(leftTrack, rightTrack);
+
+      const hull = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.8, 3.1), hullMat);
+      hull.position.y = 0.75;
+      hull.castShadow = true;
+      group.add(hull);
+
+      const turretHead = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 1.15, 0.65, 6), hullMat);
+      turretHead.position.y = 1.35;
+      turretHead.castShadow = true;
+      turret.add(turretHead);
+
+      const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 2.6, 8), darkMat);
+      barrel.rotation.x = Math.PI / 2;
+      barrel.position.set(0, 1.35, 1.4);
+      turret.add(barrel);
+    } else if (type === 'mech') {
+      // Bipedal Assault Walker with twin plasma cannons
+      const legL = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.7, 0.65), darkMat);
+      legL.position.set(-0.7, 0.85, 0);
+      const legR = legL.clone();
+      legR.position.x = 0.7;
+      group.add(legL, legR);
+
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.6, 1.6), hullMat);
+      torso.position.y = 2.2;
+      torso.castShadow = true;
+      turret.add(torso);
+
+      const podL = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 2.2, 6), darkMat);
+      podL.rotation.x = Math.PI / 2;
+      podL.position.set(-1.25, 2.35, 0.75);
+      const podR = podL.clone();
+      podR.position.x = 1.25;
+      turret.add(podL, podR);
+    }
+
+    group.add(turret);
+
+    // Selection Ring under unit
+    const selGeo = new THREE.RingGeometry(1.6, 2.0, 24);
+    selGeo.rotateX(-Math.PI / 2);
+    const selMat = new THREE.MeshBasicMaterial({
+      color: 0x00ffaa,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.9
+    });
+    const selRing = new THREE.Mesh(selGeo, selMat);
+    selRing.position.y = 0.12;
+    selRing.visible = false;
+    group.add(selRing);
+
+    return { group, turret, selRing };
+  }
+
+  /**
+   * Spawns a unit onto the 3D battlefield
+   */
+  spawnUnit(type, faction, x, z) {
+    const spec = UNIT_SPECS[type];
+    if (!spec) return null;
+
+    // Slight jitter so multiple spawns don't stack on exact same spot
+    const jx = x + (Math.random() - 0.5) * 4;
+    const jz = z + (Math.random() - 0.5) * 4;
+    const y = Math.max(WATER_LEVEL, this.getTerrainHeight(jx, jz));
+
+    const { group, turret, selRing } = this.createUnitMesh(type, faction);
+    group.position.set(jx, y, jz);
+    this.worldGroup.add(group);
+
+    // Floating HP bar
+    const hpEl = document.createElement('div');
+    hpEl.className = 'world-label';
+    const barColor = faction === FACTION.PLAYER ? '#00f0ff' : '#ff2a5f';
+    hpEl.innerHTML = `<div class="unit-hp-wrap"><div class="unit-hp-fill" style="width:100%;background:${barColor}"></div></div>`;
+    this.labelsContainer.appendChild(hpEl);
+
+    const unit = {
+      id: Math.random().toString(36).slice(2),
+      type,
+      spec,
+      faction,
+      hp: spec.hp,
+      maxHp: spec.hp,
+      x: jx,
+      y,
+      z: jz,
+      targetX: jx,
+      targetZ: jz,
+      cooldown: 0,
+      group,
+      turret,
+      selRing,
+      hpEl,
+      hpFill: hpEl.querySelector('.unit-hp-fill'),
+      walkPhase: Math.random() * Math.PI * 2
+    };
+
+    group.traverse(child => {
+      if (child.isMesh) child.userData = { unit };
+    });
+
+    this.units.push(unit);
+    return unit;
+  }
+
+  /**
+   * Player recruitment button handler
+   */
+  recruitPlayerUnit(type) {
+    if (!this.isRunning) return;
+    const spec = UNIT_SPECS[type];
+    if (this.credits[FACTION.PLAYER] < spec.cost) {
+      this.pushAlert('Insufficient Credits for Orbital Drop!');
+      return;
+    }
+
+    // Find spawn province (selected player province or any owned province)
+    let spawnProv = (this.selectedProvince && this.selectedProvince.owner === FACTION.PLAYER)
+      ? this.selectedProvince
+      : this.provinces.find(p => p.owner === FACTION.PLAYER);
+
+    if (!spawnProv) {
+      this.pushAlert('No Allied Citadel Available for Drop!');
+      return;
+    }
+
+    this.credits[FACTION.PLAYER] -= spec.cost;
+    const u = this.spawnUnit(type, FACTION.PLAYER, spawnProv.x, spawnProv.z - 6);
+    sfx.spawnUnit();
+    this.spawnBurstParticles(u.x, u.y + 1.5, u.z, 0x00f0ff, 12);
+    this.updateHUD();
+  }
+
+  /**
+   * Main simulation step (economy, unit movement, combat, province capture, AI)
+   */
+  updateSimulation(dt) {
+    if (!this.isRunning || this.gameSpeed === 0) return;
+
+    const simDt = dt * this.gameSpeed;
+
+    // 1. Economic Tick & Cycle Counter (every 1.0 second of game time)
+    this.cycleTimer += simDt;
+    if (this.cycleTimer >= 1.0) {
+      this.cycleTimer -= 1.0;
+      this.turnCycle++;
+
+      let playerInc = 8; // Base command income
+      let enemyInc = 8 * this.difficulty;
+
+      for (const p of this.provinces) {
+        if (p.owner === FACTION.PLAYER) playerInc += p.income;
+        else if (p.owner === FACTION.ENEMY) enemyInc += p.income * this.difficulty;
+      }
+
+      this.credits[FACTION.PLAYER] += playerInc;
+      this.credits[FACTION.ENEMY] += enemyInc;
+      this.updateHUD();
+    }
+
+    // 2. AI Strategic Commander Tick
+    this.aiDecisionTimer += simDt;
+    if (this.aiDecisionTimer >= 2.2) {
+      this.aiDecisionTimer = 0;
+      this.runAICommander();
+    }
+
+    // 3. Update Units (Movement, Collision Avoidance, Combat)
+    for (let i = 0; i < this.units.length; i++) {
+      const u = this.units[i];
+      u.cooldown = Math.max(0, u.cooldown - simDt);
+
+      // Find nearest enemy unit
+      let nearestEnemy = null;
+      let minDist = Infinity;
+      for (let j = 0; j < this.units.length; j++) {
+        const other = this.units[j];
+        if (other.faction !== u.faction) {
+          const d = Math.hypot(other.x - u.x, other.z - u.z);
+          if (d < minDist) {
+            minDist = d;
+            nearestEnemy = other;
+          }
+        }
+      }
+
+      // Movement towards targetX, targetZ (stop early if enemy in firing range and not explicitly moving far)
+      const dx = u.targetX - u.x;
+      const dz = u.targetZ - u.z;
+      const distToTarget = Math.hypot(dx, dz);
+
+      const inCombatHold = nearestEnemy && minDist <= u.spec.range * 0.88 && distToTarget < 12;
+
+      if (distToTarget > 0.6 && !inCombatHold) {
+        const step = Math.min(distToTarget, u.spec.speed * simDt);
+        u.x += (dx / distToTarget) * step;
+        u.z += (dz / distToTarget) * step;
+
+        // Smooth heading rotation
+        const targetAngle = Math.atan2(dx, dz);
+        u.group.rotation.y = targetAngle;
+
+        // Subtle bobbing animation while moving
+        u.walkPhase += simDt * 10;
+      }
+
+      // Soft separation between nearby units
+      for (let j = i + 1; j < this.units.length; j++) {
+        const o = this.units[j];
+        const sx = u.x - o.x;
+        const sz = u.z - o.z;
+        const dist = Math.hypot(sx, sz);
+        const minSep = u.spec.radius + o.spec.radius;
+        if (dist > 0.001 && dist < minSep) {
+          const push = (minSep - dist) * 0.35;
+          const nx = sx / dist;
+          const nz = sz / dist;
+          u.x += nx * push;
+          u.z += nz * push;
+          o.x -= nx * push;
+          o.z -= nz * push;
+        }
+      }
+
+      // Clamp to map bounds & conform to terrain height
+      const bound = MAP_SIZE * 0.46;
+      u.x = Math.max(-bound, Math.min(bound, u.x));
+      u.z = Math.max(-bound, Math.min(bound, u.z));
+
+      const groundY = this.getTerrainHeight(u.x, u.z);
+      u.y = Math.max(WATER_LEVEL - 0.1, groundY);
+      const bob = (distToTarget > 0.6 && u.type === 'mech') ? Math.abs(Math.sin(u.walkPhase)) * 0.25 : 0;
+      u.group.position.set(u.x, u.y + bob, u.z);
+
+      // Combat Resolution
+      if (nearestEnemy && minDist <= u.spec.range) {
+        // Aim turret at enemy
+        const aimAngle = Math.atan2(nearestEnemy.x - u.x, nearestEnemy.z - u.z);
+        u.turret.rotation.y = aimAngle - u.group.rotation.y;
+
+        if (u.cooldown <= 0) {
+          u.cooldown = u.spec.cooldown;
+          this.fireProjectile(u, nearestEnemy);
+        }
+      } else {
+        u.turret.rotation.y *= 0.9;
+      }
+    }
+
+    // 4. Update Projectiles
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      const proj = this.projectiles[i];
+      proj.life -= simDt;
+      if (proj.life <= 0) {
+        this.worldGroup.remove(proj.mesh);
+        this.projectiles.splice(i, 1);
+        continue;
+      }
+
+      proj.mesh.position.addScaledVector(proj.vel, simDt);
+
+      // Check impact with target
+      if (proj.target && proj.target.hp > 0) {
+        const d = proj.mesh.position.distanceTo(proj.target.group.position);
+        if (d < 2.4) {
+          this.applyDamage(proj.target, proj.damage);
+          this.spawnBurstParticles(proj.mesh.position.x, proj.mesh.position.y, proj.mesh.position.z, proj.color, 7);
+          this.worldGroup.remove(proj.mesh);
+          this.projectiles.splice(i, 1);
+        }
+      }
+    }
+
+    // 5. Update Particle Effects
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.life -= simDt;
+      if (p.life <= 0) {
+        this.worldGroup.remove(p.mesh);
+        this.particles.splice(i, 1);
+        continue;
+      }
+      p.vel.y -= 18 * simDt; // gravity
+      p.mesh.position.addScaledVector(p.vel, simDt);
+      p.mesh.scale.setScalar(Math.max(0.01, p.life / p.maxLife));
+    }
+
+    // 6. Update Move Order Ring Markers
+    for (let i = this.moveMarkers.length - 1; i >= 0; i--) {
+      const m = this.moveMarkers[i];
+      m.life -= simDt;
+      if (m.life <= 0) {
+        this.worldGroup.remove(m.mesh);
+        this.moveMarkers.splice(i, 1);
+      } else {
+        const s = 1 + (1 - m.life / 0.6) * 1.8;
+        m.mesh.scale.set(s, s, s);
+        m.mesh.material.opacity = m.life / 0.6;
+      }
+    }
+
+    // 7. Update Strategic Province Capture Mechanics
+    this.updateProvinces(simDt);
+  }
+
+  fireProjectile(attacker, target) {
+    const isHeavy = attacker.type !== 'scout';
+    sfx.laserShot(isHeavy);
+
+    const color = attacker.faction === FACTION.PLAYER ? 0x00f0ff : 0xff2a5f;
+    const geo = new THREE.SphereGeometry(isHeavy ? 0.36 : 0.22, 6, 6);
+    const mat = new THREE.MeshBasicMaterial({ color });
+    const mesh = new THREE.Mesh(geo, mat);
+
+    const startPos = new THREE.Vector3(attacker.x, attacker.y + 1.6, attacker.z);
+    const endPos = new THREE.Vector3(target.x, target.y + 1.2, target.z);
+    mesh.position.copy(startPos);
+
+    const speed = isHeavy ? 52 : 68;
+    const vel = endPos.sub(startPos).normalize().multiplyScalar(speed);
+
+    this.worldGroup.add(mesh);
+    this.projectiles.push({
+      mesh,
+      vel,
+      target,
+      damage: attacker.spec.damage,
+      color,
+      life: 1.2
+    });
+  }
+
+  applyDamage(unit, amount) {
+    unit.hp -= amount;
+    const pct = Math.max(0, (unit.hp / unit.maxHp) * 100);
+    unit.hpFill.style.width = `${pct}%`;
+
+    if (unit.hp <= 0) {
+      sfx.explosion();
+      this.spawnBurstParticles(unit.x, unit.y + 1.2, unit.z, 0xffaa00, 18);
+      this.worldGroup.remove(unit.group);
+      unit.hpEl.remove();
+
+      const idx = this.units.indexOf(unit);
+      if (idx !== -1) this.units.splice(idx, 1);
+
+      const selIdx = this.selectedUnits.indexOf(unit);
+      if (selIdx !== -1) this.selectedUnits.splice(selIdx, 1);
+
+      this.updateHUD();
+      this.checkVictoryConditions();
+    }
+  }
+
+  spawnBurstParticles(x, y, z, colorHex, count = 10) {
+    const geo = new THREE.BoxGeometry(0.35, 0.35, 0.35);
+    const mat = new THREE.MeshBasicMaterial({ color: colorHex });
+    for (let i = 0; i < count; i++) {
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(x, y, z);
+      const vel = new THREE.Vector3(
+        (Math.random() - 0.5) * 16,
+        Math.random() * 12 + 3,
+        (Math.random() - 0.5) * 16
+      );
+      this.worldGroup.add(mesh);
+      this.particles.push({ mesh, vel, life: 0.45, maxLife: 0.45 });
+    }
+  }
+
+  updateProvinces(simDt) {
+    for (const prov of this.provinces) {
+      // Rotate crystal spire slowly
+      prov.spireMesh.rotation.y += simDt * 0.9;
+
+      // Count units inside capture radius (14 units)
+      let playerPower = 0;
+      let enemyPower = 0;
+      for (const u of this.units) {
+        const d = Math.hypot(u.x - prov.x, u.z - prov.z);
+        if (d < 14) {
+          if (u.faction === FACTION.PLAYER) playerPower += u.spec.captureRate;
+          else if (u.faction === FACTION.ENEMY) enemyPower += u.spec.captureRate;
+        }
+      }
+
+      if (playerPower > 0 && enemyPower === 0) {
+        this.processCapture(prov, FACTION.PLAYER, playerPower * 18 * simDt);
+      } else if (enemyPower > 0 && playerPower === 0) {
+        this.processCapture(prov, FACTION.ENEMY, enemyPower * 18 * simDt);
+      } else if (playerPower === 0 && enemyPower === 0 && prov.captureProgress < 100) {
+        prov.captureProgress = Math.min(100, prov.captureProgress + 8 * simDt);
+        this.refreshProvinceVisuals(prov);
+      }
+    }
+  }
+
+  processCapture(prov, faction, delta) {
+    if (prov.owner === faction) {
+      if (prov.captureProgress < 100) {
+        prov.captureProgress = Math.min(100, prov.captureProgress + delta);
+        this.refreshProvinceVisuals(prov);
+      }
+      return;
+    }
+
+    prov.captureProgress -= delta;
+    if (prov.captureProgress <= 0) {
+      prov.owner = faction;
+      prov.captureProgress = 100;
+      const isAlly = faction === FACTION.PLAYER;
+      sfx.captureProvince(isAlly);
+      this.pushAlert(`${prov.name} captured by ${isAlly ? 'Allied Nexus' : 'Sovereign AI'}!`);
+      this.spawnBurstParticles(prov.x, prov.y + 4, prov.z, FACTION_COLORS[faction], 16);
+      this.updateHUD();
+      this.checkVictoryConditions();
+    }
+    this.refreshProvinceVisuals(prov);
+  }
+
+  /**
+   * Autonomous AI Opponent Logic (Spawns balanced forces and captures provinces)
+   */
+  runAICommander() {
+    const enemyProvs = this.provinces.filter(p => p.owner === FACTION.ENEMY);
+    if (enemyProvs.length === 0) return;
+
+    // 1. Spend credits to spawn units at front-most owned province
+    enemyProvs.sort((a, b) => b.z - a.z);
+    const spawnHub = enemyProvs[0];
+
+    const enemyUnits = this.units.filter(u => u.faction === FACTION.ENEMY);
+    const budget = this.credits[FACTION.ENEMY];
+
+    if (enemyUnits.length < 18) {
+      if (budget >= 240 && Math.random() < 0.45) {
+        this.credits[FACTION.ENEMY] -= 240;
+        this.spawnUnit('mech', FACTION.ENEMY, spawnHub.x, spawnHub.z + 5);
+      } else if (budget >= 140 && Math.random() < 0.65) {
+        this.credits[FACTION.ENEMY] -= 140;
+        this.spawnUnit('tank', FACTION.ENEMY, spawnHub.x, spawnHub.z + 5);
+      } else if (budget >= 75 && enemyUnits.length < 6) {
+        this.credits[FACTION.ENEMY] -= 75;
+        this.spawnUnit('scout', FACTION.ENEMY, spawnHub.x, spawnHub.z + 5);
+      }
+    }
+
+    // 2. Direct idle AI units toward unowned provinces or player threats
+    const targets = this.provinces.filter(p => p.owner !== FACTION.ENEMY);
+    if (targets.length === 0) return;
+
+    for (const u of enemyUnits) {
+      const distToDest = Math.hypot(u.targetX - u.x, u.targetZ - u.z);
+      if (distToDest < 3.5) {
+        // Pick nearest neutral or player province
+        targets.sort((a, b) =>
+          Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z)
+        );
+        const chosen = targets[Math.min(targets.length - 1, Math.random() < 0.7 ? 0 : 1)];
+        if (chosen) {
+          u.targetX = chosen.x + (Math.random() - 0.5) * 8;
+          u.targetZ = chosen.z + (Math.random() - 0.5) * 8;
+        }
+      }
+    }
+  }
+
+  /**
+   * Checks if either faction controls all citadels or eliminated the rival
+   */
+  checkVictoryConditions() {
+    if (!this.isRunning) return;
+    const allyProvs = this.provinces.filter(p => p.owner === FACTION.PLAYER).length;
+    const enemyProvs = this.provinces.filter(p => p.owner === FACTION.ENEMY).length;
+    const allyUnits = this.units.filter(u => u.faction === FACTION.PLAYER).length;
+    const enemyUnits = this.units.filter(u => u.faction === FACTION.ENEMY).length;
+
+    if (enemyProvs === 0 && enemyUnits === 0) {
+      this.endGame(true);
+    } else if (allyProvs === 0 && allyUnits === 0) {
+      this.endGame(false);
+    }
+  }
+
+  endGame(playerWon) {
+    this.isRunning = false;
+    const modal = document.getElementById('end-modal');
+    const title = document.getElementById('end-title');
+    const sub = document.getElementById('end-subtitle');
+    const stats = document.getElementById('end-stats');
+
+    modal.classList.remove('hidden');
+    if (playerWon) {
+      title.textContent = 'SUPREME VICTORY';
+      title.style.color = '#00f0ff';
+      sub.textContent = 'All Rival Nexus Citadels Pacified';
+    } else {
+      title.textContent = 'SECTOR LOST';
+      title.style.color = '#ff2a5f';
+      sub.textContent = 'Command Network Overrun';
+    }
+    stats.textContent = `Campaign concluded on Cycle ${this.turnCycle} with ${Math.floor(this.credits[FACTION.PLAYER])} surplus Credits.`;
+  }
+
+  /**
+   * Projects 3D coordinates to 2D screen labels
+   */
+  updateWorldLabels() {
+    const halfW = window.innerWidth / 2;
+    const halfH = window.innerHeight / 2;
+    const tempV = new THREE.Vector3();
+
+    for (const prov of this.provinces) {
+      tempV.set(prov.x, prov.y + 8.8, prov.z);
+      tempV.project(this.camera);
+      if (tempV.z > 1) {
+        prov.labelEl.style.display = 'none';
+      } else {
+        prov.labelEl.style.display = 'block';
+        const sx = (tempV.x * halfW) + halfW;
+        const sy = -(tempV.y * halfH) + halfH;
+        prov.labelEl.style.left = `${sx}px`;
+        prov.labelEl.style.top = `${sy}px`;
+      }
+    }
+
+    for (const u of this.units) {
+      if (u.hp >= u.maxHp && !this.selectedUnits.includes(u)) {
+        u.hpEl.style.display = 'none';
+        continue;
+      }
+      tempV.set(u.x, u.y + 3.6, u.z);
+      tempV.project(this.camera);
+      if (tempV.z > 1) {
+        u.hpEl.style.display = 'none';
+      } else {
+        u.hpEl.style.display = 'block';
+        const sx = (tempV.x * halfW) + halfW;
+        const sy = -(tempV.y * halfH) + halfH;
+        u.hpEl.style.left = `${sx}px`;
+        u.hpEl.style.top = `${sy}px`;
+      }
+    }
+  }
+
+  updateHUD() {
+    const allyProvs = this.provinces.filter(p => p.owner === FACTION.PLAYER);
+    const enemyProvs = this.provinces.filter(p => p.owner === FACTION.ENEMY);
+    const allyUnits = this.units.filter(u => u.faction === FACTION.PLAYER);
+    const enemyUnits = this.units.filter(u => u.faction === FACTION.ENEMY);
+
+    let income = 8;
+    allyProvs.forEach(p => income += p.income);
+
+    document.getElementById('hud-turn').textContent = this.turnCycle;
+    document.getElementById('hud-gold').textContent = Math.floor(this.credits[FACTION.PLAYER]);
+    document.getElementById('hud-income').textContent = `(+${income}/s)`;
+    document.getElementById('hud-prov-ally').textContent = allyProvs.length;
+    document.getElementById('hud-prov-enemy').textContent = enemyProvs.length;
+    document.getElementById('hud-units-ally').textContent = allyUnits.length;
+    document.getElementById('hud-units-enemy').textContent = enemyUnits.length;
+
+    // Enable/Disable recruitment cards based on current credits
+    ['scout', 'tank', 'mech'].forEach(type => {
+      const btn = document.getElementById(`spawn-${type}`);
+      if (this.credits[FACTION.PLAYER] >= UNIT_SPECS[type].cost) {
+        btn.classList.remove('disabled');
+      } else {
+        btn.classList.add('disabled');
+      }
+    });
+  }
+
+  pushAlert(text) {
+    const feed = document.getElementById('alert-feed');
+    const el = document.createElement('div');
+    el.className = 'alert-msg';
+    el.textContent = text;
+    feed.appendChild(el);
+    setTimeout(() => el.remove(), 3200);
+  }
+
+  /**
+   * Mouse & Touch Interaction System
+   */
+  bindEvents() {
+    window.addEventListener('resize', () => {
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Prevent context menu on right-click commands
+    this.canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+    let downPos = { x: 0, y: 0 };
+    this.canvas.addEventListener('pointerdown', e => {
+      downPos = { x: e.clientX, y: e.clientY };
+    });
+
+    this.canvas.addEventListener('pointerup', e => {
+      if (!this.isRunning) return;
+      const moveDist = Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y);
+      if (moveDist > 8) return; // Ignore camera drag gestures
+
+      this.pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+      this.pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      this.raycaster.setFromCamera(this.pointer, this.camera);
+
+      // Right-click always issues a move order if units are selected
+      if (e.button === 2 && this.selectedUnits.length > 0) {
+        this.issueGroundMoveOrder();
+        return;
+      }
+
+      // Check intersections with units or provinces
+      const hits = this.raycaster.intersectObjects(this.worldGroup.children, true);
+      let hitUnit = null;
+      let hitProv = null;
+
+      for (const h of hits) {
+        if (h.object.userData && h.object.userData.unit) {
+          hitUnit = h.object.userData.unit;
+          break;
+        }
+        if (h.object.userData && h.object.userData.province) {
+          hitProv = h.object.userData.province;
+          break;
+        }
+      }
+
+      if (hitUnit && hitUnit.faction === FACTION.PLAYER) {
+        sfx.selectUnit();
+        if (!e.shiftKey) this.clearUnitSelection();
+        if (!this.selectedUnits.includes(hitUnit)) {
+          this.selectedUnits.push(hitUnit);
+          hitUnit.selRing.visible = true;
+        }
+        this.updateInspector();
+      } else if (hitProv) {
+        sfx.uiClick();
+        this.selectedProvince = hitProv;
+        if (this.selectedUnits.length > 0 && hitProv.owner !== FACTION.PLAYER) {
+          // Move selected units to capture clicked non-ally province
+          this.moveUnitsToPoint(hitProv.x, hitProv.z);
+        }
+        this.updateInspector();
+      } else if (this.selectedUnits.length > 0) {
+        // Left-clicking or tapping open terrain moves currently selected units (great for mobile & desktop)
+        this.issueGroundMoveOrder();
+      }
+    });
+
+    // UI Buttons
+    document.getElementById('btn-start').addEventListener('click', () => {
+      sfx.init();
+      sfx.uiClick();
+      this.difficulty = parseFloat(document.getElementById('set-difficulty').value);
+      const mapMode = document.getElementById('set-map').value;
+      const vol = parseInt(document.getElementById('set-volume').value, 10) / 100;
+      sfx.setVolume(vol);
+
+      this.generateBattlefield(mapMode);
+      this.credits[FACTION.PLAYER] = 260;
+      this.credits[FACTION.ENEMY] = 260;
+      this.turnCycle = 1;
+      this.isRunning = true;
+      document.getElementById('main-menu').classList.add('hidden');
+      this.pushAlert('Theatre Initialized — Capture Nexus Citadels!');
+    });
+
+    document.getElementById('btn-restart').addEventListener('click', () => {
+      sfx.uiClick();
+      document.getElementById('end-modal').classList.add('hidden');
+      document.getElementById('main-menu').classList.remove('hidden');
+    });
+
+    document.getElementById('btn-menu').addEventListener('click', () => {
+      sfx.uiClick();
+      this.isRunning = false;
+      document.getElementById('main-menu').classList.remove('hidden');
+    });
+
+    document.getElementById('btn-select-all').addEventListener('click', () => {
+      sfx.selectUnit();
+      this.clearUnitSelection();
+      for (const u of this.units) {
+        if (u.faction === FACTION.PLAYER) {
+          this.selectedUnits.push(u);
+          u.selRing.visible = true;
+        }
+      }
+      this.updateInspector();
+    });
+
+    document.getElementById('btn-speed').addEventListener('click', e => {
+      sfx.uiClick();
+      if (this.gameSpeed === 1) this.gameSpeed = 2;
+      else if (this.gameSpeed === 2) this.gameSpeed = 0;
+      else this.gameSpeed = 1;
+      e.target.textContent = this.gameSpeed === 0 ? 'Paused' : `Speed: ${this.gameSpeed}x`;
+    });
+
+    ['scout', 'tank', 'mech'].forEach(type => {
+      document.getElementById(`spawn-${type}`).addEventListener('click', () => {
+        this.recruitPlayerUnit(type);
+      });
+    });
+  }
+
+  clearUnitSelection() {
+    for (const u of this.selectedUnits) {
+      u.selRing.visible = false;
+    }
+    this.selectedUnits = [];
+  }
+
+  issueGroundMoveOrder() {
+    if (!this.terrainMesh) return;
+    const hits = this.raycaster.intersectObject(this.terrainMesh);
+    if (hits.length > 0) {
+      const pt = hits[0].point;
+      this.moveUnitsToPoint(pt.x, pt.z);
+    }
+  }
+
+  moveUnitsToPoint(tx, tz) {
+    sfx.moveOrder();
+    const count = this.selectedUnits.length;
+    const cols = Math.ceil(Math.sqrt(count));
+    const spacing = 4.2;
+
+    this.selectedUnits.forEach((u, idx) => {
+      const r = Math.floor(idx / cols);
+      const c = idx % cols;
+      const ox = (c - (cols - 1) / 2) * spacing;
+      const oz = (r - (cols - 1) / 2) * spacing;
+      u.targetX = tx + ox;
+      u.targetZ = tz + oz;
+    });
+
+    // Spawn visual waypoint ring on terrain
+    const wy = Math.max(WATER_LEVEL + 0.2, this.getTerrainHeight(tx, tz) + 0.25);
+    const geo = new THREE.RingGeometry(0.8, 1.3, 24);
+    geo.rotateX(-Math.PI / 2);
+    const mat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, side: THREE.DoubleSide, transparent: true });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(tx, wy, tz);
+    this.worldGroup.add(mesh);
+    this.moveMarkers.push({ mesh, life: 0.6 });
+  }
+
+  updateInspector() {
+    const titleEl = document.getElementById('insp-title');
+    const bodyEl = document.getElementById('insp-body');
+
+    if (this.selectedUnits.length === 1) {
+      const u = this.selectedUnits[0];
+      titleEl.textContent = u.spec.name;
+      bodyEl.innerHTML = `
+        <b>Integrity:</b> ${Math.ceil(u.hp)} / ${u.maxHp} HP<br>
+        <b>Weapon:</b> ${u.spec.damage} DMG • Range ${u.spec.range}m<br>
+        <b>Orders:</b> Click or Right-Click ground to advance
+      `;
+    } else if (this.selectedUnits.length > 1) {
+      titleEl.textContent = `Strike Group (${this.selectedUnits.length} Units)`;
+      bodyEl.innerHTML = `
+        <b>Combined Force Active</b><br>
+        Click any enemy Citadel or terrain point to advance in formation.
+      `;
+    } else if (this.selectedProvince) {
+      const p = this.selectedProvince;
+      const ownerStr = p.owner === FACTION.PLAYER ? 'Allied Nexus' :
+                       p.owner === FACTION.ENEMY ? 'Sovereign AI' : 'Unclaimed Sector';
+      titleEl.textContent = `Province: ${p.name}`;
+      bodyEl.innerHTML = `
+        <b>Controller:</b> ${ownerStr}<br>
+        <b>Economic Yield:</b> +${p.income} Credits / Cycle<br>
+        <b>Control Integrity:</b> ${Math.floor(p.captureProgress)}%
+      `;
+    }
+  }
+
+  animate() {
+    requestAnimationFrame(() => this.animate());
+
+    const dt = Math.min(0.1, this.clock.getDelta());
+    this.controls.update();
+
+    // Subtle water wave shimmer
+    if (this.waterMesh) {
+      this.waterMesh.position.y = WATER_LEVEL + Math.sin( performance.now() * 0.0018 ) * 0.12;
+    }
+
+    this.updateSimulation(dt);
+    this.updateWorldLabels();
+    this.renderer.render(this.scene, this.camera);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  new GrandStrategyGame();
+});
+</script>
+</body>
+</html>
