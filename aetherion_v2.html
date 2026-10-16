@@ -1,0 +1,2198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>AETHERION: Nexus Command — 3D Grand Strategy</title>
+<style>
+  :root {
+    --bg-dark: rgba(8, 13, 24, 0.92);
+    --bg-panel: rgba(12, 21, 38, 0.88);
+    --cyan: #00f0ff;
+    --cyan-dim: rgba(0, 240, 255, 0.28);
+    --blue-ally: #38bdf8;
+    --red-enemy: #f43f5e;
+    --gold: #fbbf24;
+    --emerald: #10b981;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+  }
+
+  * {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    margin: 0;
+    padding: 0;
+  }
+
+  body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #050811;
+    font-family: var(--font-ui);
+    color: var(--text-main);
+    touch-action: none;
+  }
+
+  #game-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    touch-action: none;
+    display: block;
+  }
+
+  /* Виньетка без тяжелых фильтров */
+  .screen-fx {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    background: radial-gradient(circle at center, transparent 62%, rgba(2, 6, 18, 0.65) 100%);
+  }
+
+  /* ПЛАВАЮЩИЕ МЕТКИ (КОМПАКТНЫЕ ДЛЯ МОБИЛОК) */
+  #labels-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    overflow: hidden;
+  }
+
+  .world-label {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate3d(-50%, -100%, 0);
+    text-align: center;
+    pointer-events: none;
+    white-space: nowrap;
+    will-change: transform;
+  }
+
+  .prov-badge {
+    background: rgba(6, 12, 24, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    line-height: 1.2;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  .prov-cap-bar {
+    width: 38px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.16);
+    margin: 2px auto 0;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .prov-cap-fill {
+    height: 100%;
+    transition: width 0.15s linear;
+  }
+
+  .unit-hp-wrap {
+    width: 24px;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .unit-hp-fill {
+    height: 100%;
+  }
+
+  /* ГЛАВНОЕ МЕНЮ И МОДАЛЬНЫЕ ОКНА */
+  #main-menu, #end-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(12px + var(--safe-top)) calc(12px + var(--safe-right)) calc(12px + var(--safe-bottom)) calc(12px + var(--safe-left));
+    background: radial-gradient(circle at center, rgba(10, 20, 40, 0.78) 0%, rgba(4, 8, 18, 0.96) 100%);
+    backdrop-filter: blur(6px);
+    transition: opacity 0.35s ease, visibility 0.35s ease;
+  }
+
+  #main-menu.hidden, #end-modal.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .menu-card {
+    width: min(480px, 94vw);
+    max-height: 92vh;
+    overflow-y: auto;
+    background: var(--bg-panel);
+    border: 1px solid var(--cyan-dim);
+    box-shadow: 0 0 32px rgba(0, 240, 255, 0.15);
+    border-radius: 12px;
+    padding: 22px 20px;
+    text-align: center;
+  }
+
+  .game-title {
+    font-size: clamp(1.5rem, 5vw, 2.3rem);
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 0 14px rgba(0, 240, 255, 0.55);
+  }
+
+  .game-subtitle {
+    font-size: 0.78rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin: 4px 0 14px;
+  }
+
+  .menu-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+    margin-bottom: 16px;
+  }
+
+  .settings-group {
+    text-align: left;
+    background: rgba(5, 10, 22, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 18px;
+  }
+
+  .setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    font-size: 0.85rem;
+  }
+
+  .setting-row:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  select, input[type="range"] {
+    background: #0f172a;
+    color: var(--cyan);
+    border: 1px solid var(--cyan-dim);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    min-height: 36px;
+    outline: none;
+  }
+
+  .btn-primary {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #040814;
+    background: linear-gradient(135deg, #00f0ff 0%, #38bdf8 100%);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 18px rgba(0, 240, 255, 0.35);
+  }
+
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  /* ОСНОВНОЙ HUD С УЧЕТОМ SAFE-AREA */
+  #hud {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-top: calc(10px + var(--safe-top));
+    padding-bottom: calc(10px + var(--safe-bottom));
+    padding-left: calc(10px + var(--safe-left));
+    padding-right: calc(10px + var(--safe-right));
+  }
+
+  /* ВЕРХНЯЯ ПАНЕЛЬ РЕСУРСОВ И КНОПОК */
+  .hud-top {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+  }
+
+  .resource-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-panel);
+    border: 1px solid var(--cyan-dim);
+    border-radius: 10px;
+    padding: 8px 14px;
+    min-height: 46px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  }
+
+  .res-item {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+
+  .res-label {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .res-val {
+    font-weight: 800;
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .val-gold { color: var(--gold); }
+  .val-cyan { color: var(--cyan); }
+  .val-ally { color: var(--blue-ally); }
+  .val-enemy { color: var(--red-enemy); }
+
+  .top-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .hud-btn {
+    background: var(--bg-panel);
+    color: var(--text-main);
+    border: 1px solid var(--cyan-dim);
+    border-radius: 8px;
+    min-height: 44px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+  }
+
+  .hud-btn:active {
+    transform: scale(0.96);
+  }
+
+  .hud-btn.active {
+    background: var(--cyan);
+    color: #040814;
+    border-color: #fff;
+    box-shadow: 0 0 14px rgba(0, 240, 255, 0.65);
+  }
+
+  /* УВЕДОМЛЕНИЯ И БАННЕР РЕЖИМА ЦЕЛЕУКАЗАНИЯ */
+  .hud-center- stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+  }
+
+  #mode-indicator {
+    align-self: center;
+    margin-top: 6px;
+    background: rgba(0, 240, 255, 0.92);
+    color: #030712;
+    font-weight: 800;
+    font-size: 0.82rem;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 20px;
+    box-shadow: 0 0 18px rgba(0, 240, 255, 0.6);
+    display: none;
+    pointer-events: auto;
+  }
+
+  #mode-indicator.visible {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #alert-feed {
+    align-self: center;
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+  }
+
+  .alert-msg {
+    background: rgba(10, 18, 36, 0.92);
+    border-left: 3px solid var(--cyan);
+    border-right: 3px solid var(--cyan);
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  }
+
+  /* НИЖНЯЯ ПАНЕЛЬ: КОНТЕКСТНЫЕ ПРИКАЗЫ ВОЙСКАМ + НАЙМ */
+  .hud-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  /* Панель управления войсками (для тач-экранов и ПК) */
+  .orders-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    pointer-events: auto;
+  }
+
+  .order-btn {
+    min-height: 46px;
+    padding: 8px 14px;
+    border-radius: 9px;
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    background: rgba(12, 22, 42, 0.92);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+  }
+
+  .order-btn:active {
+    transform: scale(0.96);
+  }
+
+  .order-btn.move-mode-active {
+    background: linear-gradient(135deg, #00f0ff 0%, #38bdf8 100%);
+    color: #040814;
+    border-color: #fff;
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.7);
+  }
+
+  .order-btn.attack-btn {
+    border-color: rgba(244, 63, 94, 0.6);
+    color: #fda4af;
+  }
+
+  /* Нижний ряд: Инспектор и Крупные кнопки найма */
+  .bottom-deck {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 8px;
+    pointer-events: auto;
+  }
+
+  .panel-box {
+    background: var(--bg-panel);
+    border: 1px solid var(--cyan-dim);
+    border-radius: 10px;
+    padding: 8px 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  .inspector-panel {
+    flex: 1 1 210px;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .panel-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--cyan);
+    margin-bottom: 4px;
+    font-weight: 700;
+  }
+
+  .inspector-body {
+    font-size: 0.78rem;
+    color: var(--text-main);
+    line-height: 1.35;
+  }
+
+  .recruitment-box {
+    flex: 2 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .recruitment-panel {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .unit-card {
+    background: rgba(8, 15, 30, 0.92);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 8px;
+    padding: 8px 10px;
+    min-height: 54px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: left;
+    transition: transform 0.1s ease, border-color 0.15s ease;
+  }
+
+  .unit-card:active:not(.disabled) {
+    transform: scale(0.97);
+    background: rgba(0, 240, 255, 0.2);
+  }
+
+  .unit-card.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .u-name {
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .u-cost {
+    color: var(--gold);
+    font-weight: 800;
+    font-size: 0.85rem;
+  }
+
+  .u-stats {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* АДАПТАЦИЯ ПОД ВЕРТИКАЛЬНУЮ ОРИЕНТАЦИЮ СМАРТФОНА (PORTRAIT) */
+  @media (max-width: 768px) and (orientation: portrait) {
+    .hud-top {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .resource-bar {
+      justify-content: space-between;
+      padding: 8px 12px;
+      gap: 6px;
+    }
+    .top-controls {
+      justify-content: space-between;
+    }
+    .top-controls .hud-btn {
+      flex: 1;
+    }
+    .bottom-deck {
+      flex-direction: column;
+    }
+    .inspector-panel {
+      max-width: 100%;
+      flex: none;
+      padding: 6px 10px;
+    }
+    .unit-card {
+      min-height: 56px;
+      padding: 8px;
+    }
+    .u-name {
+      font-size: 0.8rem;
+    }
+  }
+
+  /* АДАПТАЦИЯ ПОД ГОРИЗОНТАЛЬНУЮ ОРИЕНТАЦИЮ СМАРТФОНА (LANDSCAPE) */
+  @media (max-height: 520px) and (orientation: landscape) {
+    #hud {
+      padding-top: calc(6px + var(--safe-top));
+      padding-bottom: calc(6px + var(--safe-bottom));
+    }
+    .resource-bar {
+      min-height: 38px;
+      padding: 4px 10px;
+      gap: 10px;
+    }
+    .res-val { font-size: 0.92rem; }
+    .hud-btn, .order-btn {
+      min-height: 38px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+    }
+    .inspector-panel {
+      display: none; /* Освобождаем обзор карты в альбомном режиме */
+    }
+    .panel-title {
+      display: none;
+    }
+    .unit-card {
+      min-height: 44px;
+      padding: 5px 8px;
+    }
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+<canvas id="game-canvas"></canvas>
+<div class="screen-fx"></div>
+<div id="labels-container"></div>
+
+<!-- ГЛАВНОЕ МЕНЮ -->
+<div id="main-menu">
+  <div class="menu-card">
+    <div class="game-title">AETHERION</div>
+    <div class="game-subtitle">Nexus Command // 4X Tactical 3D</div>
+    <p class="menu-desc">
+      Захватывайте провинции-цитадели для роста экономики, создавайте бронетанковые группы и сокрушите ИИ-противника. Полная поддержка тач-жестов и ПК.
+    </p>
+    <div class="settings-group">
+      <div class="setting-row">
+        <span>Сложность ИИ</span>
+        <select id="set-difficulty">
+          <option value="0.8">Кадет (Легко)</option>
+          <option value="1.0" selected>Командор (Норма)</option>
+          <option value="1.35">Гранд-Маршал (Сложно)</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <span>Генерация архипелага</span>
+        <select id="set-map">
+          <option value="archipelago" selected>Два континента</option>
+          <option value="highlands">Горное плато</option>
+          <option value="atoll">Кольцо кальдеры</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <span>Тени и 3D-эффекты</span>
+        <select id="set-shadows">
+          <option value="auto" selected>Авто (60 FPS)</option>
+          <option value="on">Включены</option>
+          <option value="off">Выкл (Макс. FPS)</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <span>Громкость звука</span>
+        <input type="range" id="set-volume" min="0" max="100" value="70">
+      </div>
+    </div>
+    <button class="btn-primary" id="btn-start">Начать кампанию</button>
+  </div>
+</div>
+
+<!-- ЭКРАН ЗАВЕРШЕНИЯ ИГРЫ -->
+<div id="end-modal" class="hidden">
+  <div class="menu-card">
+    <div class="game-title" id="end-title">ПОБЕДА</div>
+    <div class="game-subtitle" id="end-subtitle">Сектор под контролем</div>
+    <p class="menu-desc" id="end-stats"></p>
+    <button class="btn-primary" id="btn-restart">Новая операция</button>
+  </div>
+</div>
+
+<!-- ИГРОВОЙ ИНТЕРФЕЙС (HUD) -->
+<div id="hud">
+  <div>
+    <div class="hud-top">
+      <div class="resource-bar">
+        <div class="res-item">
+          <span class="res-label">Цикл</span>
+          <span class="res-val val-cyan" id="hud-turn">1</span>
+        </div>
+        <div class="res-item">
+          <span class="res-label">Кредиты</span>
+          <span class="res-val val-gold" id="hud-gold">260</span>
+          <span style="font-size:0.74rem; color:var(--emerald); font-weight:700;" id="hud-income">(+28)</span>
+        </div>
+        <div class="res-item">
+          <span class="res-label">Базы</span>
+          <span class="res-val val-ally" id="hud-prov-ally">1</span>
+          <span style="color:var(--text-muted)">:</span>
+          <span class="res-val val-enemy" id="hud-prov-enemy">1</span>
+        </div>
+        <div class="res-item">
+          <span class="res-label">Войска</span>
+          <span class="res-val val-ally" id="hud-units-ally">2</span>
+          <span style="color:var(--text-muted)">vs</span>
+          <span class="res-val val-enemy" id="hud-units-enemy">2</span>
+        </div>
+      </div>
+
+      <div class="top-controls">
+        <button class="hud-btn" id="btn-select-all">Все войска</button>
+        <button class="hud-btn" id="btn-speed">1x</button>
+        <button class="hud-btn" id="btn-menu">Меню</button>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <div id="mode-indicator">
+        <span>🎯 Тапните по карте, куда направить войска</span>
+      </div>
+      <div id="alert-feed"></div>
+    </div>
+  </div>
+
+  <!-- НИЖНЯЯ ЧАСТЬ HUD -->
+  <div class="hud-bottom">
+    <!-- Контекстные кнопки приказов для удобного управления на смартфонах -->
+    <div class="orders-bar" id="orders-bar">
+      <button class="order-btn" id="btn-order-move" title="Включить режим отправки войск по тапу на карту">
+        🎯 Указать цель (<span id="sel-count">0</span>)
+      </button>
+      <button class="order-btn attack-btn" id="btn-order-attack" title="Отправить выбранные войска на ближайшую вражескую цель">
+        ⚔️ В штурм
+      </button>
+      <button class="order-btn" id="btn-order-stop" title="Остановить выбранные войска">
+        🛡️ Стоп
+      </button>
+      <button class="order-btn" id="btn-order-clear" title="Снять выделение">
+        ✖ Сброс
+      </button>
+    </div>
+
+    <div class="bottom-deck">
+      <div class="panel-box inspector-panel">
+        <div class="panel-title" id="insp-title">Тактическая сводка</div>
+        <div class="inspector-body" id="insp-body">
+          <b>1 палец:</b> Вращение • <b>2 пальца:</b> Зум/Сдвиг<br>
+          <b>Тап по юниту:</b> Выбор • <b>Кнопка «Указать цель»:</b> Марш
+        </div>
+      </div>
+
+      <div class="panel-box recruitment-box">
+        <div class="panel-title">Орбитальный вызов (в выбранной базе)</div>
+        <div class="recruitment-panel">
+          <button class="unit-card" id="spawn-scout" data-type="scout">
+            <div class="u-name"><span>Ровер</span><span class="u-cost">75c</span></div>
+            <div class="u-stats">Быстрый • Захват баз</div>
+          </button>
+          <button class="unit-card" id="spawn-tank" data-type="tank">
+            <div class="u-name"><span>Танк «Эгида»</span><span class="u-cost">140c</span></div>
+            <div class="u-stats">Броня • Дальнобойный</div>
+          </button>
+          <button class="unit-card" id="spawn-mech" data-type="mech">
+            <div class="u-name"><span>Мех «Колосс»</span><span class="u-cost">240c</span></div>
+            <div class="u-stats">Штурмовой • Двойная плазма</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/**
+ * ============================================================================
+ * 1. СИНТЕЗАТОР ЗВУКА НА WEB AUDIO API (Без внешних файлов)
+ * ============================================================================
+ */
+class SoundEngine {
+  constructor() {
+    this.ctx = null;
+    this.volume = 0.7;
+  }
+
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) this.ctx = new AudioCtx();
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  setVolume(val) {
+    this.volume = Math.max(0, Math.min(1, val));
+  }
+
+  playTone(freqStart, freqEnd, duration, type = 'sine', gainMult = 0.14) {
+    if (!this.ctx || this.volume <= 0.01) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freqStart, now);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(25, freqEnd), now + duration);
+
+    const peak = gainMult * this.volume;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(peak, now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + duration + 0.02);
+  }
+
+  uiClick() { this.playTone(680, 1020, 0.07, 'triangle', 0.11); }
+  selectUnit() { this.playTone(480, 860, 0.1, 'sine', 0.13); }
+  moveOrder() { this.playTone(640, 420, 0.12, 'triangle', 0.13); }
+  spawnUnit() { this.playTone(210, 640, 0.25, 'sawtooth', 0.11); }
+  laserShot(isHeavy = false) {
+    if (isHeavy) this.playTone(260, 65, 0.18, 'sawtooth', 0.12);
+    else this.playTone(790, 190, 0.11, 'square', 0.07);
+  }
+  explosion() {
+    this.playTone(130, 32, 0.28, 'sawtooth', 0.18);
+  }
+  captureProvince(isAlly) {
+    if (isAlly) this.playTone(440, 880, 0.32, 'triangle', 0.16);
+    else this.playTone(350, 150, 0.32, 'sawtooth', 0.16);
+  }
+}
+
+const sfx = new SoundEngine();
+
+/**
+ * ============================================================================
+ * 2. ПРОЦЕДУРНЫЙ ШУМ ПЕРЛИНА ДЛЯ ГЕНЕРАЦИИ 3D ЛАНДШАФТА
+ * ============================================================================
+ */
+class ProceduralNoise {
+  constructor(seed = 1337) {
+    this.p = new Uint8Array(512);
+    let s = seed;
+    const perm = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) perm[i] = i;
+    for (let i = 255; i > 0; i--) {
+      s = (s * 16807) % 2147483647;
+      const j = s % (i + 1);
+      const tmp = perm[i];
+      perm[i] = perm[j];
+      perm[j] = tmp;
+    }
+    for (let i = 0; i < 512; i++) this.p[i] = perm[i & 255];
+  }
+
+  fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+  lerp(t, a, b) { return a + t * (b - a); }
+  grad(hash, x, y) {
+    const h = hash & 7;
+    const u = h < 4 ? x : y;
+    const v = h < 4 ? y : x;
+    return ((h & 1) ? -u : u) + ((h & 2) ? -2.0 * v : 2.0 * v);
+  }
+
+  noise2D(x, y) {
+    const X = Math.floor(x) & 255;
+    const Y = Math.floor(y) & 255;
+    x -= Math.floor(x);
+    y -= Math.floor(y);
+    const u = this.fade(x);
+    const v = this.fade(y);
+    const A = this.p[X] + Y;
+    const B = this.p[X + 1] + Y;
+    return this.lerp(v,
+      this.lerp(u, this.grad(this.p[A], x, y), this.grad(this.p[B], x - 1, y)),
+      this.lerp(u, this.grad(this.p[A + 1], x, y - 1), this.grad(this.p[B + 1], x - 1, y - 1))
+    );
+  }
+
+  fbm(x, y, octaves = 3) {
+    let val = 0;
+    let amp = 0.5;
+    let freq = 1.0;
+    for (let i = 0; i < octaves; i++) {
+      val += amp * this.noise2D(x * freq, y * freq);
+      freq *= 2.05;
+      amp *= 0.5;
+    }
+    return val;
+  }
+}
+
+/**
+ * ============================================================================
+ * 3. КОНСТАНТЫ И ХАРАКТЕРИСТИКИ БОЕВЫХ ЕДИНИЦ
+ * ============================================================================
+ */
+const FACTION = { NEUTRAL: 0, PLAYER: 1, ENEMY: 2 };
+
+const FACTION_COLORS = {
+  [FACTION.NEUTRAL]: 0x94a3b8,
+  [FACTION.PLAYER]: 0x00f0ff,
+  [FACTION.ENEMY]: 0xff2a5f
+};
+
+const UNIT_SPECS = {
+  scout: {
+    name: 'Развед-Ровер',
+    cost: 75,
+    hp: 95,
+    damage: 14,
+    range: 13,
+    cooldown: 0.75,
+    speed: 14.5,
+    radius: 1.5,
+    captureRate: 1.5
+  },
+  tank: {
+    name: 'Танк «Эгида»',
+    cost: 140,
+    hp: 240,
+    damage: 36,
+    range: 20,
+    cooldown: 1.35,
+    speed: 9.2,
+    radius: 2.1,
+    captureRate: 1.0
+  },
+  mech: {
+    name: 'Мех «Колосс»',
+    cost: 240,
+    hp: 440,
+    damage: 62,
+    range: 23,
+    cooldown: 1.5,
+    speed: 7.4,
+    radius: 2.6,
+    captureRate: 1.2
+  }
+};
+
+const MAP_SIZE = 180;
+const WATER_LEVEL = -0.35;
+
+/**
+ * ============================================================================
+ * 4. ЯДРО ИГРЫ (ОПТИМИЗИРОВАННОЕ ПОД 60 FPS И СМАРТФОНЫ)
+ * ============================================================================
+ */
+class GrandStrategyGame {
+  constructor() {
+    this.canvas = document.getElementById('game-canvas');
+    this.labelsContainer = document.getElementById('labels-container');
+    this.isMobileDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (window.innerWidth <= 900 && 'ontouchstart' in window);
+
+    // Сцена и камера
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x050812);
+    this.scene.fog = new THREE.FogExp2(0x050812, 0.0036);
+
+    this.camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 1.5, 480);
+    this.camera.position.set(0, 96, 118);
+
+    // Ограничиваем PixelRatio для стабильных 60 FPS без перегрева
+    const maxPR = this.isMobileDevice ? 1.25 : 1.5;
+    this.renderer = new THREE.WebGLRenderer({
+      canvas: this.canvas,
+      antialias: !this.isMobileDevice,
+      powerPreference: 'high-performance'
+    });
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxPR));
+
+    // Настройка OrbitControls специально для смартфонов и ПК
+    this.controls = new THREE.OrbitControls(this.camera, this.canvas);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.08;
+    this.controls.rotateSpeed = 0.75;
+    this.controls.zoomSpeed = 0.9;
+    this.controls.panSpeed = 0.85;
+    this.controls.maxPolarAngle = Math.PI / 2 - 0.1;
+    this.controls.minDistance = 26;
+    this.controls.maxDistance = 205;
+    this.controls.target.set(0, 0, 12);
+
+    // Явная привязка жестов пальцами: 1 палец = вращение, 2 пальца = зум щипком + панорамирование
+    this.controls.touches = {
+      ONE: THREE.TOUCH.ROTATE,
+      TWO: THREE.TOUCH.DOLLY_PAN
+    };
+
+    this.raycaster = new THREE.Raycaster();
+    this.pointer = new THREE.Vector2();
+    this.projVec = new THREE.Vector3();
+
+    // Игровое состояние
+    this.noise = new ProceduralNoise(4242);
+    this.mapMode = 'archipelago';
+    this.difficulty = 1.0;
+    this.gameSpeed = 1;
+    this.isRunning = false;
+
+    // Режим приказа перемещения (для бесконфликтного управления на смартфонах)
+    this.moveCommandMode = false;
+
+    this.turnCycle = 1;
+    this.cycleTimer = 0;
+    this.aiDecisionTimer = 0;
+
+    this.credits = { [FACTION.PLAYER]: 260, [FACTION.ENEMY]: 260 };
+
+    this.provinces = [];
+    this.units = [];
+    this.projectiles = [];
+    this.particles = [];
+    this.moveMarkers = [];
+
+    this.selectedUnits = [];
+    this.selectedProvince = null;
+
+    this.worldGroup = new THREE.Group();
+    this.scene.add(this.worldGroup);
+
+    // Инициализация общих геометрий и материалов (Object Pooling для 60 FPS)
+    this.initSharedAssets();
+    this.setupLighting();
+    this.configureShadows('auto');
+    this.setupStarfield();
+    this.generateBattlefield('archipelago');
+    this.bindEvents();
+
+    this.clock = new THREE.Clock();
+    this.animate();
+  }
+
+  /**
+   * Предварительное создание общих геометрий и материалов, чтобы не нагружать GC
+   */
+  initSharedAssets() {
+    this.sharedGeo = {
+      scoutChassis: new THREE.BoxGeometry(1.7, 0.75, 2.5),
+      scoutCockpit: new THREE.ConeGeometry(0.85, 1.3, 4),
+      scoutGun: new THREE.CylinderGeometry(0.12, 0.12, 1.4, 6),
+      tankTrack: new THREE.BoxGeometry(0.65, 0.75, 3.4),
+      tankHull: new THREE.BoxGeometry(2.1, 0.8, 3.1),
+      tankTurret: new THREE.CylinderGeometry(0.95, 1.15, 0.65, 6),
+      tankBarrel: new THREE.CylinderGeometry(0.18, 0.22, 2.6, 6),
+      mechLeg: new THREE.BoxGeometry(0.55, 1.7, 0.65),
+      mechTorso: new THREE.BoxGeometry(2.1, 1.6, 1.6),
+      mechPod: new THREE.CylinderGeometry(0.28, 0.28, 2.2, 6),
+      selRing: new THREE.RingGeometry(1.65, 2.1, 20),
+      waypointRing: new THREE.RingGeometry(0.9, 1.45, 20),
+      projLight: new THREE.SphereGeometry(0.24, 5, 5),
+      projHeavy: new THREE.SphereGeometry(0.38, 6, 6),
+      particleBox: new THREE.BoxGeometry(0.36, 0.36, 0.36)
+    };
+    this.sharedGeo.selRing.rotateX(-Math.PI / 2);
+    this.sharedGeo.waypointRing.rotateX(-Math.PI / 2);
+
+    this.sharedMat = {
+      hullPlayer: new THREE.MeshStandardMaterial({ color: FACTION_COLORS[FACTION.PLAYER], roughness: 0.45, metalness: 0.3, flatShading: true }),
+      hullEnemy: new THREE.MeshStandardMaterial({ color: FACTION_COLORS[FACTION.ENEMY], roughness: 0.45, metalness: 0.3, flatShading: true }),
+      darkMetal: new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7, flatShading: true }),
+      selRing: new THREE.MeshBasicMaterial({ color: 0x00ffaa, side: THREE.DoubleSide, transparent: true, opacity: 0.9 }),
+      projPlayer: new THREE.MeshBasicMaterial({ color: 0x00f0ff }),
+      projEnemy: new THREE.MeshBasicMaterial({ color: 0xff2a5f }),
+      partCyan: new THREE.MeshBasicMaterial({ color: 0x00f0ff }),
+      partRed: new THREE.MeshBasicMaterial({ color: 0xff2a5f }),
+      partFire: new THREE.MeshBasicMaterial({ color: 0xffaa00 })
+    };
+  }
+
+  setupLighting() {
+    const hemiLight = new THREE.HemisphereLight(0x88ccff, 0x0f172a, 0.8);
+    this.scene.add(hemiLight);
+
+    this.dirLight = new THREE.DirectionalLight(0xfff4e0, 1.1);
+    this.dirLight.position.set(70, 115, 60);
+    this.dirLight.shadow.mapSize.width = 1024;
+    this.dirLight.shadow.mapSize.height = 1024;
+    const d = 95;
+    this.dirLight.shadow.camera.left = -d;
+    this.dirLight.shadow.camera.right = d;
+    this.dirLight.shadow.camera.top = d;
+    this.dirLight.shadow.camera.bottom = -d;
+    this.dirLight.shadow.bias = -0.0008;
+    this.scene.add(this.dirLight);
+  }
+
+  configureShadows(mode) {
+    const enable = mode === 'on' || (mode === 'auto' && !this.isMobileDevice);
+    this.shadowsEnabled = enable;
+    this.renderer.shadowMap.enabled = enable;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.dirLight.castShadow = enable;
+    if (this.terrainMesh) this.terrainMesh.receiveShadow = enable;
+  }
+
+  setupStarfield() {
+    const starGeo = new THREE.BufferGeometry();
+    const count = 450;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const r = 230 + Math.random() * 120;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI * 0.47;
+      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = r * Math.cos(phi) + 15;
+      positions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0x7dd3fc, size: 1.5, transparent: true, opacity: 0.7 });
+    this.scene.add(new THREE.Points(starGeo, starMat));
+  }
+
+  getTerrainHeight(x, z) {
+    const nx = x * 0.022;
+    const nz = z * 0.022;
+    let n = this.noise.fbm(nx, nz, 3);
+
+    const distFromCenter = Math.hypot(x, z) / (MAP_SIZE * 0.5);
+    let mask = 1.0 - Math.pow(Math.max(0, distFromCenter), 2.3);
+
+    if (this.mapMode === 'atoll') {
+      const ringDist = Math.abs(distFromCenter - 0.55);
+      mask = Math.max(0.15, 1.0 - ringDist * 2.1);
+    } else if (this.mapMode === 'highlands') {
+      n += 0.14;
+    }
+
+    let h = (n * 14.5 + 3.2) * mask - 2.0;
+    const bridgeFactor = Math.exp(-Math.pow(x * 0.035, 2)) * 2.2;
+    return h + bridgeFactor;
+  }
+
+  generateBattlefield(mapType) {
+    this.mapMode = mapType;
+    this.noise = new ProceduralNoise(Math.floor(Math.random() * 89999 + 10000));
+
+    while (this.worldGroup.children.length > 0) {
+      this.worldGroup.remove(this.worldGroup.children[0]);
+    }
+    this.labelsContainer.innerHTML = '';
+    this.provinces = [];
+    this.units = [];
+    this.projectiles = [];
+    this.particles = [];
+    this.moveMarkers = [];
+    this.selectedUnits = [];
+    this.selectedProvince = null;
+    this.setMoveCommandMode(false);
+
+    // 1. Оптимизированная сетка рельефа (72x72 для максимального FPS)
+    const segments = 72;
+    const geo = new THREE.PlaneGeometry(MAP_SIZE, MAP_SIZE, segments, segments);
+    geo.rotateX(-Math.PI / 2);
+
+    const posAttr = geo.attributes.position;
+    const colors = new Float32Array(posAttr.count * 3);
+    const color = new THREE.Color();
+
+    for (let i = 0; i < posAttr.count; i++) {
+      const vx = posAttr.getX(i);
+      const vz = posAttr.getZ(i);
+      const vy = this.getTerrainHeight(vx, vz);
+      posAttr.setY(i, vy);
+
+      if (vy < WATER_LEVEL + 0.35) color.setHex(0xc2b280);
+      else if (vy < 2.6) color.setHex(0x1e3f32);
+      else if (vy < 5.5) color.setHex(0x2a4d3e);
+      else if (vy < 8.2) color.setHex(0x475569);
+      else color.setHex(0xe2e8f0);
+
+      colors[i * 3] = color.r;
+      colors[i * 3 + 1] = color.g;
+      colors[i * 3 + 2] = color.b;
+    }
+
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geo.computeVertexNormals();
+
+    const terrainMat = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      flatShading: true,
+      roughness: 0.84,
+      metalness: 0.1
+    });
+
+    this.terrainMesh = new THREE.Mesh(geo, terrainMat);
+    this.terrainMesh.receiveShadow = this.shadowsEnabled;
+    this.worldGroup.add(this.terrainMesh);
+
+    // 2. Водная гладь и тактическая сетка
+    const waterGeo = new THREE.PlaneGeometry(MAP_SIZE * 2.1, MAP_SIZE * 2.1, 2, 2);
+    waterGeo.rotateX(-Math.PI / 2);
+    const waterMat = new THREE.MeshStandardMaterial({
+      color: 0x0284c7,
+      transparent: true,
+      opacity: 0.72,
+      roughness: 0.25,
+      metalness: 0.6
+    });
+    this.waterMesh = new THREE.Mesh(waterGeo, waterMat);
+    this.waterMesh.position.y = WATER_LEVEL;
+    this.worldGroup.add(this.waterMesh);
+
+    const gridHelper = new THREE.GridHelper(MAP_SIZE, 30, 0x00f0ff, 0x0c4a6e);
+    gridHelper.position.y = WATER_LEVEL + 0.04;
+    gridHelper.material.transparent = true;
+    gridHelper.material.opacity = 0.18;
+    this.worldGroup.add(gridHelper);
+
+    // 3. Создание провинций и стартовых армий
+    this.initProvinces();
+
+    const playerHome = this.provinces.find(p => p.owner === FACTION.PLAYER);
+    const enemyHome = this.provinces.find(p => p.owner === FACTION.ENEMY);
+
+    if (playerHome) {
+      this.spawnUnit('scout', FACTION.PLAYER, playerHome.x - 5, playerHome.z - 5);
+      this.spawnUnit('tank', FACTION.PLAYER, playerHome.x + 5, playerHome.z - 4);
+      this.selectedProvince = playerHome;
+    }
+    if (enemyHome) {
+      this.spawnUnit('scout', FACTION.ENEMY, enemyHome.x - 5, enemyHome.z + 5);
+      this.spawnUnit('tank', FACTION.ENEMY, enemyHome.x + 5, enemyHome.z + 4);
+    }
+
+    this.updateHUD();
+    this.updateInspector();
+  }
+
+  initProvinces() {
+    const layout = [
+      { name: 'Эгида Прайм', x: 0, z: 62, owner: FACTION.PLAYER, income: 20 },
+      { name: 'Валькирия', x: -46, z: 32, owner: FACTION.NEUTRAL, income: 14 },
+      { name: 'Гелиос', x: 46, z: 32, owner: FACTION.NEUTRAL, income: 14 },
+      { name: 'Ядро Нексуса', x: 0, z: 0, owner: FACTION.NEUTRAL, income: 26 },
+      { name: 'Орион', x: -46, z: -32, owner: FACTION.NEUTRAL, income: 14 },
+      { name: 'Кронос', x: 46, z: -32, owner: FACTION.NEUTRAL, income: 14 },
+      { name: 'Немезида', x: 0, z: -62, owner: FACTION.ENEMY, income: 20 }
+    ];
+
+    const baseGeo = new THREE.CylinderGeometry(5.0, 6.0, 1.2, 6);
+    const baseMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, flatShading: true });
+    const ringGeo = new THREE.RingGeometry(13.2, 13.9, 24);
+    ringGeo.rotateX(-Math.PI / 2);
+    const spireGeo = new THREE.ConeGeometry(1.75, 7.2, 4);
+
+    layout.forEach((cfg, idx) => {
+      const y = Math.max(WATER_LEVEL + 0.8, this.getTerrainHeight(cfg.x, cfg.z));
+      const group = new THREE.Group();
+      group.position.set(cfg.x, y, cfg.z);
+
+      const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+      baseMesh.castShadow = this.shadowsEnabled;
+      group.add(baseMesh);
+
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: FACTION_COLORS[cfg.owner],
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.5
+      });
+      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+      ringMesh.position.y = 0.25;
+      group.add(ringMesh);
+
+      const spireMat = new THREE.MeshStandardMaterial({
+        color: FACTION_COLORS[cfg.owner],
+        emissive: FACTION_COLORS[cfg.owner],
+        emissiveIntensity: 0.45,
+        flatShading: true
+      });
+      const spireMesh = new THREE.Mesh(spireGeo, spireMat);
+      spireMesh.position.y = 4.1;
+      group.add(spireMesh);
+
+      this.worldGroup.add(group);
+
+      const labelEl = document.createElement('div');
+      labelEl.className = 'world-label';
+      labelEl.innerHTML = `
+        <div class="prov-badge" id="pbadge-${idx}">${cfg.name} +${cfg.income}</div>
+        <div class="prov-cap-bar"><div class="prov-cap-fill" id="pfill-${idx}"></div></div>
+      `;
+      this.labelsContainer.appendChild(labelEl);
+
+      const prov = {
+        id: idx,
+        name: cfg.name,
+        x: cfg.x,
+        y,
+        z: cfg.z,
+        owner: cfg.owner,
+        income: cfg.income,
+        captureProgress: 100,
+        group,
+        spireMesh,
+        ringMesh,
+        labelEl,
+        badgeEl: labelEl.querySelector(`#pbadge-${idx}`),
+        fillEl: labelEl.querySelector(`#pfill-${idx}`)
+      };
+
+      baseMesh.userData = { province: prov };
+      spireMesh.userData = { province: prov };
+
+      this.provinces.push(prov);
+      this.refreshProvinceVisuals(prov);
+    });
+  }
+
+  refreshProvinceVisuals(prov) {
+    const colHex = FACTION_COLORS[prov.owner];
+    prov.spireMesh.material.color.setHex(colHex);
+    prov.spireMesh.material.emissive.setHex(colHex);
+    prov.ringMesh.material.color.setHex(colHex);
+
+    const cssColor = prov.owner === FACTION.PLAYER ? '#00f0ff' :
+                     prov.owner === FACTION.ENEMY ? '#ff2a5f' : '#94a3b8';
+    prov.badgeEl.style.borderColor = cssColor;
+    prov.badgeEl.style.color = cssColor;
+    prov.fillEl.style.width = `${Math.max(0, Math.min(100, prov.captureProgress))}%`;
+    prov.fillEl.style.background = cssColor;
+  }
+
+  createUnitMesh(type, faction) {
+    const group = new THREE.Group();
+    const hullMat = faction === FACTION.PLAYER ? this.sharedMat.hullPlayer : this.sharedMat.hullEnemy;
+    const darkMat = this.sharedMat.darkMetal;
+    const turret = new THREE.Group();
+
+    if (type === 'scout') {
+      const chassis = new THREE.Mesh(this.sharedGeo.scoutChassis, hullMat);
+      chassis.position.y = 0.65;
+      group.add(chassis);
+
+      const cockpit = new THREE.Mesh(this.sharedGeo.scoutCockpit, darkMat);
+      cockpit.rotation.x = Math.PI / 2;
+      cockpit.position.set(0, 0.85, 0.5);
+      group.add(cockpit);
+
+      const gun = new THREE.Mesh(this.sharedGeo.scoutGun, darkMat);
+      gun.rotation.x = Math.PI / 2;
+      gun.position.set(0, 1.15, 0.7);
+      turret.add(gun);
+    } else if (type === 'tank') {
+      const leftTrack = new THREE.Mesh(this.sharedGeo.tankTrack, darkMat);
+      leftTrack.position.set(-1.1, 0.4, 0);
+      const rightTrack = new THREE.Mesh(this.sharedGeo.tankTrack, darkMat);
+      rightTrack.position.set(1.1, 0.4, 0);
+      group.add(leftTrack, rightTrack);
+
+      const hull = new THREE.Mesh(this.sharedGeo.tankHull, hullMat);
+      hull.position.y = 0.75;
+      group.add(hull);
+
+      const turretHead = new THREE.Mesh(this.sharedGeo.tankTurret, hullMat);
+      turretHead.position.y = 1.35;
+      turret.add(turretHead);
+
+      const barrel = new THREE.Mesh(this.sharedGeo.tankBarrel, darkMat);
+      barrel.rotation.x = Math.PI / 2;
+      barrel.position.set(0, 1.35, 1.4);
+      turret.add(barrel);
+    } else if (type === 'mech') {
+      const legL = new THREE.Mesh(this.sharedGeo.mechLeg, darkMat);
+      legL.position.set(-0.7, 0.85, 0);
+      const legR = new THREE.Mesh(this.sharedGeo.mechLeg, darkMat);
+      legR.position.set(0.7, 0.85, 0);
+      group.add(legL, legR);
+
+      const torso = new THREE.Mesh(this.sharedGeo.mechTorso, hullMat);
+      torso.position.y = 2.2;
+      turret.add(torso);
+
+      const podL = new THREE.Mesh(this.sharedGeo.mechPod, darkMat);
+      podL.rotation.x = Math.PI / 2;
+      podL.position.set(-1.25, 2.35, 0.75);
+      const podR = new THREE.Mesh(this.sharedGeo.mechPod, darkMat);
+      podR.rotation.x = Math.PI / 2;
+      podR.position.set(1.25, 2.35, 0.75);
+      turret.add(podL, podR);
+    }
+
+    group.add(turret);
+
+    const selRing = new THREE.Mesh(this.sharedGeo.selRing, this.sharedMat.selRing);
+    selRing.position.y = 0.14;
+    selRing.visible = false;
+    group.add(selRing);
+
+    return { group, turret, selRing };
+  }
+
+  spawnUnit(type, faction, x, z) {
+    const spec = UNIT_SPECS[type];
+    if (!spec) return null;
+
+    const jx = x + (Math.random() - 0.5) * 4;
+    const jz = z + (Math.random() - 0.5) * 4;
+    const y = Math.max(WATER_LEVEL, this.getTerrainHeight(jx, jz));
+
+    const { group, turret, selRing } = this.createUnitMesh(type, faction);
+    group.position.set(jx, y, jz);
+    this.worldGroup.add(group);
+
+    const hpEl = document.createElement('div');
+    hpEl.className = 'world-label';
+    const barColor = faction === FACTION.PLAYER ? '#00f0ff' : '#ff2a5f';
+    hpEl.innerHTML = `<div class="unit-hp-wrap"><div class="unit-hp-fill" style="width:100%;background:${barColor}"></div></div>`;
+    this.labelsContainer.appendChild(hpEl);
+
+    const unit = {
+      type,
+      spec,
+      faction,
+      hp: spec.hp,
+      maxHp: spec.hp,
+      x: jx,
+      y,
+      z: jz,
+      targetX: jx,
+      targetZ: jz,
+      cooldown: 0,
+      group,
+      turret,
+      selRing,
+      hpEl,
+      hpFill: hpEl.querySelector('.unit-hp-fill'),
+      walkPhase: Math.random() * Math.PI * 2
+    };
+
+    group.traverse(child => {
+      if (child.isMesh) child.userData = { unit };
+    });
+
+    this.units.push(unit);
+    return unit;
+  }
+
+  recruitPlayerUnit(type) {
+    if (!this.isRunning) return;
+    const spec = UNIT_SPECS[type];
+    if (this.credits[FACTION.PLAYER] < spec.cost) {
+      this.pushAlert('Недостаточно кредитов!');
+      return;
+    }
+
+    const spawnProv = (this.selectedProvince && this.selectedProvince.owner === FACTION.PLAYER)
+      ? this.selectedProvince
+      : this.provinces.find(p => p.owner === FACTION.PLAYER);
+
+    if (!spawnProv) {
+      this.pushAlert('Нет подконтрольной цитадели!');
+      return;
+    }
+
+    this.credits[FACTION.PLAYER] -= spec.cost;
+    const u = this.spawnUnit(type, FACTION.PLAYER, spawnProv.x, spawnProv.z - 6);
+    sfx.spawnUnit();
+    this.spawnBurstParticles(u.x, u.y + 1.4, u.z, this.sharedMat.partCyan, 8);
+    this.updateHUD();
+  }
+
+  updateSimulation(dt) {
+    if (!this.isRunning || this.gameSpeed === 0) return;
+    const simDt = dt * this.gameSpeed;
+
+    // 1. Экономический такт (раз в 1 секунду игрового времени)
+    this.cycleTimer += simDt;
+    if (this.cycleTimer >= 1.0) {
+      this.cycleTimer -= 1.0;
+      this.turnCycle++;
+
+      let playerInc = 8;
+      let enemyInc = 8 * this.difficulty;
+
+      for (let i = 0; i < this.provinces.length; i++) {
+        const p = this.provinces[i];
+        if (p.owner === FACTION.PLAYER) playerInc += p.income;
+        else if (p.owner === FACTION.ENEMY) enemyInc += p.income * this.difficulty;
+      }
+
+      this.credits[FACTION.PLAYER] += playerInc;
+      this.credits[FACTION.ENEMY] += enemyInc;
+      this.updateHUD();
+    }
+
+    // 2. ИИ-Командир
+    this.aiDecisionTimer += simDt;
+    if (this.aiDecisionTimer >= 2.2) {
+      this.aiDecisionTimer = 0;
+      this.runAICommander();
+    }
+
+    // 3. Движение и бой юнитов
+    const bound = MAP_SIZE * 0.46;
+    for (let i = 0; i < this.units.length; i++) {
+      const u = this.units[i];
+      u.cooldown = Math.max(0, u.cooldown - simDt);
+
+      let nearestEnemy = null;
+      let minDist = Infinity;
+      for (let j = 0; j < this.units.length; j++) {
+        const other = this.units[j];
+        if (other.faction !== u.faction) {
+          const d = Math.hypot(other.x - u.x, other.z - u.z);
+          if (d < minDist) {
+            minDist = d;
+            nearestEnemy = other;
+          }
+        }
+      }
+
+      const dx = u.targetX - u.x;
+      const dz = u.targetZ - u.z;
+      const distToTarget = Math.hypot(dx, dz);
+      const inCombatHold = nearestEnemy && minDist <= u.spec.range * 0.88 && distToTarget < 12;
+
+      if (distToTarget > 0.6 && !inCombatHold) {
+        const step = Math.min(distToTarget, u.spec.speed * simDt);
+        u.x += (dx / distToTarget) * step;
+        u.z += (dz / distToTarget) * step;
+        u.group.rotation.y = Math.atan2(dx, dz);
+        u.walkPhase += simDt * 10;
+      }
+
+      // Мягкое расталкивание соседних юнитов
+      for (let j = i + 1; j < this.units.length; j++) {
+        const o = this.units[j];
+        const sx = u.x - o.x;
+        const sz = u.z - o.z;
+        const dist = Math.hypot(sx, sz);
+        const minSep = u.spec.radius + o.spec.radius;
+        if (dist > 0.001 && dist < minSep) {
+          const push = (minSep - dist) * 0.35;
+          const nx = sx / dist;
+          const nz = sz / dist;
+          u.x += nx * push;
+          u.z += nz * push;
+          o.x -= nx * push;
+          o.z -= nz * push;
+        }
+      }
+
+      u.x = Math.max(-bound, Math.min(bound, u.x));
+      u.z = Math.max(-bound, Math.min(bound, u.z));
+      u.y = Math.max(WATER_LEVEL - 0.1, this.getTerrainHeight(u.x, u.z));
+
+      const bob = (distToTarget > 0.6 && u.type === 'mech') ? Math.abs(Math.sin(u.walkPhase)) * 0.22 : 0;
+      u.group.position.set(u.x, u.y + bob, u.z);
+
+      if (nearestEnemy && minDist <= u.spec.range) {
+        const aimAngle = Math.atan2(nearestEnemy.x - u.x, nearestEnemy.z - u.z);
+        u.turret.rotation.y = aimAngle - u.group.rotation.y;
+        if (u.cooldown <= 0) {
+          u.cooldown = u.spec.cooldown;
+          this.fireProjectile(u, nearestEnemy);
+        }
+      } else {
+        u.turret.rotation.y *= 0.9;
+      }
+    }
+
+    // 4. Полет снарядов
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      const proj = this.projectiles[i];
+      proj.life -= simDt;
+      if (proj.life <= 0) {
+        this.worldGroup.remove(proj.mesh);
+        this.projectiles.splice(i, 1);
+        continue;
+      }
+      proj.mesh.position.addScaledVector(proj.vel, simDt);
+      if (proj.target && proj.target.hp > 0) {
+        if (proj.mesh.position.distanceToSquared(proj.target.group.position) < 5.8) {
+          this.applyDamage(proj.target, proj.damage);
+          this.spawnBurstParticles(proj.mesh.position.x, proj.mesh.position.y, proj.mesh.position.z, proj.partMat, 5);
+          this.worldGroup.remove(proj.mesh);
+          this.projectiles.splice(i, 1);
+        }
+      }
+    }
+
+    // 5. Частицы
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.life -= simDt;
+      if (p.life <= 0) {
+        this.worldGroup.remove(p.mesh);
+        this.particles.splice(i, 1);
+        continue;
+      }
+      p.vel.y -= 18 * simDt;
+      p.mesh.position.addScaledVector(p.vel, simDt);
+      p.mesh.scale.setScalar(Math.max(0.05, p.life / p.maxLife));
+    }
+
+    // 6. Маркеры целеуказания
+    for (let i = this.moveMarkers.length - 1; i >= 0; i--) {
+      const m = this.moveMarkers[i];
+      m.life -= simDt;
+      if (m.life <= 0) {
+        this.worldGroup.remove(m.mesh);
+        m.mesh.material.dispose();
+        this.moveMarkers.splice(i, 1);
+      } else {
+        const s = 1 + (1 - m.life / 0.55) * 1.8;
+        m.mesh.scale.set(s, s, s);
+        m.mesh.material.opacity = m.life / 0.55;
+      }
+    }
+
+    // 7. Захват провинций
+    this.updateProvinces(simDt);
+  }
+
+  fireProjectile(attacker, target) {
+    const isHeavy = attacker.type !== 'scout';
+    sfx.laserShot(isHeavy);
+
+    const isPlayer = attacker.faction === FACTION.PLAYER;
+    const geo = isHeavy ? this.sharedGeo.projHeavy : this.sharedGeo.projLight;
+    const mat = isPlayer ? this.sharedMat.projPlayer : this.sharedMat.projEnemy;
+    const partMat = isPlayer ? this.sharedMat.partCyan : this.sharedMat.partRed;
+
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(attacker.x, attacker.y + 1.6, attacker.z);
+
+    const vel = new THREE.Vector3(
+      target.x - attacker.x,
+      (target.y + 1.2) - (attacker.y + 1.6),
+      target.z - attacker.z
+    ).normalize().multiplyScalar(isHeavy ? 52 : 68);
+
+    this.worldGroup.add(mesh);
+    this.projectiles.push({ mesh, vel, target, damage: attacker.spec.damage, partMat, life: 1.1 });
+  }
+
+  applyDamage(unit, amount) {
+    unit.hp -= amount;
+    unit.hpFill.style.width = `${Math.max(0, (unit.hp / unit.maxHp) * 100)}%`;
+
+    if (unit.hp <= 0) {
+      sfx.explosion();
+      this.spawnBurstParticles(unit.x, unit.y + 1.2, unit.z, this.sharedMat.partFire, 12);
+      this.worldGroup.remove(unit.group);
+      unit.hpEl.remove();
+
+      const idx = this.units.indexOf(unit);
+      if (idx !== -1) this.units.splice(idx, 1);
+
+      const selIdx = this.selectedUnits.indexOf(unit);
+      if (selIdx !== -1) {
+        this.selectedUnits.splice(selIdx, 1);
+        if (this.selectedUnits.length === 0) this.setMoveCommandMode(false);
+      }
+
+      this.updateHUD();
+      this.updateInspector();
+      this.checkVictoryConditions();
+    }
+  }
+
+  spawnBurstParticles(x, y, z, sharedMat, count = 8) {
+    // Ограничиваем общее число частиц на экране для стабильных 60 FPS
+    if (this.particles.length > 70) count = Math.min(count, 4);
+    for (let i = 0; i < count; i++) {
+      const mesh = new THREE.Mesh(this.sharedGeo.particleBox, sharedMat);
+      mesh.position.set(x, y, z);
+      const vel = new THREE.Vector3(
+        (Math.random() - 0.5) * 15,
+        Math.random() * 11 + 3,
+        (Math.random() - 0.5) * 15
+      );
+      this.worldGroup.add(mesh);
+      this.particles.push({ mesh, vel, life: 0.4, maxLife: 0.4 });
+    }
+  }
+
+  updateProvinces(simDt) {
+    for (let i = 0; i < this.provinces.length; i++) {
+      const prov = this.provinces[i];
+      prov.spireMesh.rotation.y += simDt * 0.9;
+
+      let playerPower = 0;
+      let enemyPower = 0;
+      for (let j = 0; j < this.units.length; j++) {
+        const u = this.units[j];
+        if (Math.hypot(u.x - prov.x, u.z - prov.z) < 14) {
+          if (u.faction === FACTION.PLAYER) playerPower += u.spec.captureRate;
+          else if (u.faction === FACTION.ENEMY) enemyPower += u.spec.captureRate;
+        }
+      }
+
+      if (playerPower > 0 && enemyPower === 0) {
+        this.processCapture(prov, FACTION.PLAYER, playerPower * 18 * simDt);
+      } else if (enemyPower > 0 && playerPower === 0) {
+        this.processCapture(prov, FACTION.ENEMY, enemyPower * 18 * simDt);
+      } else if (playerPower === 0 && enemyPower === 0 && prov.captureProgress < 100) {
+        prov.captureProgress = Math.min(100, prov.captureProgress + 8 * simDt);
+        this.refreshProvinceVisuals(prov);
+      }
+    }
+  }
+
+  processCapture(prov, faction, delta) {
+    if (prov.owner === faction) {
+      if (prov.captureProgress < 100) {
+        prov.captureProgress = Math.min(100, prov.captureProgress + delta);
+        this.refreshProvinceVisuals(prov);
+      }
+      return;
+    }
+
+    prov.captureProgress -= delta;
+    if (prov.captureProgress <= 0) {
+      prov.owner = faction;
+      prov.captureProgress = 100;
+      const isAlly = faction === FACTION.PLAYER;
+      sfx.captureProvince(isAlly);
+      this.pushAlert(`Провинция ${prov.name} захвачена ${isAlly ? 'вашими войсками' : 'ИИ'}!`);
+      this.spawnBurstParticles(prov.x, prov.y + 4, prov.z, isAlly ? this.sharedMat.partCyan : this.sharedMat.partRed, 12);
+      this.updateHUD();
+      this.checkVictoryConditions();
+    }
+    this.refreshProvinceVisuals(prov);
+  }
+
+  runAICommander() {
+    const enemyProvs = this.provinces.filter(p => p.owner === FACTION.ENEMY);
+    if (enemyProvs.length === 0) return;
+
+    enemyProvs.sort((a, b) => b.z - a.z);
+    const spawnHub = enemyProvs[0];
+    const enemyUnits = this.units.filter(u => u.faction === FACTION.ENEMY);
+    const budget = this.credits[FACTION.ENEMY];
+
+    if (enemyUnits.length < 16) {
+      if (budget >= 240 && Math.random() < 0.45) {
+        this.credits[FACTION.ENEMY] -= 240;
+        this.spawnUnit('mech', FACTION.ENEMY, spawnHub.x, spawnHub.z + 5);
+      } else if (budget >= 140 && Math.random() < 0.65) {
+        this.credits[FACTION.ENEMY] -= 140;
+        this.spawnUnit('tank', FACTION.ENEMY, spawnHub.x, spawnHub.z + 5);
+      } else if (budget >= 75 && enemyUnits.length < 6) {
+        this.credits[FACTION.ENEMY] -= 75;
+        this.spawnUnit('scout', FACTION.ENEMY, spawnHub.x, spawnHub.z + 5);
+      }
+    }
+
+    const targets = this.provinces.filter(p => p.owner !== FACTION.ENEMY);
+    if (targets.length === 0) return;
+
+    for (const u of enemyUnits) {
+      if (Math.hypot(u.targetX - u.x, u.targetZ - u.z) < 3.5) {
+        targets.sort((a, b) => Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z));
+        const chosen = targets[Math.min(targets.length - 1, Math.random() < 0.72 ? 0 : 1)];
+        if (chosen) {
+          u.targetX = chosen.x + (Math.random() - 0.5) * 8;
+          u.targetZ = chosen.z + (Math.random() - 0.5) * 8;
+        }
+      }
+    }
+  }
+
+  checkVictoryConditions() {
+    if (!this.isRunning) return;
+    const allyProvs = this.provinces.filter(p => p.owner === FACTION.PLAYER).length;
+    const enemyProvs = this.provinces.filter(p => p.owner === FACTION.ENEMY).length;
+    const allyUnits = this.units.filter(u => u.faction === FACTION.PLAYER).length;
+    const enemyUnits = this.units.filter(u => u.faction === FACTION.ENEMY).length;
+
+    if (enemyProvs === 0 && enemyUnits === 0) this.endGame(true);
+    else if (allyProvs === 0 && allyUnits === 0) this.endGame(false);
+  }
+
+  endGame(playerWon) {
+    this.isRunning = false;
+    const modal = document.getElementById('end-modal');
+    const title = document.getElementById('end-title');
+    const sub = document.getElementById('end-subtitle');
+    const stats = document.getElementById('end-stats');
+
+    modal.classList.remove('hidden');
+    if (playerWon) {
+      title.textContent = 'ПОБЕДА';
+      title.style.color = '#00f0ff';
+      sub.textContent = 'Все цитадели противника захвачены';
+    } else {
+      title.textContent = 'ПОРАЖЕНИЕ';
+      title.style.color = '#ff2a5f';
+      sub.textContent = 'Командная сеть потеряна';
+    }
+    stats.textContent = `Кампания завершена на ${this.turnCycle} цикле. Резерв: ${Math.floor(this.credits[FACTION.PLAYER])} кредитов.`;
+  }
+
+  /**
+   * Компактное позиционирование 2D-меток через GPU-ускоренный translate3d
+   */
+  updateWorldLabels() {
+    const halfW = window.innerWidth * 0.5;
+    const halfH = window.innerHeight * 0.5;
+    const camPos = this.camera.position;
+
+    for (let i = 0; i < this.provinces.length; i++) {
+      const prov = this.provinces[i];
+      this.projVec.set(prov.x, prov.y + 8.5, prov.z);
+      const dist = camPos.distanceTo(this.projVec);
+      this.projVec.project(this.camera);
+
+      if (this.projVec.z > 1 || dist > 230) {
+        prov.labelEl.style.display = 'none';
+      } else {
+        prov.labelEl.style.display = 'block';
+        const sx = (this.projVec.x * halfW) + halfW;
+        const sy = -(this.projVec.y * halfH) + halfH;
+        const scale = Math.max(0.72, Math.min(1.0, 115 / dist));
+        prov.labelEl.style.transform = `translate3d(${sx.toFixed(1)}px, ${sy.toFixed(1)}px, 0) translate(-50%, -100%) scale(${scale.toFixed(2)})`;
+      }
+    }
+
+    for (let i = 0; i < this.units.length; i++) {
+      const u = this.units[i];
+      const isSelected = this.selectedUnits.includes(u);
+      if (u.hp >= u.maxHp && !isSelected) {
+        u.hpEl.style.display = 'none';
+        continue;
+      }
+      this.projVec.set(u.x, u.y + 3.4, u.z);
+      this.projVec.project(this.camera);
+      if (this.projVec.z > 1) {
+        u.hpEl.style.display = 'none';
+      } else {
+        u.hpEl.style.display = 'block';
+        const sx = (this.projVec.x * halfW) + halfW;
+        const sy = -(this.projVec.y * halfH) + halfH;
+        u.hpEl.style.transform = `translate3d(${sx.toFixed(1)}px, ${sy.toFixed(1)}px, 0) translate(-50%, -100%)`;
+      }
+    }
+  }
+
+  setMoveCommandMode(active) {
+    this.moveCommandMode = active && this.selectedUnits.length > 0;
+    const btn = document.getElementById('btn-order-move');
+    const indicator = document.getElementById('mode-indicator');
+    if (this.moveCommandMode) {
+      btn.classList.add('move-mode-active');
+      indicator.classList.add('visible');
+    } else {
+      btn.classList.remove('move-mode-active');
+      indicator.classList.remove('visible');
+    }
+  }
+
+  updateHUD() {
+    const allyProvs = this.provinces.filter(p => p.owner === FACTION.PLAYER);
+    const enemyProvs = this.provinces.filter(p => p.owner === FACTION.ENEMY);
+    const allyUnits = this.units.filter(u => u.faction === FACTION.PLAYER);
+    const enemyUnits = this.units.filter(u => u.faction === FACTION.ENEMY);
+
+    let income = 8;
+    allyProvs.forEach(p => income += p.income);
+
+    document.getElementById('hud-turn').textContent = this.turnCycle;
+    document.getElementById('hud-gold').textContent = Math.floor(this.credits[FACTION.PLAYER]);
+    document.getElementById('hud-income').textContent = `(+${income})`;
+    document.getElementById('hud-prov-ally').textContent = allyProvs.length;
+    document.getElementById('hud-prov-enemy').textContent = enemyProvs.length;
+    document.getElementById('hud-units-ally').textContent = allyUnits.length;
+    document.getElementById('hud-units-enemy').textContent = enemyUnits.length;
+    document.getElementById('sel-count').textContent = this.selectedUnits.length;
+
+    ['scout', 'tank', 'mech'].forEach(type => {
+      const btn = document.getElementById(`spawn-${type}`);
+      if (this.credits[FACTION.PLAYER] >= UNIT_SPECS[type].cost) btn.classList.remove('disabled');
+      else btn.classList.add('disabled');
+    });
+  }
+
+  pushAlert(text) {
+    const feed = document.getElementById('alert-feed');
+    const el = document.createElement('div');
+    el.className = 'alert-msg';
+    el.textContent = text;
+    feed.appendChild(el);
+    setTimeout(() => el.remove(), 2800);
+  }
+
+  /**
+   * Защищенная от ложных срабатываний система распознавания тапов и кликов
+   */
+  bindEvents() {
+    window.addEventListener('resize', () => {
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    this.canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+    // Отслеживаем все активные пальцы/указатели для отсечения свайпов и щипков зума
+    const activePointers = new Map();
+    let gestureWasMultiTouch = false;
+    let maxMoveDistance = 0;
+    let downTime = 0;
+
+    this.canvas.addEventListener('pointerdown', e => {
+      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (activePointers.size > 1) {
+        gestureWasMultiTouch = true;
+      } else {
+        gestureWasMultiTouch = false;
+        maxMoveDistance = 0;
+        downTime = performance.now();
+      }
+    });
+
+    this.canvas.addEventListener('pointermove', e => {
+      const start = activePointers.get(e.pointerId);
+      if (start) {
+        const dist = Math.hypot(e.clientX - start.x, e.clientY - start.y);
+        if (dist > maxMoveDistance) maxMoveDistance = dist;
+      }
+    });
+
+    const clearPointer = e => {
+      activePointers.delete(e.pointerId);
+      if (activePointers.size === 0) {
+        setTimeout(() => { gestureWasMultiTouch = false; }, 60);
+      }
+    };
+
+    this.canvas.addEventListener('pointercancel', clearPointer);
+
+    this.canvas.addEventListener('pointerup', e => {
+      const wasMulti = gestureWasMultiTouch || activePointers.size > 1;
+      const moveDist = maxMoveDistance;
+      const elapsed = performance.now() - downTime;
+      clearPointer(e);
+
+      if (!this.isRunning) return;
+
+      // Исключаем любые свайпы, вращение камеры и мультитач-зум (порог 6px и 420мс)
+      if (wasMulti || moveDist > 6 || elapsed > 450) return;
+
+      this.pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+      this.pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      this.raycaster.setFromCamera(this.pointer, this.camera);
+
+      // На ПК правая кнопка мыши сразу отправляет войска в точку
+      if (e.button === 2 && this.selectedUnits.length > 0) {
+        this.issueGroundMoveOrder();
+        return;
+      }
+
+      // Проверяем попадание луча в юнит или провинцию
+      const hits = this.raycaster.intersectObjects(this.worldGroup.children, true);
+      let hitUnit = null;
+      let hitProv = null;
+
+      for (let i = 0; i < hits.length; i++) {
+        const ud = hits[i].object.userData;
+        if (ud && ud.unit) { hitUnit = ud.unit; break; }
+        if (ud && ud.province) { hitProv = ud.province; break; }
+      }
+
+      // Если активен явный режим «Указать цель» (Move Command Mode)
+      if (this.moveCommandMode && this.selectedUnits.length > 0) {
+        if (hitProv) {
+          this.moveUnitsToPoint(hitProv.x, hitProv.z);
+        } else {
+          this.issueGroundMoveOrder();
+        }
+        // Оставляем или выключаем режим после приказа для удобства
+        this.setMoveCommandMode(false);
+        return;
+      }
+
+      // Тап по союзному юниту — выбор юнита (и близлежащих того же типа при двойном/шифт клике)
+      if (hitUnit && hitUnit.faction === FACTION.PLAYER) {
+        sfx.selectUnit();
+        if (!e.shiftKey && !this.isMobileDevice) this.clearUnitSelection();
+        if (!this.selectedUnits.includes(hitUnit)) {
+          this.selectedUnits.push(hitUnit);
+          hitUnit.selRing.visible = true;
+        } else if (this.isMobileDevice) {
+          // На смартфоне повторный тап по уже выбранному юниту сразу включает режим приказа
+          this.setMoveCommandMode(true);
+        }
+        this.updateHUD();
+        this.updateInspector();
+        return;
+      }
+
+      // Тап по вражескому юниту при выбранных своих войсках — атаковать его позицию
+      if (hitUnit && hitUnit.faction === FACTION.ENEMY && this.selectedUnits.length > 0) {
+        this.moveUnitsToPoint(hitUnit.x, hitUnit.z);
+        return;
+      }
+
+      // Тап по провинции
+      if (hitProv) {
+        sfx.uiClick();
+        this.selectedProvince = hitProv;
+        this.updateInspector();
+        return;
+      }
+    });
+
+    // Кнопки панели приказов (для смартфонов и ПК)
+    document.getElementById('btn-order-move').addEventListener('click', () => {
+      sfx.uiClick();
+      if (this.selectedUnits.length === 0) {
+        this.selectAllPlayerUnits();
+      }
+      if (this.selectedUnits.length > 0) {
+        this.setMoveCommandMode(!this.moveCommandMode);
+      } else {
+        this.pushAlert('Сначала наймите или выберите войска!');
+      }
+    });
+
+    document.getElementById('btn-order-attack').addEventListener('click', () => {
+      sfx.uiClick();
+      if (this.selectedUnits.length === 0) this.selectAllPlayerUnits();
+      if (this.selectedUnits.length === 0) return;
+
+      // Ищем ближайшую вражескую или нейтральную провинцию / врага
+      const ref = this.selectedUnits[0];
+      const targets = this.provinces.filter(p => p.owner !== FACTION.PLAYER);
+      if (targets.length > 0) {
+        targets.sort((a, b) => Math.hypot(a.x - ref.x, a.z - ref.z) - Math.hypot(b.x - ref.x, b.z - ref.z));
+        this.moveUnitsToPoint(targets[0].x, targets[0].z);
+        this.pushAlert(`Штурмовая группа направлена к ${targets[0].name}!`);
+      } else {
+        const enemies = this.units.filter(u => u.faction === FACTION.ENEMY);
+        if (enemies.length > 0) {
+          this.moveUnitsToPoint(enemies[0].x, enemies[0].z);
+        }
+      }
+      this.setMoveCommandMode(false);
+    });
+
+    document.getElementById('btn-order-stop').addEventListener('click', () => {
+      sfx.uiClick();
+      for (const u of this.selectedUnits) {
+        u.targetX = u.x;
+        u.targetZ = u.z;
+      }
+      this.setMoveCommandMode(false);
+    });
+
+    document.getElementById('btn-order-clear').addEventListener('click', () => {
+      sfx.uiClick();
+      this.clearUnitSelection();
+      this.updateHUD();
+      this.updateInspector();
+    });
+
+    // Кнопки главного меню и верхней панели
+    document.getElementById('btn-start').addEventListener('click', () => {
+      sfx.init();
+      sfx.uiClick();
+      this.difficulty = parseFloat(document.getElementById('set-difficulty').value);
+      const mapMode = document.getElementById('set-map').value;
+      const shadowMode = document.getElementById('set-shadows').value;
+      const vol = parseInt(document.getElementById('set-volume').value, 10) / 100;
+
+      sfx.setVolume(vol);
+      this.configureShadows(shadowMode);
+      this.generateBattlefield(mapMode);
+
+      this.credits[FACTION.PLAYER] = 260;
+      this.credits[FACTION.ENEMY] = 260;
+      this.turnCycle = 1;
+      this.isRunning = true;
+      document.getElementById('main-menu').classList.add('hidden');
+      this.pushAlert('Сектор инициализирован. Выберите войска и нажмите «Указать цель»!');
+    });
+
+    document.getElementById('btn-restart').addEventListener('click', () => {
+      sfx.uiClick();
+      document.getElementById('end-modal').classList.add('hidden');
+      document.getElementById('main-menu').classList.remove('hidden');
+    });
+
+    document.getElementById('btn-menu').addEventListener('click', () => {
+      sfx.uiClick();
+      this.isRunning = false;
+      document.getElementById('main-menu').classList.remove('hidden');
+    });
+
+    document.getElementById('btn-select-all').addEventListener('click', () => {
+      sfx.selectUnit();
+      this.selectAllPlayerUnits();
+    });
+
+    document.getElementById('btn-speed').addEventListener('click', e => {
+      sfx.uiClick();
+      if (this.gameSpeed === 1) this.gameSpeed = 2;
+      else if (this.gameSpeed === 2) this.gameSpeed = 0;
+      else this.gameSpeed = 1;
+      e.currentTarget.textContent = this.gameSpeed === 0 ? 'Пауза' : `${this.gameSpeed}x`;
+    });
+
+    ['scout', 'tank', 'mech'].forEach(type => {
+      document.getElementById(`spawn-${type}`).addEventListener('click', () => {
+        this.recruitPlayerUnit(type);
+      });
+    });
+  }
+
+  selectAllPlayerUnits() {
+    this.clearUnitSelection();
+    for (const u of this.units) {
+      if (u.faction === FACTION.PLAYER) {
+        this.selectedUnits.push(u);
+        u.selRing.visible = true;
+      }
+    }
+    this.updateHUD();
+    this.updateInspector();
+  }
+
+  clearUnitSelection() {
+    for (const u of this.selectedUnits) {
+      u.selRing.visible = false;
+    }
+    this.selectedUnits = [];
+    this.setMoveCommandMode(false);
+  }
+
+  issueGroundMoveOrder() {
+    if (!this.terrainMesh) return;
+    const hits = this.raycaster.intersectObject(this.terrainMesh);
+    if (hits.length > 0) {
+      const pt = hits[0].point;
+      this.moveUnitsToPoint(pt.x, pt.z);
+    }
+  }
+
+  moveUnitsToPoint(tx, tz) {
+    if (this.selectedUnits.length === 0) return;
+    sfx.moveOrder();
+    const count = this.selectedUnits.length;
+    const cols = Math.ceil(Math.sqrt(count));
+    const spacing = 4.2;
+
+    this.selectedUnits.forEach((u, idx) => {
+      const r = Math.floor(idx / cols);
+      const c = idx % cols;
+      const ox = (c - (cols - 1) / 2) * spacing;
+      const oz = (r - (cols - 1) / 2) * spacing;
+      u.targetX = tx + ox;
+      u.targetZ = tz + oz;
+    });
+
+    const wy = Math.max(WATER_LEVEL + 0.2, this.getTerrainHeight(tx, tz) + 0.25);
+    const mat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, side: THREE.DoubleSide, transparent: true });
+    const mesh = new THREE.Mesh(this.sharedGeo.waypointRing, mat);
+    mesh.position.set(tx, wy, tz);
+    this.worldGroup.add(mesh);
+    this.moveMarkers.push({ mesh, life: 0.55 });
+  }
+
+  updateInspector() {
+    const titleEl = document.getElementById('insp-title');
+    const bodyEl = document.getElementById('insp-body');
+
+    if (this.selectedUnits.length === 1) {
+      const u = this.selectedUnits[0];
+      titleEl.textContent = u.spec.name;
+      bodyEl.innerHTML = `
+        <b>Прочность:</b> ${Math.ceil(u.hp)}/${u.maxHp} • <b>Урон:</b> ${u.spec.damage}<br>
+        Нажмите <b>«🎯 Указать цель»</b> или ПКМ для отправки
+      `;
+    } else if (this.selectedUnits.length > 1) {
+      titleEl.textContent = `Ударная группа (${this.selectedUnits.length} ед.)`;
+      bodyEl.innerHTML = `
+        Нажмите <b>«🎯 Указать цель»</b> и тапните по карте, либо <b>«⚔️ В штурм»</b>.
+      `;
+    } else if (this.selectedProvince) {
+      const p = this.selectedProvince;
+      const ownerStr = p.owner === FACTION.PLAYER ? 'Союзный Нексус' :
+                       p.owner === FACTION.ENEMY ? 'ИИ-Суверен' : 'Нейтральный сектор';
+      titleEl.textContent = `Цитадель: ${p.name}`;
+      bodyEl.innerHTML = `
+        <b>Статус:</b> ${ownerStr} (+${p.income} кр/с)<br>
+        <b>Контроль:</b> ${Math.floor(p.captureProgress)}%
+      `;
+    }
+  }
+
+  animate() {
+    requestAnimationFrame(() => this.animate());
+
+    const dt = Math.min(0.1, this.clock.getDelta());
+    this.controls.update();
+
+    if (this.waterMesh) {
+      this.waterMesh.position.y = WATER_LEVEL + Math.sin(performance.now() * 0.0018) * 0.1;
+    }
+
+    this.updateSimulation(dt);
+    this.updateWorldLabels();
+    this.renderer.render(this.scene, this.camera);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  new GrandStrategyGame();
+});
+</script>
+</body>
+</html>
