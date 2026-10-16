@@ -534,7 +534,8 @@
     </div>
 
     <!-- 5. AETHERION: Nexus Command -->
-    <div class="card card-aetherion" onclick="launchAetherion()">
+    <div class="card card-aetherion" onclick="launchAetherionLatest()">
+      <div class="btn-dots" title="All versions" onclick="event.stopPropagation(); openModal('aetherionModal')">•••</div>
       <div class="card-preview">
         <div class="preview-badge"><span></span>3D GRAND STRATEGY</div>
         <svg viewBox="0 0 320 145" width="100%" height="100%">
@@ -593,7 +594,7 @@
         <span class="tag cyan">Three.js 3D</span>
         <span class="tag cyan">Grand Strategy</span>
         <span class="tag">Procedural</span>
-        <span class="tag">Orbital Drops</span>
+        <span class="tag">Archive [2 versions]</span>
       </div>
     </div>
 
@@ -931,6 +932,24 @@
     </div>
   </div>
 
+  <!-- Modal: AETHERION: Nexus Command Archive -->
+  <div class="modal-overlay" id="aetherionModal">
+    <div class="choice-dialog">
+      <h3>💠 AETHERION: Nexus Command</h3>
+      <p>Select a strategy version:</p>
+      <div class="version-btns">
+        <button class="btn-version primary" onclick="launchAetherionLatest()">
+          <span>⚡ <b>v1.1</b> (Mobile Touch, Orbit Zoom & FPS Optimization)</span>
+          <small style="color:inherit">Latest</small>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('aetherion.html', 'AETHERION: Nexus Command (v1.0)')">
+          <span>v1.0 (Original Three.js 3D Release)</span>
+        </button>
+      </div>
+      <button class="btn-dialog-close" onclick="closeModal('aetherionModal')">Cancel</button>
+    </div>
+  </div>
+
   <!-- Modal: Mega Evolution Archive -->
   <div class="modal-overlay" id="megaModal">
     <div class="choice-dialog">
@@ -1054,8 +1073,9 @@
     const frameTitle = document.getElementById('frameTitle');
     let currentGameUrl = '';
 
-    function launchAetherion() {
-      chooseVersion('aetherion.html', 'AETHERION: Nexus Command (3D Grand Strategy)');
+    function launchAetherionLatest() {
+      const target = 'aetherion_v2.html';
+      chooseVersion(target, 'AETHERION: Nexus Command (v1.1)');
     }
 
     function launchAncient4X() {
