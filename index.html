@@ -594,7 +594,7 @@
         <span class="tag cyan">Three.js 3D</span>
         <span class="tag cyan">Grand Strategy</span>
         <span class="tag">Procedural</span>
-        <span class="tag">Archive [2 versions]</span>
+        <span class="tag">Archive [3 versions]</span>
       </div>
     </div>
 
@@ -939,8 +939,11 @@
       <p>Select a strategy version:</p>
       <div class="version-btns">
         <button class="btn-version primary" onclick="launchAetherionLatest()">
-          <span>⚡ <b>v1.1</b> (Mobile Touch, Orbit Zoom & FPS Optimization)</span>
+          <span>⚡ <b>v1.3</b> (Language Switcher RU/EN, Mobile Touch & Full Polish)</span>
           <small style="color:inherit">Latest</small>
+        </button>
+        <button class="btn-version" onclick="chooseVersion('aetherion_v2.html', 'AETHERION: Nexus Command (v1.1)')">
+          <span>v1.1 (Mobile Touch, Orbit Zoom & FPS Optimization)</span>
         </button>
         <button class="btn-version" onclick="chooseVersion('aetherion.html', 'AETHERION: Nexus Command (v1.0)')">
           <span>v1.0 (Original Three.js 3D Release)</span>
@@ -1074,8 +1077,8 @@
     let currentGameUrl = '';
 
     function launchAetherionLatest() {
-      const target = 'aetherion_v2.html';
-      chooseVersion(target, 'AETHERION: Nexus Command (v1.1)');
+      const target = 'aetherion_v3.html';
+      chooseVersion(target, 'AETHERION: Nexus Command (v1.3)');
     }
 
     function launchAncient4X() {
