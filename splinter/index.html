@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Раскол Древних Империй — 4X Прототип</title>
-  <script type="module" crossorigin src="assets/index-B8BWkFxf.js"></script>
-  <link rel="stylesheet" crossorigin href="assets/index-C3Xo0eCk.css">
+  <script type="module" crossorigin src="/assets/index-gT6wcVvf.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-D8vxuxQ2.css">
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -137,6 +137,12 @@
             <div class="btn-content">
               <span class="btn-primary-text" data-i18n="menuPlayGame">Основать Державу</span>
               <span class="btn-desc" data-i18n="menuPlayGameDesc">Выбрать одну из 10 исторических культур бронзового века</span>
+            </div>
+          <button id="btn-launcher-tutorial" class="launcher-menu-btn">
+            <span class="btn-icon">📚</span>
+            <div class="btn-content">
+              <span class="btn-primary-text" data-i18n="menuTutorial">Руководство Державца</span>
+              <span class="btn-desc" data-i18n="menuTutorialDesc">Энциклопедия механик: сословия, вассалы, плацдармы и снабжение</span>
             </div>
           </button>
           <button id="btn-launcher-chronicles" class="launcher-menu-btn">
@@ -821,6 +827,72 @@
     </div>
   </div>
 
+  <!-- Modal 13: Main Menu Launcher Tutorial Encyclopedia Modal -->
+  <div id="tutorial-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="width: 760px; max-width: 95vw;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #30363d; padding-bottom:8px;">
+        <h2 style="color:#f1c40f; margin:0; font-size:1.35rem; display:flex; align-items:center; gap:8px;">
+          <span>📚</span> <span data-i18n="tutorialModalTitle">Руководство и Энциклопедия Механик</span>
+        </h2>
+        <button id="btn-tutorial-header-close" class="annex-close" style="font-size:1.2rem;" title="Закрыть">✕</button>
+      </div>
+      <p class="small-text" style="color:#8b949e; margin-bottom:14px; text-align:left;" data-i18n="tutorialModalSubtitle">
+        Полный свод правил древней стратегии: от сословий и снабжения до плацдармов и вассалов
+      </p>
+
+      <div class="tutorial-tabs" style="display:flex; gap:8px; margin-bottom:12px; border-bottom:1px solid #30363d; padding-bottom:8px; overflow-x:auto;">
+        <button class="tutorial-tab-btn active" data-tab="estates">👥 Сословия и POPs</button>
+        <button class="tutorial-tab-btn" data-tab="logistics">📦 Снабжение</button>
+        <button class="tutorial-tab-btn" data-tab="beachheads">⛵ Десант и Плацдармы</button>
+        <button class="tutorial-tab-btn" data-tab="vassals">👑 Вассалы</button>
+        <button class="tutorial-tab-btn" data-tab="assembly">⚖️ Ассамблея и Законы</button>
+      </div>
+
+      <div id="tutorial-content-area" class="tutorial-scroll-body" style="max-height:440px; overflow-y:auto; text-align:left; background:rgba(0,0,0,0.35); border-radius:8px; padding:16px; border:1px solid #30363d; line-height:1.6;">
+        <!-- Dynamically rendered by UIManager -->
+      </div>
+
+      <div class="modal-actions" style="margin-top:16px; justify-content:center;">
+        <button id="btn-tutorial-close" class="modal-btn primary" style="min-width:160px;" data-i18n="tutorialCloseBtn">Закрыть Руководство</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 14: Interactive Royal Advisor Pop-up (Turn 1 Onboarding) -->
+  <div id="advisor-modal" class="modal-overlay hidden">
+    <div class="modal-card advisor-card" style="width: 660px; max-width: 95vw; border-color: #f1c40f; box-shadow: 0 0 50px rgba(241, 196, 15, 0.4);">
+      <div class="advisor-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #30363d; padding-bottom:10px; margin-bottom:12px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="advisor-avatar" style="font-size:2.6rem; background:rgba(241,196,15,0.15); width:56px; height:56px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:2px solid #f1c40f;">🧙‍♂️</div>
+          <div style="text-align:left;">
+            <h2 id="advisor-title" style="color:#f1c40f; margin:0; font-size:1.35rem;" data-i18n="advisorModalTitle">Советник Царя</h2>
+            <div id="advisor-subtitle" style="font-size:0.8rem; color:#8b949e;" data-i18n="advisorModalSubtitle">Наставление верховного визиря в первый год вашего правления</div>
+          </div>
+        </div>
+        <button id="btn-advisor-skip" class="modal-btn secondary" style="font-size:0.78rem; padding:4px 10px;" data-i18n="advisorSkipBtn">Пропустить</button>
+      </div>
+
+      <!-- Slide Indicator Dots -->
+      <div class="advisor-dots-row" style="display:flex; justify-content:center; gap:8px; margin-bottom:12px;">
+        <span class="advisor-dot active" data-slide="0"></span>
+        <span class="advisor-dot" data-slide="1"></span>
+        <span class="advisor-dot" data-slide="2"></span>
+      </div>
+
+      <!-- Advisor Speech / Slide Content Box -->
+      <div id="advisor-slide-content" class="advisor-speech-bubble" style="background:rgba(0,0,0,0.4); border:1px solid rgba(241,196,15,0.4); border-radius:8px; padding:16px; text-align:left; min-height:220px; line-height:1.6; margin-bottom:16px;">
+        <!-- Dynamically rendered based on active slide -->
+      </div>
+
+      <!-- Actions / Navigation Buttons -->
+      <div class="modal-actions" style="display:flex; justify-content:space-between; align-items:center;">
+        <button id="btn-advisor-prev" class="modal-btn secondary" style="min-width:110px;" data-i18n="advisorPrevBtn">◀ Назад</button>
+        <span id="advisor-step-text" style="color:#8b949e; font-size:0.85rem; font-weight:600;">1 / 3</span>
+        <button id="btn-advisor-next" class="modal-btn primary" style="min-width:130px;" data-i18n="advisorNextBtn">Далее ▶</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Floating UI: Click-to-Annex Context Menu (at cursor position) -->
   <div id="floating-annex-menu" class="floating-annex-menu hidden">
     <div class="annex-header">
@@ -841,6 +913,9 @@
 
   <!-- Floating UI: Canvas Hover Tooltip -->
   <div id="province-tooltip" class="province-tooltip hidden"></div>
+
+  <!-- Floating UI: Contextual Info Badge Tooltip (non-blocking) -->
+  <div id="floating-tooltip" class="floating-tooltip hidden"></div>
 
 </body>
 </html>
