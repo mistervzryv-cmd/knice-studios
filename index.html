@@ -582,6 +582,33 @@
       -webkit-overflow-scrolling: touch;
     }
 
+    
+    .lib-star-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: transparent;
+      border: none;
+      color: #475569;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition-standard);
+      flex-shrink: 0;
+      margin-left: 2px;
+      padding: 0;
+    }
+    .lib-star-btn:hover {
+      color: #fbbf24;
+      transform: scale(1.2);
+    }
+    .lib-star-btn.starred {
+      color: #fbbf24;
+      text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+    }
+
     .library-item {
       display: flex;
       align-items: center;
@@ -3088,14 +3115,14 @@
         accentColor: '#38bdf8',
         accentRgb: '56, 189, 248',
         bgGradient: 'radial-gradient(ellipse at 80% 20%, rgba(56, 189, 248, 0.25) 0%, rgba(30, 64, 175, 0.16) 45%, #030712 85%)',
-        badge: '9.0 ECOSYSTEM LIVE',
-        desc: 'Financial simulator: Dark Pool & OTC desk, Whale syndicate market manipulation, futures leverage, and multi-language engine.',
-        synopsis: 'The next evolution of high-stakes algorithmic capitalism. Navigate institutional Dark Pools, negotiate high-volume OTC desk trades, manage Whale syndicate market manipulations, and trade leveraged futures. Complete with live order books, floating forex, venture startup incubation, and executive Hammam suites.',
-        tags: ['OTC Desk', 'Dark Pool', 'Whale Syndicate', 'Futures', 'Forex', '28 Versions'],
+        badge: '10.0 FINAL MASTER',
+        desc: 'Financial simulator: Final master release with complete macroeconomic system, Dark Pool OTC desk, Whale syndicate manipulation, leveraged futures, staking, and full bilingual RU/EN support.',
+        synopsis: 'The definitive master release of high-stakes algorithmic capitalism. Navigate institutional Dark Pools, coordinate Whale syndicate market squeezes, trade leveraged futures contracts, and utilize fixed-yield staking. Features comprehensive macroeconomic cycles, live candlestick books, floating forex, venture startup incubators, executive VIP Hammam suites, and complete bilingual RU/EN interface localization.',
+        tags: ['10.0 Final', 'OTC Desk', 'Dark Pool', 'Whale Syndicate', 'Futures', 'Staking', '29 Versions'],
         requiresLandscape: false,
         techInfo: {
           engine: 'High-Frequency DOM Engine',
-          releaseState: 'Ecosystem & OTC v9.0',
+          releaseState: 'Grand Milestone v10.0',
           developer: 'Knice Banking Corp',
           input: 'Keyboard & Mouse'
         },
@@ -3113,13 +3140,14 @@
           <polyline points="20,110 50,105 80,115 120,70 160,85 200,45 240,65 280,30 300,38" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
           <polyline points="20,95 60,90 100,120 150,110 190,130 230,95 270,105 300,80" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="3,3"/>
           <rect x="215" y="15" width="90" height="20" rx="4" fill="rgba(56,189,248,0.2)"/>
-          <text x="224" y="29" fill="#38bdf8" font-size="10" font-weight="bold">9.0 STABLE</text>
+          <text x="224" y="29" fill="#38bdf8" font-size="10" font-weight="bold">10.0 FINAL</text>
         </svg>`,
-        defaultUrl: 'Knice_Bank_9_0.html',
-        defaultTitle: 'Knice Bank 9.0',
+        defaultUrl: 'Knice_Bank_10_0.html',
+        defaultTitle: 'Knice Bank 10.0 (Grand Finale)',
         versions: [
-          { url: 'Knice_Bank_9_0.html', label: '9.0.0 (OTC Desk, Whale Syndicate, Futures & Staking)', category: 'latest', badge: 'Active Master' },
-          { url: 'Knice_Bank_8_7_1.html', label: '8.7.1 (Forex, Hammam, Startups)', category: 'archive', badge: 'Stable' },
+          { url: 'Knice_Bank_10_0.html', label: '10.0.0 (Final Master Milestone — Full Ecosystem)', category: 'latest', badge: 'Active Final' },
+          { url: 'Knice_Bank_9_0.html', label: '9.0.0 (OTC Desk, Whale Syndicate, Futures & Staking)', category: 'archive', badge: 'Stable' },
+          { url: 'Knice_Bank_8_7_1.html', label: '8.7.1 (Forex, Hammam, Startups)', category: 'archive', badge: 'Legacy' },
           { url: 'Knice_Bank_8_8.html', label: '8.8.0 (Translations & Logic Test)', category: 'beta', badge: 'Unsuccessful Build' },
           { url: 'Knice_Bank_8_7_0.html', label: '8.7.0 (Macroeconomics & Bubbles)', category: 'archive' },
           { url: 'Knice_Bank_8_6_3.html', label: '8.6.3 (Candles & Order Book)', category: 'archive' },
@@ -3664,6 +3692,7 @@
         if (raw) {
           const parsed = JSON.parse(raw);
           launcherState = Object.assign(launcherState, parsed);
+        launcherState.favorites = launcherState.favorites || [];
         }
       } catch(e) {}
 
@@ -3681,9 +3710,9 @@
 
       // Auto-migrate previous default build selections to new stable masters
       if (launcherState.games['bank']) {
-        if (!launcherState.games['bank'].selectedVersionUrl || launcherState.games['bank'].selectedVersionUrl === 'Knice_Bank_8_7_1.html') {
-          launcherState.games['bank'].selectedVersionUrl = 'Knice_Bank_9_0.html';
-          launcherState.games['bank'].selectedVersionLabel = '9.0.0 (OTC Desk, Whale Syndicate, Futures & Staking)';
+        if (!launcherState.games['bank'].selectedVersionUrl || launcherState.games['bank'].selectedVersionUrl === 'Knice_Bank_8_7_1.html' || launcherState.games['bank'].selectedVersionUrl === 'Knice_Bank_9_0.html') {
+          launcherState.games['bank'].selectedVersionUrl = 'Knice_Bank_10_0.html';
+          launcherState.games['bank'].selectedVersionLabel = '10.0.0 (Final Master Milestone — Full Ecosystem)';
         }
       }
       if (launcherState.games['rts']) {
@@ -3996,16 +4025,36 @@
       const isGameActive = inGame && inGame.classList.contains('active');
 
       if (isGameActive) {
+        // Desktop In-Game quick exit hotkey (ESC or Q)
         if (e.key === 'Escape' || e.key === 'q' || e.key === 'Q') {
           if (e.key === 'q' || e.key === 'Q') e.preventDefault();
           closeGame();
         }
       } else {
+        // Modal dismissals on Escape
         if (e.key === 'Escape') {
           closePassportModal();
           closeVersionDropdown();
           closeVersionBottomSheet();
           toggleSidebarDrawer(false);
+          return;
+        }
+
+        // Desktop accessibility: keyboard navigation when not focused on an input
+        const activeTag = document.activeElement ? document.activeElement.tagName : '';
+        const isTyping = (activeTag === 'INPUT' || activeTag === 'TEXTAREA');
+
+        if (!isTyping) {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            switchGameNext();
+          } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+            e.preventDefault();
+            switchGamePrev();
+          } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            launchActiveGame();
+          }
         }
       }
     });
@@ -4053,9 +4102,10 @@
       const container = document.getElementById('libraryList');
       const searchTerm = document.getElementById('librarySearchInput').value.trim().toLowerCase();
 
-      container.innerHTML = '';
+      container.replaceChildren();
 
-      const filtered = GAMES.filter(g => {
+      // Filter games by category and search
+      let filtered = GAMES.filter(g => {
         const matchesCategory = (currentCategoryFilter === 'all' || g.category.toLowerCase() === currentCategoryFilter.toLowerCase());
         const matchesSearch = !searchTerm || (
           g.title.toLowerCase().includes(searchTerm) ||
@@ -4066,13 +4116,27 @@
         return matchesCategory && matchesSearch;
       });
 
+      // Sort favorites to top of list
+      launcherState.favorites = launcherState.favorites || [];
+      filtered.sort((a, b) => {
+        const isFavA = launcherState.favorites.includes(a.id);
+        const isFavB = launcherState.favorites.includes(b.id);
+        if (isFavA && !isFavB) return -1;
+        if (!isFavA && isFavB) return 1;
+        return 0;
+      });
+
       if (filtered.length === 0) {
-        container.innerHTML = `<div style="padding:20px; text-align:center; color:#64748b; font-size:0.8rem">No games match query.</div>`;
+        const noMatch = document.createElement('div');
+        noMatch.style.cssText = 'padding:20px; text-align:center; color:#64748b; font-size:0.8rem';
+        noMatch.textContent = 'No games match query.';
+        container.appendChild(noMatch);
         return;
       }
 
       filtered.forEach(g => {
         const isActive = (g.id === launcherState.activeGameId);
+        const isFav = launcherState.favorites.includes(g.id);
         const gData = launcherState.games[g.id];
         const playtimeMins = Math.floor((gData?.playtimeSeconds || 0) / 60);
         const playtimeStr = playtimeMins > 0 ? `${playtimeMins}m` : 'New';
@@ -4103,10 +4167,31 @@
               <span class="lib-playtime">${playtimeStr}</span>
             </div>
           </div>
+          <button class="lib-star-btn ${isFav ? 'starred' : ''}" onclick="toggleFavoriteGame('${g.id}', event)" title="${isFav ? 'Unpin Starred Game' : 'Pin to Top of Rail'}">
+            ${isFav ? '★' : '☆'}
+          </button>
         `;
 
         container.appendChild(item);
       });
+    }
+
+    function toggleFavoriteGame(gameId, event) {
+      if (event) event.stopPropagation();
+      SoundFX.playSelect();
+      launcherState.favorites = launcherState.favorites || [];
+      const idx = launcherState.favorites.indexOf(gameId);
+      const game = GAMES.find(g => g.id === gameId);
+      if (idx >= 0) {
+        launcherState.favorites.splice(idx, 1);
+        showToast('☆', 'Unpinned', `${game ? game.shortName : 'Game'} removed from favorites.`);
+      } else {
+        launcherState.favorites.push(gameId);
+        showToast('⭐', 'Pinned to Top', `${game ? game.shortName : 'Game'} pinned for fast access.`);
+      }
+      saveState();
+      renderLibraryList();
+      renderMobileBottomDock();
     }
 
     function renderMobileBottomDock() {
@@ -4343,19 +4428,20 @@
       }
     });
 
-    function appendSectionHeader(container, text) {
-      const header = document.createElement('div');
-      header.className = 'dropdown-section-title';
-      header.textContent = text;
-      container.appendChild(header);
+        function appendDropdownHeader(container, text) {
+      const el = document.createElement('div');
+      el.className = 'dropdown-section-title';
+      el.textContent = text;
+      container.appendChild(el);
     }
+    const appendSectionHeader = appendDropdownHeader; // Backward alias
 
     function populateVersionDropdown(game) {
       const list = document.getElementById('dropdownVersionList');
       const searchVal = document.getElementById('dropdownSearchInput').value.trim().toLowerCase();
       const gData = launcherState.games[game.id];
 
-      list.innerHTML = '';
+      list.replaceChildren();
       const filtered = game.versions.filter(v => !searchVal || v.label.toLowerCase().includes(searchVal));
 
       if (filtered.length === 0) {
@@ -4369,13 +4455,13 @@
       const latestBuild = filtered.find(v => v.category === 'latest');
       if (latestBuild) {
         const isSel = (latestBuild.url === gData.selectedVersionUrl);
-        appendSectionHeader(list, 'Latest Active Build');
+        appendDropdownHeader(list, 'Latest Active Build');
         list.appendChild(createDropdownItem(latestBuild, isSel));
       }
 
       const betas = filtered.filter(v => v.category === 'beta');
       if (betas.length > 0) {
-        appendSectionHeader(list, 'Experimental & Beta');
+        appendDropdownHeader(list, 'Experimental & Beta');
         betas.forEach(b => {
           const isSel = (b.url === gData.selectedVersionUrl);
           list.appendChild(createDropdownItem(b, isSel, true));
@@ -4384,7 +4470,7 @@
 
       const archives = filtered.filter(v => v.category === 'archive');
       if (archives.length > 0) {
-        appendSectionHeader(list, `Legacy Archive (${archives.length})`);
+        appendDropdownHeader(list, `Legacy Archive (${archives.length})`);
         archives.forEach(a => {
           const isSel = (a.url === gData.selectedVersionUrl);
           list.appendChild(createDropdownItem(a, isSel));
@@ -4399,10 +4485,21 @@
         e.stopPropagation();
         selectVersion(ver.url, ver.label);
       };
-      item.innerHTML = `
-        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${ver.label}</span>
-        ${ver.badge ? `<span class="dropdown-ver-tag">${ver.badge}</span>` : ''}
-      `;
+
+      const labelSpan = document.createElement('span');
+      labelSpan.style.overflow = 'hidden';
+      labelSpan.style.textOverflow = 'ellipsis';
+      labelSpan.style.whiteSpace = 'nowrap';
+      labelSpan.textContent = ver.label;
+      item.appendChild(labelSpan);
+
+      if (ver.badge) {
+        const badgeSpan = document.createElement('span');
+        badgeSpan.className = 'dropdown-ver-tag';
+        badgeSpan.textContent = ver.badge;
+        item.appendChild(badgeSpan);
+      }
+
       return item;
     }
 
@@ -4446,7 +4543,7 @@
       const searchVal = document.getElementById('bottomSheetSearchInput').value.trim().toLowerCase();
       const gData = launcherState.games[game.id];
 
-      list.innerHTML = '';
+      list.replaceChildren();
       const filtered = game.versions.filter(v => !searchVal || v.label.toLowerCase().includes(searchVal));
 
       if (filtered.length === 0) {
@@ -4459,13 +4556,13 @@
 
       const latestBuild = filtered.find(v => v.category === 'latest');
       if (latestBuild) {
-        appendSectionHeader(list, 'Latest Active Build');
+        appendDropdownHeader(list, 'Latest Active Build');
         list.appendChild(createBottomSheetItem(latestBuild, latestBuild.url === gData.selectedVersionUrl, game.id));
       }
 
       const betas = filtered.filter(v => v.category === 'beta');
       if (betas.length > 0) {
-        appendSectionHeader(list, 'Experimental & Beta');
+        appendDropdownHeader(list, 'Experimental & Beta');
         betas.forEach(b => {
           list.appendChild(createBottomSheetItem(b, b.url === gData.selectedVersionUrl, game.id));
         });
@@ -4473,7 +4570,7 @@
 
       const archives = filtered.filter(v => v.category === 'archive');
       if (archives.length > 0) {
-        appendSectionHeader(list, `Legacy Archive (${archives.length})`);
+        appendDropdownHeader(list, `Legacy Archive (${archives.length})`);
         archives.forEach(a => {
           list.appendChild(createBottomSheetItem(a, a.url === gData.selectedVersionUrl, game.id));
         });
@@ -4488,13 +4585,29 @@
         selectVersion(ver.url, ver.label);
         closeVersionBottomSheet();
       };
-      item.innerHTML = `
-        <div>
-          <div style="font-weight:800; color:#fff">${ver.label}</div>
-          <div style="font-size:0.7rem; color:#94a3b8">${getBuildNote(gameId, ver.label)}</div>
-        </div>
-        ${ver.badge ? `<span class="dropdown-ver-tag">${ver.badge}</span>` : ''}
-      `;
+
+      const textCol = document.createElement('div');
+      const labelDiv = document.createElement('div');
+      labelDiv.style.fontWeight = '800';
+      labelDiv.style.color = '#fff';
+      labelDiv.textContent = ver.label;
+      textCol.appendChild(labelDiv);
+
+      const noteDiv = document.createElement('div');
+      noteDiv.style.fontSize = '0.7rem';
+      noteDiv.style.color = '#94a3b8';
+      noteDiv.textContent = getBuildNote(gameId, ver.label);
+      textCol.appendChild(noteDiv);
+
+      item.appendChild(textCol);
+
+      if (ver.badge) {
+        const badgeSpan = document.createElement('span');
+        badgeSpan.className = 'dropdown-ver-tag';
+        badgeSpan.textContent = ver.badge;
+        item.appendChild(badgeSpan);
+      }
+
       return item;
     }
 
@@ -4804,6 +4917,7 @@
           activeGameId: 'bank',
           muted: false,
           curatorSwitchCount: 0,
+          favorites: [],
           games: {},
           achievements: {}
         };
@@ -4864,7 +4978,7 @@
 
     function launchBankLatest() {
       switchGame('bank');
-      selectVersion('Knice_Bank_9_0.html', 'Knice Bank 9.0');
+      selectVersion('Knice_Bank_10_0.html', 'Knice Bank 10.0 (Grand Finale)');
       launchActiveGame();
     }
 
@@ -4969,6 +5083,22 @@
         });
       });
     }
+
+    
+    /* Reliable telemetry & playtime auto-saver */
+    function saveSessionTelemetry() {
+      if (currentRunningGame && launcherState.games[currentRunningGame.gameId]) {
+        launcherState.games[currentRunningGame.gameId].lastPlayedTimestamp = Date.now();
+      }
+      saveState();
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        saveSessionTelemetry();
+      }
+    });
+    window.addEventListener('pagehide', saveSessionTelemetry);
+    window.addEventListener('beforeunload', saveSessionTelemetry);
 
     /* ==========================================================================
        15. BOOTSTRAP INITIALIZATION
