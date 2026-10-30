@@ -2538,6 +2538,323 @@
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
     }
 
+
+    /* ==========================================================================
+       GOLD MASTER ENHANCEMENTS: AUDIO SLIDER, LOCALIZATION, GALLERY & EMBLEMS
+       ========================================================================== */
+    /* Interactive Audio Cluster */
+    .audio-control-cluster {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .volume-slider-popover {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      z-index: 250;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      animation: slideUp 0.15s ease-out;
+    }
+    .audio-control-cluster:hover .volume-slider-popover,
+    .audio-control-cluster:focus-within .volume-slider-popover {
+      display: flex;
+    }
+    .volume-slider {
+      width: 90px;
+      height: 6px;
+      border-radius: 3px;
+      accent-color: #38bdf8;
+      cursor: pointer;
+      background: #1e293b;
+    }
+    .drone-toggle-btn {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      padding: 4px 6px;
+      color: #94a3b8;
+      transition: all 0.2s;
+    }
+    .drone-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    .drone-toggle-btn.active {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: rgba(56, 189, 248, 0.5);
+      color: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    }
+
+    /* Sidebar Sorting Controls */
+    .sidebar-sort-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: space-between;
+      padding: 4px 2px 2px 2px;
+    }
+    .sidebar-sort-label {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .sidebar-sort-select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: #e2e8f0;
+      font-size: 0.73rem;
+      padding: 5px 8px;
+      cursor: pointer;
+      outline: none;
+      font-weight: 600;
+      transition: var(--transition-standard);
+      max-width: 170px;
+    }
+    .sidebar-sort-select:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .sidebar-sort-select option {
+      background: #0f172a;
+      color: #fff;
+    }
+
+    /* Callsign Editor & Avatar Emblem Picker */
+    .callsign-edit-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-callsign-edit {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .btn-callsign-edit:hover {
+      opacity: 1;
+    }
+    .callsign-inline-input {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-medium);
+      border-radius: 4px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      width: 140px;
+      outline: none;
+    }
+    .passport-avatar-lg {
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .passport-avatar-lg:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 15px rgba(var(--accent-rgb, 56, 189, 248), 0.5);
+    }
+    .avatar-picker-tray {
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+    .avatar-emblem-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .emblem-opt {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-standard);
+    }
+    .emblem-opt:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.1);
+      border-color: #38bdf8;
+    }
+
+    /* Accent Lock Palette */
+    .accent-lock-section {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+    }
+    .accent-color-palette {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .accent-choice {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .accent-choice:hover {
+      transform: scale(1.15);
+    }
+    .accent-choice.active {
+      border-color: #fff;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+      transform: scale(1.15);
+    }
+    .accent-choice.dynamic {
+      width: auto;
+      height: 28px;
+      border-radius: 99px;
+      padding: 0 10px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+    }
+    .accent-choice.dynamic.active {
+      border-color: #38bdf8;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+    }
+
+    /* Per-game stats reset button in dossier */
+    .passport-game-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .passport-game-title-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+    .btn-game-stat-reset {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #64748b;
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 4px;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .btn-game-stat-reset:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    /* Passport footer rows */
+    .passport-footer-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      width: 100%;
+      justify-content: flex-end;
+    }
+
+    /* Screenshot Gallery Modal */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+      max-height: 480px;
+      overflow-y: auto;
+      padding: 4px;
+    }
+    .gallery-card {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+    .gallery-thumb-wrap {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      overflow: hidden;
+    }
+    .gallery-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .gallery-meta {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .gallery-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .gallery-time {
+      font-size: 0.7rem;
+      color: #94a3b8;
+    }
+    .gallery-actions {
+      padding: 0 10px 10px 10px;
+      display: flex;
+      gap: 8px;
+    }
+    .btn-gallery-dl {
+      flex: 1;
+      padding: 6px;
+      border-radius: 4px;
+      background: #0284c7;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn-gallery-dl:hover {
+      background: #0369a1;
+    }
+
   </style>
 </head>
 <body>
@@ -2596,10 +2913,25 @@
       </div>
 
       <div class="header-right">
-        <!-- SFX Audio Mute/Unmute Toggle -->
-        <button class="header-pill-btn active" id="btnSfxToggle" onclick="toggleAudioMute()" title="Toggle Web Audio SFX">
-          <span id="sfxIcon">🔊</span>
-          <span id="sfxLabel">SFX: ON</span>
+        <!-- Audio Controls Cluster with Slider & Drone -->
+        <div class="audio-control-cluster" id="audioControlCluster">
+          <button class="header-pill-btn active" id="btnSfxToggle" onclick="toggleAudioMute()" title="Click to Mute/Unmute. Hover for Volume Slider.">
+            <span id="sfxIcon">🔊</span>
+            <span id="sfxLabel">70%</span>
+          </button>
+          <div class="volume-slider-popover" id="volumeSliderPopover">
+            <span style="font-size:0.7rem; color:#94a3b8; font-weight:700">VOL</span>
+            <input type="range" min="0" max="100" value="70" id="volumeRangeSlider" oninput="handleVolumeSliderChange(this.value)" class="volume-slider" title="Master Volume" />
+            <button class="drone-toggle-btn" id="btnDroneToggle" onclick="toggleDroneAudio()" title="Toggle Procedural Ambient Sci-Fi Drone">
+              <span id="droneToggleIcon">🛸</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bilingual Language Switcher -->
+        <button class="header-pill-btn" id="btnLangToggle" onclick="toggleLanguage()" title="Switch Language / Сменить язык (EN / RU)">
+          <span>🌐</span>
+          <span id="langLabel">EN</span>
         </button>
 
         <!-- Achievements Cabinet Trigger -->
@@ -2610,9 +2942,9 @@
 
         <!-- Commander Profile Pill -->
         <div class="profile-pill" onclick="openPassportModal()" title="View Commander Profile">
-          <div class="profile-avatar">⚔️</div>
+          <div class="profile-avatar" id="headerAvatar">⚔️</div>
           <div class="profile-meta">
-            <span class="profile-name">Commander</span>
+            <span class="profile-name" id="headerCallsign">Commander</span>
             <span class="profile-level" id="profileLevelText">Level 12</span>
           </div>
         </div>
@@ -2651,15 +2983,25 @@
 
           <div class="filter-controls-row">
             <div class="filter-chips">
-              <button class="filter-chip active" onclick="filterCategory('all', this)">All (9)</button>
-              <button class="filter-chip" onclick="filterCategory('Strategy', this)">Strategy</button>
-              <button class="filter-chip" onclick="filterCategory('Simulation', this)">Simulation</button>
-              <button class="filter-chip" onclick="filterCategory('Action', this)">Action</button>
+              <button class="filter-chip active" id="filterChipAll" onclick="filterCategory('all', this)">All (9)</button>
+              <button class="filter-chip" id="filterChipStrategy" onclick="filterCategory('Strategy', this)">Strategy</button>
+              <button class="filter-chip" id="filterChipSimulation" onclick="filterCategory('Simulation', this)">Simulation</button>
+              <button class="filter-chip" id="filterChipAction" onclick="filterCategory('Action', this)">Action</button>
             </div>
             <button class="btn-lib-view-toggle" id="btnLibViewToggle" onclick="toggleLibraryView()" title="Toggle Compact / Card View">
               <span id="libViewToggleIcon">☵</span>
               <span id="libViewToggleText">Compact View</span>
             </button>
+          </div>
+
+          <div class="sidebar-sort-row">
+            <span class="sidebar-sort-label" id="sortLabelText">Sort:</span>
+            <select id="librarySortSelect" class="sidebar-sort-select" onchange="handleLibrarySortChange(this.value)">
+              <option value="default" id="optSortDefault">Default Studio Order</option>
+              <option value="playtime" id="optSortPlaytime">Most Played (Time)</option>
+              <option value="recent" id="optSortRecent">Recently Played</option>
+              <option value="alpha" id="optSortAlpha">Alphabetical (A–Z)</option>
+            </select>
           </div>
         </div>
 
@@ -2936,16 +3278,28 @@
           <span style="color:#22c55e">●</span>
           <span id="hudFpsText">60.0 FPS</span>
         </div>
+        <div class="hud-stat-pill hud-latency-indicator">
+          <span style="color:#38bdf8">📶</span>
+          <span id="hudLatencyText">14ms • Synchronized</span>
+        </div>
       </div>
 
       <div class="hud-right">
         <button class="btn-hud-action" onclick="takeGameScreenshot()" title="Capture frame snapshot">
           <span>📸</span>
-          <span>Snapshot</span>
+          <span id="hudSnapshotText">Snapshot</span>
+        </button>
+        <button class="btn-hud-action" onclick="openScreenshotGalleryModal()" title="View session screenshot gallery">
+          <span>🖼️</span>
+          <span id="hudGalleryText">Gallery</span>
+        </button>
+        <button class="btn-hud-action" onclick="toggleGameFullscreen()" title="Toggle Fullscreen (F11 / F)">
+          <span>⛶</span>
+          <span id="hudFullscreenText">Fullscreen</span>
         </button>
         <button class="btn-hud-action" onclick="openCurrentInNewTab()" title="Pop out game to external browser tab">
           <span>↗</span>
-          <span>Popout Tab</span>
+          <span id="hudPopoutText">Popout Tab</span>
         </button>
         <button class="btn-hud-action" onclick="minimizeGameToLauncher()" title="Keep running in background and return to launcher">
           <span>🗕</span>
@@ -2970,6 +3324,7 @@
         <span id="mHudTimer" style="font-family:var(--font-mono); font-size:0.75rem; color:#38bdf8;">00:00</span>
       </div>
       <button class="btn-hud-action" onclick="takeGameScreenshot()">📸 Take Snapshot</button>
+      <button class="btn-hud-action" onclick="openScreenshotGalleryModal()">🖼️ View Gallery</button>
       <button class="btn-hud-action" onclick="toggleFullscreen()">⛶ Fullscreen</button>
       <button class="btn-hud-action" onclick="reloadInGameFrame()">🔄 Reload Frame</button>
       <button class="btn-hud-action" onclick="openCurrentInNewTab()">↗ Popout Tab</button>
@@ -2991,10 +3346,30 @@
     <div class="passport-modal-card">
       <div class="passport-header">
         <div class="passport-profile-strip">
-          <div class="passport-avatar-lg">⚔️</div>
+          <div class="passport-avatar-lg" id="passportAvatarLg" onclick="toggleAvatarPicker()" title="Click to Change Emblem">⚔️</div>
           <div class="passport-user-info">
-            <span class="passport-username">Commander</span>
+            <div class="callsign-edit-row">
+              <span class="passport-username" id="passportCallsignDisplay">Commander</span>
+              <button class="btn-callsign-edit" onclick="startEditCallsign()" title="Edit Callsign">✏️</button>
+              <input type="text" id="callsignInput" class="callsign-inline-input" style="display:none" maxlength="20" onblur="saveCallsign()" onkeydown="if(event.key==='Enter')saveCallsign()" />
+            </div>
             <span class="passport-rank" id="passportRankTitle">Level 12 • High Strategist</span>
+          </div>
+        </div>
+
+        <!-- Avatar Emblem Picker Tray -->
+        <div id="avatarPickerTray" class="avatar-picker-tray" style="display:none">
+          <span style="font-size:0.75rem; color:#94a3b8; font-weight:700" id="chooseEmblemText">Choose Emblem:</span>
+          <div class="avatar-emblem-grid">
+            <button class="emblem-opt" onclick="selectAvatar('⚔️')">⚔️</button>
+            <button class="emblem-opt" onclick="selectAvatar('🏦')">🏦</button>
+            <button class="emblem-opt" onclick="selectAvatar('👑')">👑</button>
+            <button class="emblem-opt" onclick="selectAvatar('✈️')">✈️</button>
+            <button class="emblem-opt" onclick="selectAvatar('🧬')">🧬</button>
+            <button class="emblem-opt" onclick="selectAvatar('🪖')">🪖</button>
+            <button class="emblem-opt" onclick="selectAvatar('🚀')">🚀</button>
+            <button class="emblem-opt" onclick="selectAvatar('🛡️')">🛡️</button>
+            <button class="emblem-opt" onclick="selectAvatar('💠')">💠</button>
           </div>
         </div>
         <button class="win-btn close" onclick="closePassportModal()">✕</button>
@@ -3016,18 +3391,75 @@
           </div>
         </div>
 
-        <span class="passport-section-title">Deployment Registry</span>
+        <span class="passport-section-title" id="deploymentRegistryTitle">Deployment Registry</span>
         <div class="passport-game-stats-list" id="passportGameStatsList">
           <!-- Dynamically populated stats rows per game -->
+        </div>
+
+        <!-- Accent Color Lock Selector -->
+        <div class="accent-lock-section">
+          <span class="passport-section-title" id="themeLockTitle">Theme Neon Glow Lock</span>
+          <div class="accent-color-palette">
+            <button class="accent-choice dynamic active" id="accentLockDynamic" data-color="" onclick="setAccentLock(null)" title="Dynamic Theme (Adapts to Active Game)">
+              <span id="dynamicAccentLabel">Dynamic</span>
+            </button>
+            <button class="accent-choice" data-color="#38bdf8" style="background:#38bdf8" onclick="setAccentLock('#38bdf8')" title="Cyber Cyan"></button>
+            <button class="accent-choice" data-color="#22c55e" style="background:#22c55e" onclick="setAccentLock('#22c55e')" title="Emerald Green"></button>
+            <button class="accent-choice" data-color="#f59e0b" style="background:#f59e0b" onclick="setAccentLock('#f59e0b')" title="Desert Amber"></button>
+            <button class="accent-choice" data-color="#a855f7" style="background:#a855f7" onclick="setAccentLock('#a855f7')" title="Aether Purple"></button>
+            <button class="accent-choice" data-color="#ef4444" style="background:#ef4444" onclick="setAccentLock('#ef4444')" title="Battle Crimson"></button>
+            <button class="accent-choice" data-color="#f1c40f" style="background:#f1c40f" onclick="setAccentLock('#f1c40f')" title="Bronze Gold"></button>
+          </div>
         </div>
       </div>
 
       <div class="passport-footer">
-        <button class="btn-secondary-action" id="btnPassportEcoToggle" onclick="toggleEcoMode()" title="Toggle Battery Saver / Eco Mode">
-          <span>🌱 Battery Saver (ECO): <strong id="passportEcoStatus" style="color:#22c55e">OFF</strong></span>
-        </button>
-        <button class="btn-secondary-action" onclick="resetAllStats()">Reset Local Progress</button>
-        <button class="btn-secondary-action" style="background:#0284c7; color:#fff" onclick="closePassportModal()">Close Dossier</button>
+        <div class="passport-footer-row" style="margin-bottom: 8px;">
+          <button class="btn-secondary-action" onclick="exportBackupData()" title="Download JSON save backup" id="btnExportBackup">
+            <span>💾 Export Backup</span>
+          </button>
+          <label class="btn-secondary-action" style="cursor:pointer" title="Load JSON save backup" id="btnImportBackup">
+            <span>📥 Import Backup</span>
+            <input type="file" id="backupFileInput" accept=".json" style="display:none" onchange="importBackupData(event)" />
+          </label>
+          <button class="btn-secondary-action" id="btnPassportEcoToggle" onclick="toggleEcoMode()" title="Toggle Battery Saver / Eco Mode">
+            <span>🌱 Battery Saver: <strong id="passportEcoStatus" style="color:#22c55e">OFF</strong></span>
+          </button>
+        </div>
+        <div class="passport-footer-row">
+          <button class="btn-secondary-action" onclick="resetAllStats()" id="btnResetAllStats">Reset All Progress</button>
+          <button class="btn-secondary-action" style="background:#0284c7; color:#fff" onclick="closePassportModal()" id="btnCloseDossier">Close Dossier</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==========================================================================
+       SCREENSHOT GALLERY MODAL
+       ========================================================================== -->
+  <div class="passport-modal-backdrop" id="screenshotGalleryModal" onclick="closeScreenshotGalleryModalOnBackdrop(event)">
+    <div class="passport-modal-card" style="max-width: 680px;">
+      <div class="passport-header">
+        <div class="passport-profile-strip">
+          <div class="passport-avatar-lg">🖼️</div>
+          <div class="passport-user-info">
+            <span class="passport-username" id="galleryTitle">Mission Surveillance Gallery</span>
+            <span class="passport-rank" id="galleryCountLabel">0 Snapshots in Local Memory</span>
+          </div>
+        </div>
+        <button class="win-btn close" onclick="closeScreenshotGalleryModal()">✕</button>
+      </div>
+
+      <div class="passport-body">
+        <div class="gallery-grid" id="galleryGrid">
+          <!-- Dynamically populated snapshots -->
+        </div>
+      </div>
+
+      <div class="passport-footer">
+        <button class="btn-secondary-action" onclick="clearAllScreenshots()" id="btnClearGallery">Clear Gallery</button>
+        <button class="btn-secondary-action" style="background:#0284c7; color:#fff" onclick="closeScreenshotGalleryModal()" id="btnCloseGallery">Close Gallery</button>
       </div>
     </div>
   </div>
@@ -3044,6 +3476,10 @@
        ========================================================================== */
     const SoundFX = {
       ctx: null,
+      masterGain: null,
+      droneOsc: null,
+      droneGain: null,
+      droneFilter: null,
       muted: false,
 
       init() {
@@ -3051,11 +3487,31 @@
           const AudioContextClass = window.AudioContext || window.webkitAudioContext;
           if (AudioContextClass) {
             this.ctx = new AudioContextClass();
+            this.masterGain = this.ctx.createGain();
+            const vol = launcherState.muted ? 0 : (launcherState.masterVolume ?? 0.7);
+            this.masterGain.gain.setValueAtTime(vol, this.ctx.currentTime);
+            this.masterGain.connect(this.ctx.destination);
           }
         }
         if (this.ctx && this.ctx.state === 'suspended') {
           this.ctx.resume().catch(() => {});
         }
+      },
+
+      getDestination() {
+        this.init();
+        return this.masterGain || (this.ctx ? this.ctx.destination : null);
+      },
+
+      setMasterVolume(val) {
+        this.init();
+        launcherState.masterVolume = Math.max(0, Math.min(1, val));
+        if (this.masterGain && this.ctx) {
+          const targetGain = launcherState.muted ? 0 : launcherState.masterVolume;
+          this.masterGain.gain.setValueAtTime(targetGain, this.ctx.currentTime);
+        }
+        saveState();
+        updateAudioUi();
       },
 
       triggerHaptic(ms = 15) {
@@ -3067,8 +3523,50 @@
       setMuted(state) {
         this.muted = !!state;
         launcherState.muted = this.muted;
+        if (this.masterGain && this.ctx) {
+          const targetGain = this.muted ? 0 : (launcherState.masterVolume ?? 0.7);
+          this.masterGain.gain.setValueAtTime(targetGain, this.ctx.currentTime);
+        }
         saveState();
         updateAudioUi();
+        if (this.muted) this.stopAmbientDrone();
+        else if (launcherState.droneEnabled && !currentRunningGame) this.startAmbientDrone();
+      },
+
+      startAmbientDrone() {
+        if (!launcherState.droneEnabled || this.droneOsc || this.muted) return;
+        this.init();
+        if (!this.ctx || !this.masterGain) return;
+        try {
+          const now = this.ctx.currentTime;
+          this.droneOsc = this.ctx.createOscillator();
+          this.droneGain = this.ctx.createGain();
+          this.droneFilter = this.ctx.createBiquadFilter();
+
+          this.droneOsc.type = 'sawtooth';
+          this.droneOsc.frequency.setValueAtTime(55, now);
+
+          this.droneFilter.type = 'lowpass';
+          this.droneFilter.frequency.setValueAtTime(80, now);
+
+          this.droneGain.gain.setValueAtTime(0.007, now);
+
+          this.droneOsc.connect(this.droneFilter);
+          this.droneFilter.connect(this.droneGain);
+          this.droneGain.connect(this.masterGain);
+
+          this.droneOsc.start();
+        } catch(e) {}
+      },
+
+      stopAmbientDrone() {
+        if (this.droneOsc) {
+          try {
+            this.droneOsc.stop();
+            this.droneOsc.disconnect();
+          } catch(e) {}
+          this.droneOsc = null;
+        }
       },
 
       playHover() {
@@ -3088,7 +3586,7 @@
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
 
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this.getDestination());
 
           osc.start(now);
           osc.stop(now + 0.04);
@@ -3113,7 +3611,7 @@
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
 
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this.getDestination());
 
           osc.start(now);
           osc.stop(now + 0.055);
@@ -3139,7 +3637,7 @@
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
 
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
+          gain.connect(this.getDestination());
 
           osc.start(now);
           osc.stop(now + 0.13);
@@ -3173,7 +3671,7 @@
 
           subOsc.connect(subFilter);
           subFilter.connect(subGain);
-          subGain.connect(this.ctx.destination);
+          subGain.connect(this.getDestination());
 
           subOsc.start(now);
           subOsc.stop(now + 0.82);
@@ -3190,7 +3688,7 @@
           riserGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
 
           riserOsc.connect(riserGain);
-          riserGain.connect(this.ctx.destination);
+          riserGain.connect(this.getDestination());
 
           riserOsc.start(now);
           riserOsc.stop(now + 0.62);
@@ -3206,7 +3704,7 @@
             thumpGain.gain.setValueAtTime(0.25, thumpNow);
             thumpGain.gain.exponentialRampToValueAtTime(0.001, thumpNow + 0.2);
             thumpOsc.connect(thumpGain);
-            thumpGain.connect(this.ctx.destination);
+            thumpGain.connect(this.getDestination());
             thumpOsc.start(thumpNow);
             thumpOsc.stop(thumpNow + 0.22);
           }, 450);
@@ -3230,7 +3728,7 @@
             gain.gain.setValueAtTime(0.1, start);
             gain.gain.exponentialRampToValueAtTime(0.001, start + 0.35);
             osc.connect(gain);
-            gain.connect(this.ctx.destination);
+            gain.connect(this.getDestination());
             osc.start(start);
             osc.stop(start + 0.38);
           });
@@ -3252,7 +3750,7 @@
           gain1.gain.setValueAtTime(0.15, now);
           gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
           osc1.connect(gain1);
-          gain1.connect(this.ctx.destination);
+          gain1.connect(this.getDestination());
           osc1.start(now);
           osc1.stop(now + 0.05);
 
@@ -3267,7 +3765,7 @@
             gain2.gain.setValueAtTime(0.12, now2);
             gain2.gain.exponentialRampToValueAtTime(0.001, now2 + 0.06);
             osc2.connect(gain2);
-            gain2.connect(this.ctx.destination);
+            gain2.connect(this.getDestination());
             osc2.start(now2);
             osc2.stop(now2 + 0.07);
           }, 80);
@@ -3323,10 +3821,10 @@
           <rect x="210" y="15" width="100" height="20" rx="4" fill="rgba(56,189,248,0.2)"/>
           <text x="218" y="29" fill="#38bdf8" font-size="9" font-weight="bold">10.1.0 FINAL</text>
         </svg>`,
-        defaultUrl: 'Knice_Bank_10_1_0.html',
-        defaultTitle: 'Knice Bank 10.1.0 (Final Cut)',
+        defaultUrl: 'Knice_Bank_10_1.html',
+        defaultTitle: 'Knice Bank 10.1 (Final Master Cut)',
         versions: [
-          { url: 'Knice_Bank_10_1_0.html', label: '10.1.0 (Ultimate Final Master — Complete Ecosystem)', category: 'latest', badge: 'Active Master' },
+          { url: 'Knice_Bank_10_1.html', label: '10.1 (Ultimate Final Master — Complete Ecosystem)', category: 'latest', badge: 'Active Master' },
           { url: 'Knice_Bank_10_0.html', label: '10.0.0 (Grand Finale Milestone)', category: 'archive', badge: 'Final Milestone' },
           { url: 'Knice_Bank_9_0.html', label: '9.0.0 (OTC Desk, Whale Syndicate, Futures & Staking)', category: 'archive', badge: 'Stable' },
           { url: 'Knice_Bank_8_7_1.html', label: '8.7.1 (Forex, Hammam, Startups)', category: 'archive', badge: 'Legacy' },
@@ -3877,6 +4375,13 @@
         launcherState.favorites = launcherState.favorites || [];
           launcherState.compactLibrary = !!launcherState.compactLibrary;
           launcherState.ecoMode = !!launcherState.ecoMode;
+          launcherState.masterVolume = (typeof launcherState.masterVolume === 'number') ? launcherState.masterVolume : 0.7;
+          launcherState.droneEnabled = !!launcherState.droneEnabled;
+          launcherState.librarySort = launcherState.librarySort || 'default';
+          launcherState.callsign = launcherState.callsign || 'Commander';
+          launcherState.avatar = launcherState.avatar || '⚔️';
+          launcherState.accentLock = launcherState.accentLock || null;
+          launcherState.lang = launcherState.lang || 'en';
         }
       } catch(e) {}
 
@@ -3897,9 +4402,10 @@
         if (!launcherState.games['bank'].selectedVersionUrl || 
             launcherState.games['bank'].selectedVersionUrl === 'Knice_Bank_8_7_1.html' || 
             launcherState.games['bank'].selectedVersionUrl === 'Knice_Bank_9_0.html' ||
-            launcherState.games['bank'].selectedVersionUrl === 'Knice_Bank_10_0.html') {
-          launcherState.games['bank'].selectedVersionUrl = 'Knice_Bank_10_1_0.html';
-          launcherState.games['bank'].selectedVersionLabel = '10.1.0 (Ultimate Final Master — Complete Ecosystem)';
+            launcherState.games['bank'].selectedVersionUrl === 'Knice_Bank_10_0.html' ||
+            launcherState.games['bank'].selectedVersionUrl === 'Knice_Bank_10_1_0.html') {
+          launcherState.games['bank'].selectedVersionUrl = 'Knice_Bank_10_1.html';
+          launcherState.games['bank'].selectedVersionLabel = '10.1 (Ultimate Final Master — Complete Ecosystem)';
         }
       }
       if (launcherState.games['rts']) {
@@ -3967,6 +4473,7 @@
       const targetLabel = gData.selectedVersionLabel || game.defaultTitle;
 
       SoundFX.playLaunch();
+      SoundFX.stopAmbientDrone();
 
       // Trigger fullscreen on mobile devices where user gesture supports it
       if (window.innerWidth <= 900) {
@@ -4113,6 +4620,9 @@
       simulatedFpsInterval = setInterval(() => {
         const fps = (59.7 + Math.random() * 0.6).toFixed(1);
         document.getElementById('hudFpsText').textContent = `${fps} FPS`;
+        const lat = Math.floor(12 + Math.random() * 5);
+        const latEl = document.getElementById('hudLatencyText');
+        if (latEl) latEl.textContent = `${lat}ms • Synchronized`;
       }, 900);
     }
 
@@ -4165,6 +4675,7 @@
       document.getElementById('mobileInGameSheet').classList.remove('active');
       currentRunningGame = null;
       isGameMinimized = false;
+      if (launcherState.droneEnabled && !launcherState.muted) SoundFX.startAmbientDrone();
 
       saveState();
       updateInGameHeaderPill();
@@ -4217,10 +4728,13 @@
       const isGameActive = inGame && inGame.classList.contains('active');
 
       if (isGameActive) {
-        // Desktop In-Game quick exit hotkey (ESC or Q)
+        // Desktop In-Game quick exit hotkey (ESC or Q) & Fullscreen (F)
         if (e.key === 'Escape' || e.key === 'q' || e.key === 'Q') {
           if (e.key === 'q' || e.key === 'Q') e.preventDefault();
           closeGame();
+        } else if (e.key === 'f' || e.key === 'F') {
+          e.preventDefault();
+          toggleGameFullscreen();
         }
       } else {
         // Modal dismissals on Escape
@@ -4308,14 +4822,30 @@
         return matchesCategory && matchesSearch;
       });
 
-      // Sort favorites to top of list
+      // Sort favorites to top of list, then by selected sortMode
       launcherState.favorites = launcherState.favorites || [];
+      const sortMode = launcherState.librarySort || 'default';
+
       filtered.sort((a, b) => {
         const isFavA = launcherState.favorites.includes(a.id);
         const isFavB = launcherState.favorites.includes(b.id);
         if (isFavA && !isFavB) return -1;
         if (!isFavA && isFavB) return 1;
-        return 0;
+
+        if (sortMode === 'playtime') {
+          const timeA = launcherState.games[a.id]?.playtimeSeconds || 0;
+          const timeB = launcherState.games[b.id]?.playtimeSeconds || 0;
+          return timeB - timeA;
+        }
+        if (sortMode === 'recent') {
+          const recA = launcherState.games[a.id]?.lastPlayedTimestamp || 0;
+          const recB = launcherState.games[b.id]?.lastPlayedTimestamp || 0;
+          return recB - recA;
+        }
+        if (sortMode === 'alpha') {
+          return a.title.localeCompare(b.title);
+        }
+        return GAMES.indexOf(a) - GAMES.indexOf(b);
       });
 
       if (filtered.length === 0) {
@@ -4865,13 +5395,20 @@
       const layerA = document.getElementById('ambientLayerA');
       const layerB = document.getElementById('ambientLayerB');
 
+      const bgGrad = (launcherState.accentLock && ACCENT_GRADIENTS[launcherState.accentLock]) || game.bgGradient;
+      const activeColor = launcherState.accentLock || game.accentColor;
+      const activeRgb = (launcherState.accentLock && ACCENT_RGBS[launcherState.accentLock]) || game.accentRgb;
+
+      document.documentElement.style.setProperty('--accent-color', activeColor);
+      document.documentElement.style.setProperty('--accent-rgb', activeRgb);
+
       if (activeAmbientLayer === 'A') {
-        layerB.style.background = game.bgGradient;
+        layerB.style.background = bgGrad;
         layerB.classList.add('active');
         layerA.classList.remove('active');
         activeAmbientLayer = 'B';
       } else {
-        layerA.style.background = game.bgGradient;
+        layerA.style.background = bgGrad;
         layerA.classList.add('active');
         layerB.classList.remove('active');
         activeAmbientLayer = 'A';
@@ -5106,8 +5643,13 @@
         const gMins = Math.floor((gData?.playtimeSeconds || 0) / 60);
         return `
           <div class="passport-game-row">
-            <span style="font-weight:700">${g.icon} ${g.title}</span>
-            <span style="color:#94a3b8">${gMins} mins logged • ${gData?.launchCount || 0} launches</span>
+            <div class="passport-game-title-info">
+              <span style="font-weight:700">${g.icon} ${g.title}</span>
+              <span style="color:#94a3b8; font-size:0.75rem">${gMins} mins logged • ${gData?.launchCount || 0} launches</span>
+            </div>
+            <button class="btn-game-stat-reset" onclick="resetGameStats('${g.id}')" title="Reset stats for ${g.title}">
+              <span>🔄</span>
+            </button>
           </div>
         `;
       }).join('');
@@ -5181,7 +5723,7 @@
 
     function launchBankLatest() {
       switchGame('bank');
-      selectVersion('Knice_Bank_10_1_0.html', 'Knice Bank 10.1.0 (Final Cut)');
+      selectVersion('Knice_Bank_10_1.html', 'Knice Bank 10.1 (Final Master Cut)');
       launchActiveGame();
     }
 
@@ -5304,6 +5846,512 @@
     window.addEventListener('beforeunload', saveSessionTelemetry);
 
 
+
+    /* ==========================================================================
+       GOLD MASTER ENGINES: I18N, DATA PORTABILITY, PROFILE & GALLERY
+       ========================================================================== */
+    const I18N = {
+      en: {
+        system_online: 'SYSTEM ONLINE',
+        now_playing: 'NOW PLAYING:',
+        resume: 'RESUME',
+        all: 'All (9)',
+        strategy: 'Strategy',
+        simulation: 'Simulation',
+        action: 'Action',
+        compact_view: 'Compact View',
+        card_view: 'Card View',
+        sort_by: 'Sort:',
+        sort_default: 'Default Studio Order',
+        sort_playtime: 'Most Played (Time)',
+        sort_recent: 'Recently Played',
+        sort_alpha: 'Alphabetical (A–Z)',
+        launch_game: 'LAUNCH GAME',
+        launch_m: 'LAUNCH',
+        active_version: 'Active Version',
+        popout_tab: '↗ Popout to New Tab',
+        version_archive: '📜 Version Archive',
+        overview_tab: 'Overview & Architecture',
+        archive_tab: 'Changelog & Historical Builds',
+        trophies_tab: 'Achievements & Milestones',
+        total_logged: 'TOTAL LOGGED:',
+        persistence_synced: 'LOCALSTORAGE SYNCED',
+        dossier_title: 'Deployment Registry',
+        theme_lock_title: 'Theme Neon Glow Lock',
+        export_backup: '💾 Export Backup',
+        import_backup: '📥 Import Backup',
+        reset_all: 'Reset All Progress',
+        close_dossier: 'Close Dossier',
+        snapshot_hud: 'Snapshot',
+        gallery_hud: 'Gallery',
+        fullscreen_hud: 'Fullscreen',
+        popout_hud: 'Popout Tab',
+        minimize_hud: 'Minimize',
+        exit_hud: 'Exit Session [ESC / Q]',
+        search_ph: 'Search 9 titles, tags...'
+      },
+      ru: {
+        system_online: 'СИСТЕМА ОНЛАЙН',
+        now_playing: 'СЕЙЧАС В ИГРЕ:',
+        resume: 'ПРОДОЛЖИТЬ',
+        all: 'Все (9)',
+        strategy: 'Стратегии',
+        simulation: 'Симуляторы',
+        action: 'Экшен',
+        compact_view: 'Компактный вид',
+        card_view: 'Карточки',
+        sort_by: 'Сортировка:',
+        sort_default: 'По умолчанию',
+        sort_playtime: 'По времени игры',
+        sort_recent: 'Недавние запуски',
+        sort_alpha: 'По алфавиту (А–Я)',
+        launch_game: 'ЗАПУСТИТЬ ИГРУ',
+        launch_m: 'ЗАПУСК',
+        active_version: 'Активная версия',
+        popout_tab: '↗ В новой вкладке',
+        version_archive: '📜 Архив версий',
+        overview_tab: 'Обзор и архитектура',
+        archive_tab: 'История изменений',
+        trophies_tab: 'Достижения и рекорды',
+        total_logged: 'ВСЕГО В ИГРЕ:',
+        persistence_synced: 'LOCALSTORAGE СИНХРОНИЗИРОВАНО',
+        dossier_title: 'Реестр развертывания',
+        theme_lock_title: 'Фиксация неонового свечения',
+        export_backup: '💾 Экспорт сохранения',
+        import_backup: '📥 Импорт сохранения',
+        reset_all: 'Сбросить весь прогресс',
+        close_dossier: 'Закрыть досье',
+        snapshot_hud: 'Снимок',
+        gallery_hud: 'Галерея',
+        fullscreen_hud: 'Экран',
+        popout_hud: 'Вкладка',
+        minimize_hud: 'Свернуть',
+        exit_hud: 'Выход [ESC / Q]',
+        search_ph: 'Поиск 9 игр, тегов...'
+      }
+    };
+
+    function t(key) {
+      const lang = launcherState.lang || 'en';
+      return (I18N[lang] && I18N[lang][key]) || (I18N.en[key] || key);
+    }
+
+    function toggleLanguage() {
+      SoundFX.playSelect();
+      launcherState.lang = (launcherState.lang === 'ru') ? 'en' : 'ru';
+      saveState();
+      applyLanguage();
+      showToast('🌐', launcherState.lang === 'ru' ? 'Язык изменен' : 'Language Changed', launcherState.lang === 'ru' ? 'Интерфейс переключен на Русский.' : 'Interface switched to English.');
+    }
+
+    function applyLanguage() {
+      const lang = launcherState.lang || 'en';
+      const isRu = (lang === 'ru');
+
+      const langLbl = document.getElementById('langLabel');
+      if (langLbl) langLbl.textContent = isRu ? 'RU' : 'EN';
+
+      const searchInp = document.getElementById('librarySearchInput');
+      if (searchInp) searchInp.placeholder = t('search_ph');
+
+      const fAll = document.getElementById('filterChipAll');
+      if (fAll) fAll.textContent = t('all');
+      const fStrat = document.getElementById('filterChipStrategy');
+      if (fStrat) fStrat.textContent = t('strategy');
+      const fSim = document.getElementById('filterChipSimulation');
+      if (fSim) fSim.textContent = t('simulation');
+      const fAct = document.getElementById('filterChipAction');
+      if (fAct) fAct.textContent = t('action');
+
+      const sortLbl = document.getElementById('sortLabelText');
+      if (sortLbl) sortLbl.textContent = t('sort_by');
+      const optDef = document.getElementById('optSortDefault');
+      if (optDef) optDef.textContent = t('sort_default');
+      const optPlay = document.getElementById('optSortPlaytime');
+      if (optPlay) optPlay.textContent = t('sort_playtime');
+      const optRec = document.getElementById('optSortRecent');
+      if (optRec) optRec.textContent = t('sort_recent');
+      const optAlp = document.getElementById('optSortAlpha');
+      if (optAlp) optAlp.textContent = t('sort_alpha');
+
+      const tabOverview = document.getElementById('tabBtnOverview');
+      if (tabOverview) tabOverview.textContent = t('overview_tab');
+      const tabArchive = document.getElementById('tabBtnArchive');
+      if (tabArchive) tabArchive.innerHTML = `${t('archive_tab')} (<span id="archiveTabCount">0</span>)`;
+      const tabTrophies = document.getElementById('tabBtnTrophies');
+      if (tabTrophies) tabTrophies.textContent = t('trophies_tab');
+
+      const depTitle = document.getElementById('deploymentRegistryTitle');
+      if (depTitle) depTitle.textContent = t('dossier_title');
+      const themeTitle = document.getElementById('themeLockTitle');
+      if (themeTitle) themeTitle.textContent = t('theme_lock_title');
+
+      const btnExp = document.getElementById('btnExportBackup');
+      if (btnExp) btnExp.innerHTML = `<span>${t('export_backup')}</span>`;
+      const btnImp = document.getElementById('btnImportBackup');
+      if (btnImp) btnImp.innerHTML = `<span>${t('import_backup')}</span><input type="file" id="backupFileInput" accept=".json" style="display:none" onchange="importBackupData(event)" />`;
+      const btnResAll = document.getElementById('btnResetAllStats');
+      if (btnResAll) btnResAll.textContent = t('reset_all');
+      const btnClDos = document.getElementById('btnCloseDossier');
+      if (btnClDos) btnClDos.textContent = t('close_dossier');
+
+      const snapTxt = document.getElementById('hudSnapshotText');
+      if (snapTxt) snapTxt.textContent = t('snapshot_hud');
+      const gallTxt = document.getElementById('hudGalleryText');
+      if (gallTxt) gallTxt.textContent = t('gallery_hud');
+      const fsTxt = document.getElementById('hudFullscreenText');
+      if (fsTxt) fsTxt.textContent = t('fullscreen_hud');
+      const popTxt = document.getElementById('hudPopoutText');
+      if (popTxt) popTxt.textContent = t('popout_hud');
+
+      applyLibraryView();
+      updateTopBarNowPlaying();
+      renderHeroStage();
+    }
+
+    /* Volume Slider & Drone Handler */
+    function handleVolumeSliderChange(val) {
+      const num = parseInt(val, 10) / 100;
+      if (launcherState.muted) {
+        SoundFX.setMuted(false);
+      }
+      SoundFX.setMasterVolume(num);
+    }
+
+    function toggleDroneAudio() {
+      launcherState.droneEnabled = !launcherState.droneEnabled;
+      saveState();
+      if (launcherState.droneEnabled) {
+        SoundFX.startAmbientDrone();
+        showToast('🛸', 'Sub-Drone Active', 'Low-frequency Web Audio ambience engaged.');
+      } else {
+        SoundFX.stopAmbientDrone();
+        showToast('🛸', 'Sub-Drone Muted', 'Procedural drone suspended.');
+      }
+      updateAudioUi();
+    }
+
+    /* Library Sorting Handler */
+    function handleLibrarySortChange(sortVal) {
+      SoundFX.playSelect();
+      launcherState.librarySort = sortVal;
+      saveState();
+      renderLibraryList();
+    }
+
+    /* Callsign and Avatar Management */
+    function applyCallsignAndAvatar() {
+      const callsign = launcherState.callsign || 'Commander';
+      const avatar = launcherState.avatar || '⚔️';
+
+      const hAvatar = document.getElementById('headerAvatar');
+      const hCallsign = document.getElementById('headerCallsign');
+      const pAvatar = document.getElementById('passportAvatarLg');
+      const pCallsign = document.getElementById('passportCallsignDisplay');
+      const sysPilot = document.getElementById('sysActiveProfile');
+
+      if (hAvatar) hAvatar.textContent = avatar;
+      if (hCallsign) hCallsign.textContent = callsign;
+      if (pAvatar) pAvatar.textContent = avatar;
+      if (pCallsign) pCallsign.textContent = callsign;
+      if (sysPilot) sysPilot.textContent = `PILOT: ${callsign}`;
+    }
+
+    function startEditCallsign() {
+      const disp = document.getElementById('passportCallsignDisplay');
+      const inp = document.getElementById('callsignInput');
+      if (!disp || !inp) return;
+      inp.value = launcherState.callsign || 'Commander';
+      disp.style.display = 'none';
+      inp.style.display = 'inline-block';
+      inp.focus();
+      inp.select();
+    }
+
+    function saveCallsign() {
+      const disp = document.getElementById('passportCallsignDisplay');
+      const inp = document.getElementById('callsignInput');
+      if (!disp || !inp) return;
+      const val = inp.value.trim() || 'Commander';
+      launcherState.callsign = val;
+      saveState();
+      applyCallsignAndAvatar();
+      inp.style.display = 'none';
+      disp.style.display = 'inline';
+    }
+
+    function toggleAvatarPicker() {
+      SoundFX.playSelect();
+      const tray = document.getElementById('avatarPickerTray');
+      if (tray) {
+        tray.style.display = (tray.style.display === 'none' || !tray.style.display) ? 'block' : 'none';
+      }
+    }
+
+    function selectAvatar(emblem) {
+      SoundFX.playSelect();
+      launcherState.avatar = emblem;
+      saveState();
+      applyCallsignAndAvatar();
+      const tray = document.getElementById('avatarPickerTray');
+      if (tray) tray.style.display = 'none';
+    }
+
+    /* Accent Color Lock */
+    const ACCENT_GRADIENTS = {
+      '#38bdf8': 'radial-gradient(ellipse at 80% 20%, rgba(56, 189, 248, 0.28) 0%, rgba(30, 64, 175, 0.16) 45%, #030712 85%)',
+      '#22c55e': 'radial-gradient(ellipse at 80% 25%, rgba(34, 197, 94, 0.28) 0%, rgba(20, 83, 45, 0.16) 45%, #030712 85%)',
+      '#f59e0b': 'radial-gradient(ellipse at 80% 20%, rgba(245, 158, 11, 0.28) 0%, rgba(180, 83, 9, 0.15) 50%, #030712 85%)',
+      '#a855f7': 'radial-gradient(ellipse at 80% 20%, rgba(168, 85, 247, 0.28) 0%, rgba(88, 28, 135, 0.16) 50%, #030712 85%)',
+      '#ef4444': 'radial-gradient(ellipse at 80% 20%, rgba(239, 68, 68, 0.28) 0%, rgba(153, 27, 27, 0.16) 50%, #030712 85%)',
+      '#f1c40f': 'radial-gradient(ellipse at 80% 25%, rgba(241, 196, 15, 0.28) 0%, rgba(217, 119, 6, 0.15) 50%, #030712 85%)'
+    };
+    const ACCENT_RGBS = {
+      '#38bdf8': '56, 189, 248',
+      '#22c55e': '34, 197, 94',
+      '#f59e0b': '245, 158, 11',
+      '#a855f7': '168, 85, 247',
+      '#ef4444': '239, 68, 68',
+      '#f1c40f': '241, 196, 15'
+    };
+
+    function setAccentLock(hexColor) {
+      SoundFX.playSelect();
+      launcherState.accentLock = hexColor;
+      saveState();
+      updateAccentLockButtons();
+      triggerAmbientCrossfade();
+      renderHeroStage();
+    }
+
+    function updateAccentLockButtons() {
+      const buttons = document.querySelectorAll('.accent-choice');
+      buttons.forEach(b => {
+        b.classList.remove('active');
+        if (!launcherState.accentLock && b.id === 'accentLockDynamic') {
+          b.classList.add('active');
+        } else if (launcherState.accentLock && b.dataset.color === launcherState.accentLock) {
+          b.classList.add('active');
+        }
+      });
+    }
+
+    /* Backup Export & Import */
+    function exportBackupData() {
+      SoundFX.playSelect();
+      const dataStr = JSON.stringify(launcherState, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'knice_hub_save.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('💾', 'Backup Exported', 'Downloaded knice_hub_save.json successfully.');
+    }
+
+    function importBackupData(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed && typeof parsed === 'object') {
+            launcherState = Object.assign(launcherState, parsed);
+            saveState();
+            applyEcoMode();
+            applyLibraryView();
+            applyLanguage();
+            applyCallsignAndAvatar();
+            updateAudioUi();
+            updateAccentLockButtons();
+            renderHeroStage();
+            renderLibraryList();
+            renderMobileBottomDock();
+            renderMobileCarouselDots();
+            renderPassportStats();
+            updateHeaderTrophyCount();
+            updateSystemBarPlaytime();
+            triggerAmbientCrossfade();
+            showToast('📥', 'Backup Restored', 'Dossier and sandbox state successfully loaded.');
+          } else {
+            throw new Error('Invalid JSON structure');
+          }
+        } catch (err) {
+          showToast('⚠️', 'Import Failed', 'Selected file is not a valid Knice save file.');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    /* Per-game Playtime Reset */
+    function resetGameStats(gameId) {
+      const game = GAMES.find(g => g.id === gameId);
+      const name = game ? game.title : gameId;
+      if (!confirm(`Reset recorded playtime and launch history for ${name}?`)) return;
+      if (launcherState.games[gameId]) {
+        launcherState.games[gameId].playtimeSeconds = 0;
+        launcherState.games[gameId].launchCount = 0;
+        launcherState.games[gameId].lastPlayedTimestamp = null;
+        saveState();
+        renderPassportStats();
+        updateHeroStatsDisplay();
+        updateSystemBarPlaytime();
+        renderLibraryList();
+        showToast('🔄', 'Stats Cleared', `${name} stats reset to zero.`);
+      }
+    }
+
+    /* Screenshot Gallery & HUD Suite */
+    let sessionScreenshots = [];
+
+    function takeGameScreenshot() {
+      SoundFX.playShutter();
+      const flash = document.getElementById('cameraFlashOverlay');
+      if (flash) {
+        flash.classList.add('flash');
+        setTimeout(() => flash.classList.remove('flash'), 50);
+      }
+      const game = currentRunningGame || GAMES.find(g => g.id === launcherState.activeGameId);
+      const title = game ? game.title : 'Knice Game';
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString();
+      const dateStr = now.toLocaleDateString();
+
+      // Render tactical reconnaissance dossier snapshot on canvas
+      const snapCanvas = document.createElement('canvas');
+      snapCanvas.width = 1280;
+      snapCanvas.height = 720;
+      const sCtx = snapCanvas.getContext('2d');
+
+      sCtx.fillStyle = '#030712';
+      sCtx.fillRect(0, 0, 1280, 720);
+
+      sCtx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
+      sCtx.lineWidth = 1;
+      for (let x = 0; x < 1280; x += 80) {
+        sCtx.beginPath(); sCtx.moveTo(x, 0); sCtx.lineTo(x, 720); sCtx.stroke();
+      }
+      for (let y = 0; y < 720; y += 80) {
+        sCtx.beginPath(); sCtx.moveTo(0, y); sCtx.lineTo(1280, y); sCtx.stroke();
+      }
+
+      sCtx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      sCtx.fillRect(0, 0, 1280, 720);
+
+      sCtx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      sCtx.fillRect(40, 40, 1200, 110);
+      sCtx.strokeStyle = '#38bdf8';
+      sCtx.lineWidth = 2;
+      sCtx.strokeRect(40, 40, 1200, 110);
+
+      sCtx.fillStyle = '#38bdf8';
+      sCtx.font = 'bold 36px monospace';
+      sCtx.fillText('KNICE STUDIOS • TACTICAL RECONNAISSANCE SNAPSHOT', 70, 95);
+
+      sCtx.fillStyle = '#94a3b8';
+      sCtx.font = '22px monospace';
+      sCtx.fillText(`MISSION TARGET: ${title.toUpperCase()}  |  TIMESTAMP: ${dateStr} ${timeStr}`, 70, 130);
+
+      sCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      sCtx.font = 'bold 44px sans-serif';
+      sCtx.fillText(title, 80, 400);
+
+      sCtx.fillStyle = '#22c55e';
+      sCtx.font = 'bold 22px monospace';
+      sCtx.fillText('● SYSTEM CAPTURE VERIFIED  |  RESOLUTION: 1920x1080  |  SIMULATED 60.0 FPS', 80, 440);
+
+      const dataUrl = snapCanvas.toDataURL('image/png');
+      sessionScreenshots.push({
+        id: Date.now(),
+        dataUrl,
+        title,
+        timestamp: `${dateStr} ${timeStr}`
+      });
+
+      showToast('📸', 'Snapshot Captured', `${title} frame saved to Mission Gallery.`);
+      const mobileSheet = document.getElementById('mobileInGameSheet');
+      if (mobileSheet) mobileSheet.classList.remove('active');
+    }
+
+    function openScreenshotGalleryModal() {
+      SoundFX.playSelect();
+      const modal = document.getElementById('screenshotGalleryModal');
+      const grid = document.getElementById('galleryGrid');
+      const countLbl = document.getElementById('galleryCountLabel');
+
+      if (countLbl) {
+        countLbl.textContent = `${sessionScreenshots.length} Snapshots in Session Memory`;
+      }
+
+      if (grid) {
+        grid.replaceChildren();
+        if (sessionScreenshots.length === 0) {
+          const empty = document.createElement('div');
+          empty.style.cssText = 'grid-column: 1 / -1; padding: 40px 20px; text-align: center; color: #64748b; font-size: 0.9rem;';
+          empty.textContent = 'No mission snapshots recorded yet. Click Snapshot in HUD to capture gameplay.';
+          grid.appendChild(empty);
+        } else {
+          sessionScreenshots.forEach((item, idx) => {
+            const card = document.createElement('div');
+            card.className = 'gallery-card';
+            card.innerHTML = `
+              <div class="gallery-thumb-wrap">
+                <img src="${item.dataUrl}" class="gallery-thumb-img" alt="${item.title}" />
+              </div>
+              <div class="gallery-meta">
+                <span class="gallery-title">${item.title} #${idx + 1}</span>
+                <span class="gallery-time">${item.timestamp}</span>
+              </div>
+              <div class="gallery-actions">
+                <a href="${item.dataUrl}" download="knice_snapshot_${item.id}.png" class="btn-gallery-dl">💾 Download PNG</a>
+              </div>
+            `;
+            grid.appendChild(card);
+          });
+        }
+      }
+
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeScreenshotGalleryModal() {
+      const modal = document.getElementById('screenshotGalleryModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function closeScreenshotGalleryModalOnBackdrop(e) {
+      if (e.target.id === 'screenshotGalleryModal') {
+        closeScreenshotGalleryModal();
+      }
+    }
+
+    function clearAllScreenshots() {
+      if (!confirm('Clear all captured session screenshots?')) return;
+      sessionScreenshots = [];
+      openScreenshotGalleryModal();
+      showToast('🗑️', 'Gallery Cleared', 'Session screenshot buffer emptied.');
+    }
+
+    function toggleGameFullscreen() {
+      const viewport = document.getElementById('inGameViewport');
+      if (!document.fullscreenElement) {
+        if (viewport && viewport.requestFullscreen) {
+          viewport.requestFullscreen().catch(() => {});
+        } else if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    }
+
     /* ==========================================================================
        FEATURE FUNCTIONS: NOW PLAYING, COMPACT VIEW, BATTERY SAVER ECO MODE
        ========================================================================== */
@@ -5415,6 +6463,10 @@
       applyEcoMode();
       initAmbientParticles();
       applyLibraryView();
+      applyCallsignAndAvatar();
+      updateAudioUi();
+      updateAccentLockButtons();
+      applyLanguage();
       renderHeroStage();
       renderLibraryList();
       renderMobileBottomDock();
@@ -5422,6 +6474,9 @@
       triggerAmbientCrossfade();
       updateHeaderTrophyCount();
       updateSystemBarPlaytime();
+      const sortSelect = document.getElementById('librarySortSelect');
+      if (sortSelect) sortSelect.value = launcherState.librarySort || 'default';
+      if (launcherState.droneEnabled) SoundFX.startAmbientDrone();
     });
   </script>
 </body>
