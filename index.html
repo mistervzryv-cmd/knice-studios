@@ -2746,9 +2746,9 @@
           <span>🗕</span>
           <span>Minimize</span>
         </button>
-        <button class="btn-hud-action exit" onclick="closeGame()" title="Close session and save playtime (Esc)">
+        <button class="btn-hud-action exit" onclick="closeGame()" title="Close session and save playtime (ESC / Q)">
           <span>✕</span>
-          <span>Exit [Esc]</span>
+          <span>Exit [ESC / Q]</span>
         </button>
       </div>
     </div>
@@ -2858,6 +2858,8 @@
 
       setMuted(state) {
         this.muted = !!state;
+        launcherState.muted = this.muted;
+        saveState();
         updateAudioUi();
       },
 
@@ -3272,11 +3274,10 @@
           <rect x="205" y="14" width="105" height="20" rx="4" fill="rgba(241,196,15,0.2)"/>
           <text x="214" y="28" fill="#f1c40f" font-size="9.5" font-weight="bold">BRONZE AGE 4X</text>
         </svg>`,
-        defaultUrl: 'splinter/index.html',
+        defaultUrl: './splinter/index.html',
         defaultTitle: 'Fracture of Empires (v1.0.4)',
         versions: [
-          { url: 'splinter/index.html', label: 'v1.0.4 (Bronze Age Master Build)', category: 'latest', badge: 'Latest' },
-          { url: 'index.html', label: 'v1.0.0 (Local Root Build)', category: 'archive', badge: 'Archive' }
+          { url: './splinter/index.html', label: 'v1.0.4 (Bronze Age Master Build)', category: 'latest', badge: 'Latest' }
         ]
       },
       {
@@ -3691,6 +3692,12 @@
           launcherState.games['rts'].selectedVersionLabel = '1.2.0 (Mobile & PC Touch Hybrid Edition)';
         }
       }
+      if (launcherState.games['ancient4x']) {
+        if (!launcherState.games['ancient4x'].selectedVersionUrl || launcherState.games['ancient4x'].selectedVersionUrl === 'splinter/index.html' || launcherState.games['ancient4x'].selectedVersionUrl === 'index.html') {
+          launcherState.games['ancient4x'].selectedVersionUrl = './splinter/index.html';
+          launcherState.games['ancient4x'].selectedVersionLabel = 'v1.0.4 (Bronze Age Master Build)';
+        }
+      }
 
       ACHIEVEMENTS.forEach(a => {
         if (!launcherState.achievements[a.id]) {
@@ -3881,6 +3888,7 @@
 
         updateHeroStatsDisplay();
         updateSystemBarPlaytime();
+      initBottomSheetPullGesture();
       }, 1000);
 
       if (simulatedFpsInterval) clearInterval(simulatedFpsInterval);
@@ -3984,11 +3992,16 @@
     }
 
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const inGame = document.getElementById('inGameViewport');
-        if (inGame && inGame.classList.contains('active')) {
+      const inGame = document.getElementById('inGameViewport');
+      const isGameActive = inGame && inGame.classList.contains('active');
+
+      if (isGameActive) {
+        if (e.key === 'Escape' || e.key === 'q' || e.key === 'Q') {
+          if (e.key === 'q' || e.key === 'Q') e.preventDefault();
           closeGame();
-        } else {
+        }
+      } else {
+        if (e.key === 'Escape') {
           closePassportModal();
           closeVersionDropdown();
           closeVersionBottomSheet();
@@ -4330,6 +4343,13 @@
       }
     });
 
+    function appendSectionHeader(container, text) {
+      const header = document.createElement('div');
+      header.className = 'dropdown-section-title';
+      header.textContent = text;
+      container.appendChild(header);
+    }
+
     function populateVersionDropdown(game) {
       const list = document.getElementById('dropdownVersionList');
       const searchVal = document.getElementById('dropdownSearchInput').value.trim().toLowerCase();
@@ -4339,20 +4359,23 @@
       const filtered = game.versions.filter(v => !searchVal || v.label.toLowerCase().includes(searchVal));
 
       if (filtered.length === 0) {
-        list.innerHTML = `<div style="padding:16px; color:#64748b; font-size:0.78rem; text-align:center">No builds match filter.</div>`;
+        const emptyMsg = document.createElement('div');
+        emptyMsg.style.cssText = 'padding:16px; color:#64748b; font-size:0.78rem; text-align:center';
+        emptyMsg.textContent = 'No builds match filter.';
+        list.appendChild(emptyMsg);
         return;
       }
 
       const latestBuild = filtered.find(v => v.category === 'latest');
       if (latestBuild) {
         const isSel = (latestBuild.url === gData.selectedVersionUrl);
-        list.innerHTML += `<div class="dropdown-section-title">Latest Active Build</div>`;
+        appendSectionHeader(list, 'Latest Active Build');
         list.appendChild(createDropdownItem(latestBuild, isSel));
       }
 
       const betas = filtered.filter(v => v.category === 'beta');
       if (betas.length > 0) {
-        list.innerHTML += `<div class="dropdown-section-title">Experimental & Beta</div>`;
+        appendSectionHeader(list, 'Experimental & Beta');
         betas.forEach(b => {
           const isSel = (b.url === gData.selectedVersionUrl);
           list.appendChild(createDropdownItem(b, isSel, true));
@@ -4361,7 +4384,7 @@
 
       const archives = filtered.filter(v => v.category === 'archive');
       if (archives.length > 0) {
-        list.innerHTML += `<div class="dropdown-section-title">Legacy Archive (${archives.length})</div>`;
+        appendSectionHeader(list, `Legacy Archive (${archives.length})`);
         archives.forEach(a => {
           const isSel = (a.url === gData.selectedVersionUrl);
           list.appendChild(createDropdownItem(a, isSel));
@@ -4394,11 +4417,22 @@
       document.getElementById('bottomSheetSearchInput').value = '';
       populateVersionBottomSheet(game);
 
-      document.getElementById('versionBottomSheet').classList.add('active');
+      const sheet = document.getElementById('versionBottomSheet');
+      const card = document.querySelector('.bottom-sheet-card');
+      if (card) card.style.transform = 'translateY(0)';
+      sheet.classList.add('active');
     }
 
     function closeVersionBottomSheet() {
-      document.getElementById('versionBottomSheet').classList.remove('active');
+      const sheet = document.getElementById('versionBottomSheet');
+      const card = document.querySelector('.bottom-sheet-card');
+      if (card) {
+        card.style.transform = 'translateY(100%)';
+      }
+      setTimeout(() => {
+        sheet.classList.remove('active');
+        if (card) card.style.transform = '';
+      }, 260);
     }
 
     function closeVersionBottomSheetOnBackdrop(e) {
@@ -4416,28 +4450,52 @@
       const filtered = game.versions.filter(v => !searchVal || v.label.toLowerCase().includes(searchVal));
 
       if (filtered.length === 0) {
-        list.innerHTML = `<div style="padding:20px; text-align:center; color:#64748b;">No builds match filter.</div>`;
+        const emptyMsg = document.createElement('div');
+        emptyMsg.style.cssText = 'padding:20px; text-align:center; color:#64748b;';
+        emptyMsg.textContent = 'No builds match filter.';
+        list.appendChild(emptyMsg);
         return;
       }
 
-      filtered.forEach(ver => {
-        const isSel = (ver.url === gData.selectedVersionUrl);
-        const item = document.createElement('div');
-        item.className = `dropdown-ver-item ${isSel ? 'selected' : ''}`;
-        item.style.padding = '14px 16px';
-        item.onclick = () => {
-          selectVersion(ver.url, ver.label);
-          closeVersionBottomSheet();
-        };
-        item.innerHTML = `
-          <div>
-            <div style="font-weight:800; color:#fff">${ver.label}</div>
-            <div style="font-size:0.7rem; color:#94a3b8">${getBuildNote(game.id, ver.label)}</div>
-          </div>
-          ${ver.badge ? `<span class="dropdown-ver-tag">${ver.badge}</span>` : ''}
-        `;
-        list.appendChild(item);
-      });
+      const latestBuild = filtered.find(v => v.category === 'latest');
+      if (latestBuild) {
+        appendSectionHeader(list, 'Latest Active Build');
+        list.appendChild(createBottomSheetItem(latestBuild, latestBuild.url === gData.selectedVersionUrl, game.id));
+      }
+
+      const betas = filtered.filter(v => v.category === 'beta');
+      if (betas.length > 0) {
+        appendSectionHeader(list, 'Experimental & Beta');
+        betas.forEach(b => {
+          list.appendChild(createBottomSheetItem(b, b.url === gData.selectedVersionUrl, game.id));
+        });
+      }
+
+      const archives = filtered.filter(v => v.category === 'archive');
+      if (archives.length > 0) {
+        appendSectionHeader(list, `Legacy Archive (${archives.length})`);
+        archives.forEach(a => {
+          list.appendChild(createBottomSheetItem(a, a.url === gData.selectedVersionUrl, game.id));
+        });
+      }
+    }
+
+    function createBottomSheetItem(ver, isSel, gameId) {
+      const item = document.createElement('div');
+      item.className = `dropdown-ver-item ${isSel ? 'selected' : ''}`;
+      item.style.padding = '14px 16px';
+      item.onclick = () => {
+        selectVersion(ver.url, ver.label);
+        closeVersionBottomSheet();
+      };
+      item.innerHTML = `
+        <div>
+          <div style="font-weight:800; color:#fff">${ver.label}</div>
+          <div style="font-size:0.7rem; color:#94a3b8">${getBuildNote(gameId, ver.label)}</div>
+        </div>
+        ${ver.badge ? `<span class="dropdown-ver-tag">${ver.badge}</span>` : ''}
+      `;
+      return item;
     }
 
     function handleBottomSheetFilter() {
@@ -4794,7 +4852,7 @@
 
     function launchAncient4X() {
       switchGame('ancient4x');
-      selectVersion('splinter/index.html', 'Fracture of Empires (v1.0.4)');
+      selectVersion('./splinter/index.html', 'Fracture of Empires (v1.0.4)');
       launchActiveGame();
     }
 
@@ -4867,6 +4925,49 @@
 
     function closeModal(id) {
       closeVersionBottomSheet();
+    }
+
+    
+    /* Pull-to-close gesture on bottom sheet */
+    function initBottomSheetPullGesture() {
+      let startY = 0;
+      let currentY = 0;
+      let isDragging = false;
+      const sheet = document.getElementById('versionBottomSheet');
+      const card = sheet ? sheet.querySelector('.bottom-sheet-card') : null;
+      const handle = sheet ? sheet.querySelector('.bottom-sheet-handle-bar') : null;
+      const header = sheet ? sheet.querySelector('.bottom-sheet-header') : null;
+
+      [handle, header].forEach(el => {
+        if (!el) return;
+        el.addEventListener('touchstart', (e) => {
+          startY = e.touches[0].clientY;
+          currentY = startY;
+          isDragging = true;
+          if (card) card.style.transition = 'none';
+        }, { passive: true });
+
+        el.addEventListener('touchmove', (e) => {
+          if (!isDragging) return;
+          currentY = e.touches[0].clientY;
+          const diffY = currentY - startY;
+          if (diffY > 0 && card) {
+            card.style.transform = `translateY(${diffY}px)`;
+          }
+        }, { passive: true });
+
+        el.addEventListener('touchend', () => {
+          if (!isDragging) return;
+          isDragging = false;
+          if (card) card.style.transition = 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)';
+          const diffY = currentY - startY;
+          if (diffY > 65) {
+            closeVersionBottomSheet();
+          } else if (card) {
+            card.style.transform = 'translateY(0)';
+          }
+        });
+      });
     }
 
     /* ==========================================================================
