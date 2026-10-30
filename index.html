@@ -2369,6 +2369,175 @@
         gap: 12px;
       }
     }
+
+    /* ==========================================================================
+       NEW FEATURE: NOW PLAYING LIVE TOP BAR PILL
+       ========================================================================== */
+    .system-status-indicator.now-playing {
+      display: flex !important;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 12px;
+      background: rgba(34, 197, 94, 0.16);
+      border: 1px solid rgba(74, 222, 128, 0.55);
+      border-radius: 99px;
+      color: #4ade80;
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 0 16px rgba(34, 197, 94, 0.28);
+      animation: nowPlayingPulse 2s infinite ease-in-out;
+      transition: var(--transition-standard);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      max-width: 320px;
+    }
+    .system-status-indicator.now-playing:hover {
+      background: rgba(34, 197, 94, 0.28);
+      border-color: rgba(74, 222, 128, 0.85);
+      transform: translateY(-1px);
+      box-shadow: 0 0 22px rgba(34, 197, 94, 0.5);
+    }
+    @keyframes nowPlayingPulse {
+      0%, 100% {
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.25);
+        border-color: rgba(74, 222, 128, 0.45);
+      }
+      50% {
+        box-shadow: 0 0 24px rgba(34, 197, 94, 0.65);
+        border-color: rgba(74, 222, 128, 0.95);
+      }
+    }
+
+    /* ==========================================================================
+       NEW FEATURE: COMPACT / EXPANDED LIBRARY VIEW
+       ========================================================================== */
+    .filter-controls-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+    .btn-lib-view-toggle {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: #94a3b8;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: var(--transition-standard);
+      flex-shrink: 0;
+      min-height: 36px;
+    }
+    .btn-lib-view-toggle:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .btn-lib-view-toggle:active {
+      transform: scale(0.95);
+    }
+    .btn-lib-view-toggle.active {
+      background: rgba(var(--accent-rgb, 56, 189, 248), 0.18);
+      border-color: rgba(var(--accent-rgb, 56, 189, 248), 0.45);
+      color: #38bdf8;
+    }
+
+    .library-list.compact-mode {
+      gap: 3px;
+    }
+    .library-list.compact-mode .library-item {
+      min-height: 38px;
+      padding: 7px 10px;
+      gap: 10px;
+    }
+    .library-list.compact-mode .lib-thumb {
+      display: none !important;
+    }
+    .library-list.compact-mode .lib-meta-row {
+      display: none !important;
+    }
+    .library-list.compact-mode .lib-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+    .library-list.compact-mode .lib-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin: 0;
+    }
+    .library-list.compact-mode .lib-title {
+      font-size: 0.83rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .library-list.compact-mode .lib-badge {
+      display: none !important;
+    }
+    .library-list.compact-mode .lib-active-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--active-accent-color, #38bdf8);
+      box-shadow: 0 0 8px var(--active-accent-color, #38bdf8);
+      flex-shrink: 0;
+      margin-left: 6px;
+    }
+
+    /* ==========================================================================
+       NEW FEATURE: BATTERY SAVER / ECO PERFORMANCE MODE
+       ========================================================================== */
+    body.eco-mode *,
+    body.eco-mode *::before,
+    body.eco-mode *::after {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    body.eco-mode #ambientCanvas {
+      display: none !important;
+    }
+
+    body.eco-mode .ambient-scanlines {
+      display: none !important;
+    }
+
+    body.eco-mode #topHeader,
+    body.eco-mode #bottomSystemBar,
+    body.eco-mode #sidebarRail,
+    body.eco-mode .hero-banner-container,
+    body.eco-mode .hero-tab-nav,
+    body.eco-mode .hero-tab-panel,
+    body.eco-mode .version-dropdown-menu,
+    body.eco-mode .bottom-sheet-card,
+    body.eco-mode .passport-modal-card,
+    body.eco-mode #mobileStickyActionBar,
+    body.eco-mode #mobileBottomDock,
+    body.eco-mode #inGameHud,
+    body.eco-mode #mobileInGameSheet,
+    body.eco-mode .spec-card,
+    body.eco-mode .feed-entry {
+      background-color: #0b1120ee !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+    }
+
   </style>
 </head>
 <body>
@@ -2404,9 +2573,9 @@
 
         <div class="header-divider"></div>
 
-        <div class="system-status-indicator">
+        <div class="system-status-indicator" id="topSystemStatus" onclick="handleNowPlayingClick()" title="System Engine Status: Online">
           <div class="status-dot"></div>
-          <span>SYSTEM ONLINE</span>
+          <span id="topSystemStatusText">SYSTEM ONLINE</span>
         </div>
       </div>
 
@@ -2480,11 +2649,17 @@
             <button class="search-clear" id="searchClearBtn" onclick="clearLibrarySearch()">✕</button>
           </div>
 
-          <div class="filter-chips">
-            <button class="filter-chip active" onclick="filterCategory('all', this)">All (9)</button>
-            <button class="filter-chip" onclick="filterCategory('Strategy', this)">Strategy</button>
-            <button class="filter-chip" onclick="filterCategory('Simulation', this)">Simulation</button>
-            <button class="filter-chip" onclick="filterCategory('Action', this)">Action</button>
+          <div class="filter-controls-row">
+            <div class="filter-chips">
+              <button class="filter-chip active" onclick="filterCategory('all', this)">All (9)</button>
+              <button class="filter-chip" onclick="filterCategory('Strategy', this)">Strategy</button>
+              <button class="filter-chip" onclick="filterCategory('Simulation', this)">Simulation</button>
+              <button class="filter-chip" onclick="filterCategory('Action', this)">Action</button>
+            </div>
+            <button class="btn-lib-view-toggle" id="btnLibViewToggle" onclick="toggleLibraryView()" title="Toggle Compact / Card View">
+              <span id="libViewToggleIcon">☵</span>
+              <span id="libViewToggleText">Compact View</span>
+            </button>
           </div>
         </div>
 
@@ -2664,6 +2839,9 @@
       </div>
 
       <div class="systembar-right">
+        <div class="sys-pill" onclick="toggleEcoMode()" id="sysEcoIndicator" title="Toggle Battery Saver / Eco Mode (Pauses particles & blurs for GPU efficiency)">
+          <span>ECO: </span><strong style="color:#22c55e" id="sysEcoText">OFF</strong>
+        </div>
         <div class="sys-pill" onclick="toggleAudioMute()" id="sysAudioIndicator" title="Click to mute/unmute Web Audio API SFX">
           <span>AUDIO: </span><strong style="color:#38bdf8" id="sysAudioText">SYNTH ON</strong>
         </div>
@@ -2845,6 +3023,9 @@
       </div>
 
       <div class="passport-footer">
+        <button class="btn-secondary-action" id="btnPassportEcoToggle" onclick="toggleEcoMode()" title="Toggle Battery Saver / Eco Mode">
+          <span>🌱 Battery Saver (ECO): <strong id="passportEcoStatus" style="color:#22c55e">OFF</strong></span>
+        </button>
         <button class="btn-secondary-action" onclick="resetAllStats()">Reset Local Progress</button>
         <button class="btn-secondary-action" style="background:#0284c7; color:#fff" onclick="closePassportModal()">Close Dossier</button>
       </div>
@@ -3166,7 +3347,7 @@
           { url: 'Knice_Bank_8_2.html', label: '8.2.0 (Red Theme & Terminal)', category: 'archive' },
           { url: 'Knice_Bank_8_0_final_fixed.html', label: '8.1.0 (8.0 Final Verified)', category: 'archive' },
           { url: 'Knice_Bank_8_0_complete.html', label: '8.0.0 (Dawn of 8.x)', category: 'archive' },
-          { url: 'Knice_Bank_7_5_2_mobile_verified.html', label: '7.1.1 (Mobile Port)', category: 'archive' },
+          { url: 'Knice_Bank_7_5_2_mobile_verified.html', label: '7.1 (Mobile Port)', category: 'archive' },
           { url: 'Knice_Bank_7_0.html', label: '7.0.0 (Retro UI 7.x)', category: 'archive' },
           { url: 'Knice_Bank_6_0.html', label: '6.0.0 (Market Mechanics 6.x)', category: 'archive' },
           { url: 'Knice_Bank_5_0.html', label: '5.0.0 (Classic CBE 5.x)', category: 'archive' },
@@ -3694,6 +3875,8 @@
           const parsed = JSON.parse(raw);
           launcherState = Object.assign(launcherState, parsed);
         launcherState.favorites = launcherState.favorites || [];
+          launcherState.compactLibrary = !!launcherState.compactLibrary;
+          launcherState.ecoMode = !!launcherState.ecoMode;
         }
       } catch(e) {}
 
@@ -3900,6 +4083,7 @@
       viewport.classList.add('active');
 
       updateInGameHeaderPill();
+      updateTopBarNowPlaying('00:00');
 
       if (sessionTimerInterval) clearInterval(sessionTimerInterval);
       sessionTimerInterval = setInterval(() => {
@@ -3909,6 +4093,7 @@
         const timeFormatted = `${mins}:${secs}`;
         document.getElementById('hudSessionTimer').textContent = timeFormatted;
         document.getElementById('mHudTimer').textContent = timeFormatted;
+        updateTopBarNowPlaying(timeFormatted);
 
         if (launcherState.games[gameId]) {
           launcherState.games[gameId].playtimeSeconds = (launcherState.games[gameId].playtimeSeconds || 0) + 1;
@@ -3953,6 +4138,7 @@
       document.getElementById('inGameViewport').classList.remove('active');
       document.getElementById('mobileInGameSheet').classList.remove('active');
       updateInGameHeaderPill();
+      updateTopBarNowPlaying();
       showToast('🗕', 'Game Minimized', `${currentRunningGame.title} running in background.`);
     }
 
@@ -3962,6 +4148,7 @@
         isGameMinimized = false;
         document.getElementById('inGameViewport').classList.add('active');
         updateInGameHeaderPill();
+        updateTopBarNowPlaying();
       }
     }
 
@@ -3981,6 +4168,7 @@
 
       saveState();
       updateInGameHeaderPill();
+      updateTopBarNowPlaying();
       updateHeroStatsDisplay();
       updateSystemBarPlaytime();
       renderPassportStats();
@@ -4164,6 +4352,7 @@
             <div class="lib-title-row">
               <span class="lib-title">${g.icon} ${g.shortName}</span>
               <span class="lib-badge">${g.versions.length} builds</span>
+              <span class="lib-active-dot" style="${isActive ? 'display:block;' : 'display:none;'}"></span>
             </div>
             <div class="lib-meta-row">
               <span class="lib-genre">${g.genreTag}</span>
@@ -4707,7 +4896,9 @@
           alpha: Math.random() * 0.6 + 0.2
         });
       }
-      requestAnimationFrame(renderAmbientParticles);
+      if (!launcherState.ecoMode) {
+        particleAnimFrameId = requestAnimationFrame(renderAmbientParticles);
+      }
     }
 
     function resizeParticleCanvas() {
@@ -4716,7 +4907,15 @@
     }
     window.addEventListener('resize', resizeParticleCanvas);
 
+    let particleAnimFrameId = null;
+
     function renderAmbientParticles() {
+      if (launcherState.ecoMode) {
+        particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+        particleAnimFrameId = null;
+        return;
+      }
+
       particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
       const game = GAMES.find(g => g.id === launcherState.activeGameId) || GAMES[0];
       const rgb = game.accentRgb || '56, 189, 248';
@@ -4738,7 +4937,7 @@
         particleCtx.fill();
       });
 
-      requestAnimationFrame(renderAmbientParticles);
+      particleAnimFrameId = requestAnimationFrame(renderAmbientParticles);
     }
 
     /* ==========================================================================
@@ -5104,6 +5303,108 @@
     window.addEventListener('pagehide', saveSessionTelemetry);
     window.addEventListener('beforeunload', saveSessionTelemetry);
 
+
+    /* ==========================================================================
+       FEATURE FUNCTIONS: NOW PLAYING, COMPACT VIEW, BATTERY SAVER ECO MODE
+       ========================================================================== */
+    function updateTopBarNowPlaying(elapsedTimeString) {
+      const pill = document.getElementById('topSystemStatus');
+      if (!pill) return;
+
+      if (currentRunningGame) {
+        pill.classList.add('now-playing');
+        pill.title = `Now Playing: ${currentRunningGame.title}. Click to resume session.`;
+        const timeDisplay = elapsedTimeString || '00:00';
+        pill.innerHTML = `<span>🎮</span> <span>NOW PLAYING: <strong>${currentRunningGame.title}</strong> • ${timeDisplay}</span>`;
+      } else {
+        pill.classList.remove('now-playing');
+        pill.title = 'System Engine Status: Online';
+        pill.innerHTML = '<div class="status-dot"></div><span id="topSystemStatusText">SYSTEM ONLINE</span>';
+      }
+    }
+
+    function handleNowPlayingClick() {
+      if (currentRunningGame) {
+        SoundFX.playSelect();
+        resumeActiveGame();
+      }
+    }
+
+    function toggleLibraryView() {
+      SoundFX.playSelect();
+      launcherState.compactLibrary = !launcherState.compactLibrary;
+      applyLibraryView();
+      saveState();
+    }
+
+    function applyLibraryView() {
+      const list = document.getElementById('libraryList');
+      const btn = document.getElementById('btnLibViewToggle');
+      const isCompact = !!launcherState.compactLibrary;
+
+      if (list) {
+        if (isCompact) {
+          list.classList.add('compact-mode');
+        } else {
+          list.classList.remove('compact-mode');
+        }
+      }
+
+      if (btn) {
+        if (isCompact) {
+          btn.classList.add('active');
+          btn.innerHTML = '<span>☲</span> <span>Card View</span>';
+          btn.title = 'Switch to Card View';
+        } else {
+          btn.classList.remove('active');
+          btn.innerHTML = '<span>☵</span> <span>Compact View</span>';
+          btn.title = 'Switch to Compact View';
+        }
+      }
+    }
+
+    function toggleEcoMode() {
+      SoundFX.playSelect();
+      launcherState.ecoMode = !launcherState.ecoMode;
+      applyEcoMode();
+      saveState();
+      showToast(
+        '🌱',
+        launcherState.ecoMode ? 'Battery Saver (ECO) Active' : 'Standard Visual Fidelity',
+        launcherState.ecoMode ? 'Particle loop suspended & blurs replaced with solid glass for maximum battery life.' : 'Full procedural lighting and glass effects restored.'
+      );
+    }
+
+    function applyEcoMode() {
+      const isEco = !!launcherState.ecoMode;
+      if (isEco) {
+        document.body.classList.add('eco-mode');
+        if (particleAnimFrameId) {
+          cancelAnimationFrame(particleAnimFrameId);
+          particleAnimFrameId = null;
+        }
+        if (particleCtx && particleCanvas) {
+          particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+        }
+      } else {
+        document.body.classList.remove('eco-mode');
+        if (!particleAnimFrameId && typeof renderAmbientParticles === 'function') {
+          particleAnimFrameId = requestAnimationFrame(renderAmbientParticles);
+        }
+      }
+
+      const sysEcoText = document.getElementById('sysEcoText');
+      if (sysEcoText) {
+        sysEcoText.textContent = isEco ? 'ON' : 'OFF';
+        sysEcoText.style.color = isEco ? '#4ade80' : '#22c55e';
+      }
+      const passportEco = document.getElementById('passportEcoStatus');
+      if (passportEco) {
+        passportEco.textContent = isEco ? 'ON' : 'OFF';
+        passportEco.style.color = isEco ? '#4ade80' : '#22c55e';
+      }
+    }
+
     /* ==========================================================================
        15. BOOTSTRAP INITIALIZATION
        ========================================================================== */
@@ -5111,7 +5412,9 @@
       loadState();
       startDigitalClock();
       initBatteryMonitor();
+      applyEcoMode();
       initAmbientParticles();
+      applyLibraryView();
       renderHeroStage();
       renderLibraryList();
       renderMobileBottomDock();
