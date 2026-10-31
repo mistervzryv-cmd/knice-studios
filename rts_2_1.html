@@ -1,0 +1,3239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>Ironbound RTS v2.1 - The Great Finish (Bilingual Edition)</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090d14;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#e6edf3;touch-action:none}
+canvas#game{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+
+#rotate-overlay{
+    display:none;position:fixed;inset:0;background:#090d14;z-index:9999;
+    flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px
+}
+#rotate-overlay svg{width:64px;height:64px;fill:#ffe45c;margin-bottom:16px;animation:spin 2s ease-in-out infinite alternate}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(-90deg)}}
+
+@media (orientation: portrait){
+    #rotate-overlay{display:flex}
+}
+
+#top-bar{
+    position:fixed;top:0;left:0;right:0;height:40px;
+    background:linear-gradient(180deg,rgba(11,16,25,.96) 0%,rgba(9,13,20,.85) 100%);
+    border-bottom:1px solid rgba(255,255,255,.12);
+    display:flex;align-items:center;justify-content:space-between;padding:0 14px;
+    user-select:none;z-index:20;font-size:12px;pointer-events:none
+}
+.res-group{display:flex;gap:14px;align-items:center}
+.res-item{display:flex;align-items:center;gap:5px;font-weight:700;letter-spacing:.3px;cursor:help;pointer-events:auto}
+.res-icon{width:12px;height:12px;border-radius:3px;display:inline-block;box-shadow:0 0 6px rgba(0,0,0,.5)}
+.icon-food{background:#2ecc71;box-shadow:0 0 6px rgba(46,204,113,.5)}
+.icon-wood{background:#e67e22;box-shadow:0 0 6px rgba(230,126,34,.5)}
+.icon-gold{background:#f1c40f;box-shadow:0 0 6px rgba(241,196,15,.5)}
+.icon-pop{background:#9b59b6;box-shadow:0 0 6px rgba(155,89,182,.5)}
+
+#meta-group{display:flex;gap:8px;align-items:center;font-weight:600}
+.badge{background:rgba(255,255,255,.07);padding:3px 8px;border-radius:4px;border:1px solid rgba(255,255,255,.12);font-size:11px}
+.badge-gold{color:#ffe45c;border-color:rgba(255,228,92,.35)}
+.badge-alert{color:#ff4d4d;border-color:rgba(255,77,77,.4);animation:pulse-red 1.2s infinite alternate}
+@keyframes pulse-red{from{box-shadow:0 0 0 rgba(255,77,77,0)}to{box-shadow:0 0 8px rgba(255,77,77,.6)}}
+
+.badge-btn{
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);
+    cursor:pointer;pointer-events:auto;color:#cbd5e1;font-weight:700;padding:2px 8px;border-radius:4px;
+    font-size:10px;display:flex;align-items:center;gap:3px;transition:all .15s ease
+}
+.badge-btn:hover{background:rgba(255,228,92,.18);border-color:#ffe45c}
+.badge-btn:active{transform:scale(.95)}
+.lang-opt{color:#94a3b8;font-size:10px;font-weight:700}
+.lang-opt.active{color:#ffe45c;text-shadow:0 0 4px rgba(255,228,92,.4)}
+.lang-sep{color:rgba(255,255,255,.25);font-size:9px}
+
+#groups-hud{
+    position:fixed;left:10px;top:48px;display:flex;flex-direction:column;gap:6px;z-index:20;pointer-events:none
+}
+.group-badge{
+    width:36px;height:36px;background:rgba(8,12,18,.8);border:1px solid rgba(255,255,255,.2);
+    border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;color:#9aa0a6;cursor:pointer;pointer-events:auto;
+    transition:all .15s ease
+}
+.group-badge:hover{border-color:#ffe45c;color:#ffe45c}
+.group-badge.active{border-color:#ffe45c;color:#ffe45c;background:rgba(255,228,92,.18);box-shadow:0 0 8px rgba(255,228,92,.3)}
+.group-badge span{font-size:8px;color:#cbd5e1;line-height:1}
+
+#bottom-bar{
+    position:fixed;bottom:0;left:0;right:0;height:124px;
+    background:linear-gradient(0deg,rgba(8,12,18,.98) 0%,rgba(13,18,27,.9) 100%);
+    border-top:1px solid rgba(255,255,255,.14);
+    display:flex;justify-content:space-between;align-items:stretch;
+    user-select:none;z-index:20;pointer-events:none;padding:0 8px
+}
+
+#minimap-wrapper{
+    width:156px;height:100%;display:flex;align-items:center;justify-content:center;
+    pointer-events:auto
+}
+#minimap{
+    border:1px solid rgba(255,255,255,.25);background:#05070a;
+    width:146px;height:104px;cursor:crosshair;border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,.6)
+}
+
+#panel-selection{
+    flex:1;max-width:390px;padding:8px 12px;display:flex;gap:12px;align-items:center;
+    pointer-events:none
+}
+#portrait-box{
+    width:56px;height:56px;background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.18);border-radius:8px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;
+    font-size:24px;color:#8ab4f8;flex-shrink:0;box-shadow:inset 0 0 8px rgba(0,0,0,.5)
+}
+#portrait-box.enemy{border-color:rgba(255,71,87,.6);color:#ff4757}
+#entity-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+#entity-header{display:flex;align-items:center;gap:6px}
+#entity-title{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#entity-tag{font-size:9px;padding:1px 4px;border-radius:3px;font-weight:700;text-transform:uppercase}
+.tag-player{background:rgba(56,189,248,.2);color:#38bdf8;border:1px solid rgba(56,189,248,.4)}
+.tag-enemy{background:rgba(255,71,87,.2);color:#ff4757;border:1px solid rgba(255,71,87,.4)}
+#entity-hp-wrap{width:160px;height:7px;background:rgba(0,0,0,.7);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,.16);display:none;position:relative}
+#entity-hp-fill{height:100%;background:#2ecc71;width:100%;transition:width .1s linear}
+#entity-hp-fill.enemy{background:#ff4757}
+#entity-desc{font-size:11px;color:#9aa0a6;line-height:1.25}
+
+#panel-actions{
+    width:260px;padding:6px 0;display:flex;align-items:center;justify-content:flex-end;
+    pointer-events:auto
+}
+.actions-grid{
+    display:grid;grid-template-columns:repeat(4,56px);grid-template-rows:repeat(2,52px);gap:6px
+}
+.hud-btn{
+    width:56px;height:52px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);
+    border-radius:6px;color:#e6edf3;font-size:9.5px;font-weight:600;
+    cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    user-select:none;touch-action:manipulation;position:relative;transition:all .12s ease
+}
+.hud-btn:hover:not(:disabled){background:rgba(255,255,255,.15);border-color:#ffe45c;color:#fff}
+.hud-btn:active:not(:disabled){background:rgba(255,228,92,.25);border-color:#ffe45c;color:#ffe45c;transform:scale(.97)}
+.hud-btn:disabled{opacity:.35;cursor:not-allowed;border-color:rgba(255,255,255,.08);filter:grayscale(80%)}
+.hud-btn kbd{font-size:8px;background:rgba(0,0,0,.6);padding:1px 3px;border-radius:3px;color:#ffe45c;font-weight:700}
+.hud-btn .btn-name{font-size:9px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52px}
+.hud-btn .btn-cost{font-size:7.5px;color:#94a3b8;font-weight:600}
+
+#end-screen{
+    position:fixed;inset:0;background:rgba(6,9,14,.94);
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    z-index:100;backdrop-filter:blur(6px)
+}
+#end-title{font-size:48px;font-weight:900;letter-spacing:3px;margin:0 0 12px;text-transform:uppercase}
+#end-stats{
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);
+    padding:18px 26px;border-radius:8px;min-width:320px;line-height:1.9;
+    font-size:13px;margin-bottom:20px;box-shadow:0 12px 32px rgba(0,0,0,.6)
+}
+#restart-btn{
+    padding:14px 38px;font-size:16px;font-weight:800;color:#090d14;
+    background:#ffe45c;border:none;border-radius:6px;cursor:pointer;
+    box-shadow:0 4px 16px rgba(255,228,92,.4);transition:transform .15s ease, background .15s ease
+}
+#restart-btn:hover{background:#fff085;transform:scale(1.04)}
+#restart-btn:active{transform:scale(.97)}
+</style>
+</head>
+<body>
+
+<div id="rotate-overlay">
+    <svg viewBox="0 0 24 24"><path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32zM7.52 21.48C4.25 19.94 1.91 16.76 1.55 13H.05C.56 19.16 5.71 24 12 24l.66-.03-3.81-3.81-1.33 1.32zM17 5H7c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 12H7V7h10v10z"/></svg>
+    <h2 id="rotate-title">Rotate device to landscape</h2>
+    <p id="rotate-desc">Tactical battle requires a wide field of view</p>
+</div>
+
+<div id="top-bar">
+    <div class="res-group">
+        <div class="res-item" id="res-item-food"><span class="res-icon icon-food"></span><span id="res-food">300</span></div>
+        <div class="res-item" id="res-item-wood"><span class="res-icon icon-wood"></span><span id="res-wood">250</span></div>
+        <div class="res-item" id="res-item-gold"><span class="res-icon icon-gold"></span><span id="res-gold">200</span></div>
+        <div class="res-item" id="res-item-pop"><span class="res-icon icon-pop"></span><span id="res-pop">2/10</span></div>
+    </div>
+    <div id="meta-group">
+        <button id="lang-toggle" class="badge badge-btn" title="Toggle Language / Переключить язык">
+            <span id="lang-en" class="lang-opt active">EN</span>
+            <span class="lang-sep">|</span>
+            <span id="lang-ru" class="lang-opt">RU</span>
+        </button>
+        <span class="badge badge-gold" id="hud-enemy-hq">Enemy HQ: 100%</span>
+        <span class="badge" id="hud-timer">00:00</span>
+        <span class="badge" id="hud-kills">Kills: 0</span>
+    </div>
+</div>
+
+<div id="groups-hud">
+    <div class="group-badge" id="gb-1">1<span id="gb-cnt-1"></span></div>
+    <div class="group-badge" id="gb-2">2<span id="gb-cnt-2"></span></div>
+    <div class="group-badge" id="gb-3">3<span id="gb-cnt-3"></span></div>
+    <div class="group-badge" id="gb-4">4<span id="gb-cnt-4"></span></div>
+</div>
+
+<canvas id="game"></canvas>
+
+<div id="bottom-bar">
+    <div id="minimap-wrapper">
+        <canvas id="minimap" width="146" height="104"></canvas>
+    </div>
+    <div id="panel-selection">
+        <div id="portrait-box">-</div>
+        <div id="entity-info">
+            <div id="entity-header">
+                <div id="entity-title">Nothing selected</div>
+                <div id="entity-tag" style="display:none"></div>
+            </div>
+            <div id="entity-hp-wrap"><div id="entity-hp-fill"></div></div>
+            <div id="entity-desc">Tap to select, hold or drag box</div>
+        </div>
+    </div>
+    <div id="panel-actions">
+        <div class="actions-grid">
+            <button class="hud-btn" id="btn-build-th"><kbd>1</kbd><span class="btn-name" id="btn-name-th">Town Hall</span><span class="btn-cost" id="btn-cost-th">150W 100G</span></button>
+            <button class="hud-btn" id="btn-build-barracks"><kbd>2</kbd><span class="btn-name" id="btn-name-barracks">Barracks</span><span class="btn-cost" id="btn-cost-barracks">120W 50G</span></button>
+            <button class="hud-btn" id="btn-build-farm"><kbd>3</kbd><span class="btn-name" id="btn-name-farm">Farm</span><span class="btn-cost" id="btn-cost-farm">70W (+6Pop)</span></button>
+            <button class="hud-btn" id="btn-build-mine"><kbd>4</kbd><span class="btn-name" id="btn-name-mine">Mine</span><span class="btn-cost" id="btn-cost-mine">100W (+5G)</span></button>
+            <button class="hud-btn" id="btn-train-worker"><kbd>Q</kbd><span class="btn-name" id="btn-name-worker">Worker</span><span class="btn-cost" id="btn-cost-worker">50F</span></button>
+            <button class="hud-btn" id="btn-train-warrior"><kbd>W</kbd><span class="btn-name" id="btn-name-warrior">Infantry</span><span class="btn-cost" id="btn-cost-warrior">50F 25G</span></button>
+            <button class="hud-btn" id="btn-train-heavy"><kbd>E</kbd><span class="btn-name" id="btn-name-heavy">Heavy</span><span class="btn-cost" id="btn-cost-heavy">90F 75G 50W</span></button>
+            <button class="hud-btn" id="btn-upgrade"><kbd>U</kbd><span class="btn-name" id="btn-name-upgrade">Upgrade</span><span class="btn-cost" id="btn-cost-upgrade">Lvl. 2</span></button>
+        </div>
+    </div>
+</div>
+
+<div id="end-screen">
+    <div id="end-title">VICTORY</div>
+    <div id="end-stats"></div>
+    <button id="restart-btn">Play Again</button>
+</div>
+
+<script>
+// ----------------------------------------------------
+// 1. i18n Translation Dictionary
+// ----------------------------------------------------
+const TRANSLATIONS = {
+    en: {
+        rotateTitle: "Rotate device to landscape",
+        rotateDesc: "Tactical battle requires a wide field of view",
+        resFoodTitle: "Food (produced on farms)",
+        resWoodTitle: "Wood (harvested from forests)",
+        resGoldTitle: "Gold (mined from veins & automated mines)",
+        resPopTitle: "Population (expanded by farms & Town Hall)",
+        enemyHq: "Enemy HQ",
+        kills: "Kills",
+        nothingSelected: "Nothing selected",
+        selectionHelp: "Tap to select, hold or drag box to select army",
+        tagAlly: "ALLY",
+        tagEnemy: "ENEMY",
+        tagSquad: "SQUAD",
+        squadTitle: "Army",
+        unitWorker: "WORKER",
+        unitInfantry: "INFANTRY",
+        unitHeavy: "HEAVY SIEGE",
+        bldTownHall: "TOWN HALL",
+        bldBarracks: "BARRACKS",
+        bldFarm: "FARM",
+        bldMine: "GOLD MINE",
+        lvl: "Lvl.",
+        max: "MAX",
+        constructing: "Building",
+        upgrading: "Upgrade",
+        queue: "Queue",
+        autoMineYield: "Auto-mine: +5G / 3s",
+        farmYield: "Food: +3F / 3s",
+        statHp: "HP",
+        statDmg: "Dmg",
+        statCarrying: "Carrying",
+        stateIdle: "Idle",
+        stateMoving: "Moving",
+        stateGathering: "Gathering",
+        stateReturning: "Returning",
+        stateAttacking: "Attacking",
+        stateChasing: "Chasing",
+        stateDead: "Defeated",
+        squadInfantry: "Infantry",
+        squadHeavy: "Siege",
+        squadWorkers: "Workers",
+        btnTownHall: "Town Hall",
+        btnBarracks: "Barracks",
+        btnFarm: "Farm",
+        btnMine: "Mine",
+        btnWorker: "Worker",
+        btnInfantry: "Infantry",
+        btnHeavy: "Heavy",
+        btnUpgrade: "Upgrade",
+        costTownHall: "150W 100G",
+        costBarracks: "120W 50G",
+        costFarm: "70W (+6Pop)",
+        costMine: "100W (+5G)",
+        costWorker: "50F",
+        costInfantry: "50F 25G",
+        costHeavy: "90F 75G 50W",
+        victory: "VICTORY",
+        defeat: "DEFEAT",
+        playAgain: "Play Again",
+        statTime: "Match Duration:",
+        statEnemiesKilled: "Enemies Destroyed:",
+        statWorkersCreated: "Workers Trained:",
+        statInfantryCreated: "Infantry Recruited:",
+        statHeavyCreated: "Siege Engines Built:",
+        statBuildingsBuilt: "Structures Built:",
+        statWoodGathered: "Wood Harvested:",
+        statGoldGathered: "Gold Extracted:",
+        statFoodGathered: "Food Produced:"
+    },
+    ru: {
+        rotateTitle: "Поверни устройство горизонтально",
+        rotateDesc: "Для битвы нужен полный тактический простор",
+        resFoodTitle: "Еда (производится на фермах)",
+        resWoodTitle: "Древесина (рубится в лесу)",
+        resGoldTitle: "Золото (шахты и золотые жилы)",
+        resPopTitle: "Население (увеличивается фермами и ратушей)",
+        enemyHq: "Цитадель врага",
+        kills: "Убийства",
+        nothingSelected: "Ничего не выбрано",
+        selectionHelp: "Тап для выбора, зажми или тяни для рамки",
+        tagAlly: "СОЮЗНИК",
+        tagEnemy: "ВРАГ",
+        tagSquad: "ОТРЯД",
+        squadTitle: "Армия",
+        unitWorker: "РАБОЧИЙ",
+        unitInfantry: "ПЕХОТИНЕЦ",
+        unitHeavy: "ОСАДНИК",
+        bldTownHall: "РАТУША",
+        bldBarracks: "КАЗАРМА",
+        bldFarm: "ФЕРМА",
+        bldMine: "ЗОЛОТАЯ ШАХТА",
+        lvl: "Ур.",
+        max: "МАКС",
+        constructing: "Постройка",
+        upgrading: "Апгрейд",
+        queue: "Очередь",
+        autoMineYield: "Автодобыча: +5G / 3с",
+        farmYield: "Еда: +3F / 3с",
+        statHp: "HP",
+        statDmg: "Урон",
+        statCarrying: "Ресурс",
+        stateIdle: "Ожидание",
+        stateMoving: "Движение",
+        stateGathering: "Сбор",
+        stateReturning: "Возврат",
+        stateAttacking: "Атака",
+        stateChasing: "Преследование",
+        stateDead: "Погиб",
+        squadInfantry: "Пехота",
+        squadHeavy: "Осадники",
+        squadWorkers: "Рабочие",
+        btnTownHall: "Ратуша",
+        btnBarracks: "Казарма",
+        btnFarm: "Ферма",
+        btnMine: "Шахта",
+        btnWorker: "Рабочий",
+        btnInfantry: "Пехота",
+        btnHeavy: "Осадник",
+        btnUpgrade: "Апгрейд",
+        costTownHall: "150W 100G",
+        costBarracks: "120W 50G",
+        costFarm: "70W (+6П)",
+        costMine: "100W (+5G)",
+        costWorker: "50F",
+        costInfantry: "50F 25G",
+        costHeavy: "90F 75G 50W",
+        victory: "ПОБЕДА",
+        defeat: "ПОРАЖЕНИЕ",
+        playAgain: "Сыграть снова",
+        statTime: "Время матча:",
+        statEnemiesKilled: "Уничтожено врагов:",
+        statWorkersCreated: "Нанято рабочих:",
+        statInfantryCreated: "Обучено пехоты:",
+        statHeavyCreated: "Построено осадников:",
+        statBuildingsBuilt: "Возведено зданий:",
+        statWoodGathered: "Добыто дерева:",
+        statGoldGathered: "Добыто золота:",
+        statFoodGathered: "Собрано еды:"
+    }
+}
+
+let currentLang = 'en'
+try {
+    const saved = localStorage.getItem('ironbound_lang')
+    if(saved === 'en' || saved === 'ru'){
+        currentLang = saved
+    }else if(navigator.language && navigator.language.toLowerCase().startsWith('ru')){
+        currentLang = 'ru'
+    }
+}catch(e){}
+
+function t(key){
+    const dict = TRANSLATIONS[currentLang] || TRANSLATIONS.en
+    return dict[key] || TRANSLATIONS.en[key] || key
+}
+
+function applyLanguageDOM(){
+    document.documentElement.lang = currentLang
+
+    const rotTitle = document.getElementById('rotate-title')
+    const rotDesc = document.getElementById('rotate-desc')
+    if(rotTitle) rotTitle.textContent = t('rotateTitle')
+    if(rotDesc) rotDesc.textContent = t('rotateDesc')
+
+    const rFood = document.getElementById('res-item-food')
+    const rWood = document.getElementById('res-item-wood')
+    const rGold = document.getElementById('res-item-gold')
+    const rPop = document.getElementById('res-item-pop')
+    if(rFood) rFood.title = t('resFoodTitle')
+    if(rWood) rWood.title = t('resWoodTitle')
+    if(rGold) rGold.title = t('resGoldTitle')
+    if(rPop) rPop.title = t('resPopTitle')
+
+    const langEnEl = document.getElementById('lang-en')
+    const langRuEl = document.getElementById('lang-ru')
+    if(langEnEl && langRuEl){
+        langEnEl.classList.toggle('active', currentLang === 'en')
+        langRuEl.classList.toggle('active', currentLang === 'ru')
+    }
+
+    const bNameTh = document.getElementById('btn-name-th')
+    const bNameBarracks = document.getElementById('btn-name-barracks')
+    const bNameFarm = document.getElementById('btn-name-farm')
+    const bNameMine = document.getElementById('btn-name-mine')
+    const bNameWorker = document.getElementById('btn-name-worker')
+    const bNameWarrior = document.getElementById('btn-name-warrior')
+    const bNameHeavy = document.getElementById('btn-name-heavy')
+    const bNameUpgrade = document.getElementById('btn-name-upgrade')
+
+    const bCostTh = document.getElementById('btn-cost-th')
+    const bCostBarracks = document.getElementById('btn-cost-barracks')
+    const bCostFarm = document.getElementById('btn-cost-farm')
+    const bCostMine = document.getElementById('btn-cost-mine')
+    const bCostWorker = document.getElementById('btn-cost-worker')
+    const bCostWarrior = document.getElementById('btn-cost-warrior')
+    const bCostHeavy = document.getElementById('btn-cost-heavy')
+
+    if(bNameTh) bNameTh.textContent = t('btnTownHall')
+    if(bNameBarracks) bNameBarracks.textContent = t('btnBarracks')
+    if(bNameFarm) bNameFarm.textContent = t('btnFarm')
+    if(bNameMine) bNameMine.textContent = t('btnMine')
+    if(bNameWorker) bNameWorker.textContent = t('btnWorker')
+    if(bNameWarrior) bNameWarrior.textContent = t('btnInfantry')
+    if(bNameHeavy) bNameHeavy.textContent = t('btnHeavy')
+    if(bNameUpgrade) bNameUpgrade.textContent = t('btnUpgrade')
+
+    if(bCostTh) bCostTh.textContent = t('costTownHall')
+    if(bCostBarracks) bCostBarracks.textContent = t('costBarracks')
+    if(bCostFarm) bCostFarm.textContent = t('costFarm')
+    if(bCostMine) bCostMine.textContent = t('costMine')
+    if(bCostWorker) bCostWorker.textContent = t('costWorker')
+    if(bCostWarrior) bCostWarrior.textContent = t('costInfantry')
+    if(bCostHeavy) bCostHeavy.textContent = t('costHeavy')
+
+    const rBtn = document.getElementById('restart-btn')
+    if(rBtn) rBtn.textContent = t('playAgain')
+
+    if(window.game && window.game.renderer){
+        window.game.renderer.updateHUD()
+        if(window.game.gameOver){
+            window.game.showGameOverScreen(window.game.gameOver)
+        }
+    }
+}
+
+function setLanguage(lang){
+    if(lang !== 'en' && lang !== 'ru') return
+    currentLang = lang
+    try {
+        localStorage.setItem('ironbound_lang', lang)
+    }catch(e){}
+    applyLanguageDOM()
+}
+
+// ----------------------------------------------------
+// Canvas & DOM Bindings
+// ----------------------------------------------------
+const canvas = document.getElementById('game')
+const ctx = canvas.getContext('2d')
+const minimapCanvas = document.getElementById('minimap')
+const mctx = minimapCanvas.getContext('2d')
+
+const resFoodEl = document.getElementById('res-food')
+const resWoodEl = document.getElementById('res-wood')
+const resGoldEl = document.getElementById('res-gold')
+const resPopEl = document.getElementById('res-pop')
+const hudTimerEl = document.getElementById('hud-timer')
+const hudKillsEl = document.getElementById('hud-kills')
+const hudEnemyHqEl = document.getElementById('hud-enemy-hq')
+
+const portraitBox = document.getElementById('portrait-box')
+const entityTitle = document.getElementById('entity-title')
+const entityTag = document.getElementById('entity-tag')
+const entityHpWrap = document.getElementById('entity-hp-wrap')
+const entityHpFill = document.getElementById('entity-hp-fill')
+const entityDesc = document.getElementById('entity-desc')
+
+const endScreen = document.getElementById('end-screen')
+const endTitle = document.getElementById('end-title')
+const endStats = document.getElementById('end-stats')
+const restartBtn = document.getElementById('restart-btn')
+
+const btnBuildTh = document.getElementById('btn-build-th')
+const btnBuildBarracks = document.getElementById('btn-build-barracks')
+const btnBuildFarm = document.getElementById('btn-build-farm')
+const btnBuildMine = document.getElementById('btn-build-mine')
+const btnTrainWorker = document.getElementById('btn-train-worker')
+const btnTrainWarrior = document.getElementById('btn-train-warrior')
+const btnTrainHeavy = document.getElementById('btn-train-heavy')
+const btnUpgrade = document.getElementById('btn-upgrade')
+
+const TILE_SIZE = 32
+const MAP_WIDTH = 80
+const MAP_HEIGHT = 50
+const MAX_BUILD_DISTANCE = 9
+
+const TILE_TYPES = {
+    LAND: 'land',
+    WATER: 'water',
+    FOREST: 'forest',
+    GOLD: 'gold'
+}
+
+const BUILDING_TYPES = {
+    TOWN_HALL: 'townHall',
+    BARRACKS: 'barracks',
+    FARM: 'farm',
+    MINE: 'mine'
+}
+
+const UNIT_TYPES = {
+    WORKER: 'worker',
+    INFANTRY: 'infantry',
+    HEAVY: 'heavy'
+}
+
+const COLORS = {
+    land: '#2b3a29',
+    landGrid: 'rgba(0,0,0,.08)',
+    water: '#1d486d',
+    waterDeep: '#133553',
+    forest: '#183f20',
+    forestTree: '#0f2915',
+    gold: '#c29b27',
+    goldRock: '#ffd54f',
+    player: '#38bdf8',
+    playerLight: '#7dd3fc',
+    enemy: '#f43f5e',
+    enemyLight: '#fb7185',
+    selected: '#ffe45c',
+    validGhost: 'rgba(46,204,113,.45)',
+    invalidGhost: 'rgba(231,76,60,.45)',
+    buildZone: 'rgba(56,189,248,.07)'
+}
+
+function resize(){
+    canvas.width = innerWidth
+    canvas.height = innerHeight
+}
+addEventListener('resize', resize)
+resize()
+
+// ----------------------------------------------------
+// Sound System (Web Audio API Procedural Synthesizer)
+// ----------------------------------------------------
+class SoundSystem {
+    constructor(){
+        this.ctx = null
+        this.lastAlertTime = -99
+    }
+
+    init(){
+        if(!this.ctx){
+            const AudioCtx = window.AudioContext || window.webkitAudioContext
+            if(AudioCtx) this.ctx = new AudioCtx()
+        }
+        if(this.ctx && this.ctx.state === 'suspended'){
+            this.ctx.resume()
+        }
+    }
+
+    tone(freq, type, duration, gainVal = 0.08, ramp = true){
+        this.init()
+        if(!this.ctx) return
+        try{
+            const osc = this.ctx.createOscillator()
+            const g = this.ctx.createGain()
+            osc.type = type
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime)
+            g.gain.setValueAtTime(gainVal, this.ctx.currentTime)
+            if(ramp){
+                g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration)
+            }
+            osc.connect(g)
+            g.connect(this.ctx.destination)
+            osc.start()
+            osc.stop(this.ctx.currentTime + duration)
+        }catch(e){}
+    }
+
+    playWorkerSelect(){
+        this.init()
+        if(!this.ctx) return
+        try{
+            const now = this.ctx.currentTime
+            const osc = this.ctx.createOscillator()
+            const g = this.ctx.createGain()
+            osc.type = 'sine'
+            osc.frequency.setValueAtTime(740, now)
+            osc.frequency.exponentialRampToValueAtTime(1100, now + 0.08)
+            g.gain.setValueAtTime(0.05, now)
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.08)
+            osc.connect(g)
+            g.connect(this.ctx.destination)
+            osc.start(now)
+            osc.stop(now + 0.08)
+        }catch(e){}
+    }
+
+    playInfantrySelect(){
+        this.tone(480, 'triangle', 0.06, 0.06)
+        setTimeout(() => this.tone(620, 'triangle', 0.05, 0.05), 40)
+    }
+
+    playHeavySelect(){
+        this.init()
+        if(!this.ctx) return
+        try{
+            const now = this.ctx.currentTime
+            const osc = this.ctx.createOscillator()
+            const g = this.ctx.createGain()
+            osc.type = 'sawtooth'
+            osc.frequency.setValueAtTime(140, now)
+            osc.frequency.exponentialRampToValueAtTime(70, now + 0.14)
+            g.gain.setValueAtTime(0.09, now)
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.14)
+            osc.connect(g)
+            g.connect(this.ctx.destination)
+            osc.start(now)
+            osc.stop(now + 0.14)
+        }catch(e){}
+    }
+
+    playBuildingSelect(){
+        this.tone(280, 'triangle', 0.08, 0.07)
+    }
+
+    playOrderConfirmation(){
+        this.tone(480, 'sine', 0.05, 0.04)
+        setTimeout(() => this.tone(720, 'sine', 0.07, 0.05), 45)
+    }
+
+    playAttackOrder(){
+        this.tone(320, 'sawtooth', 0.08, 0.07)
+        setTimeout(() => this.tone(220, 'sawtooth', 0.09, 0.08), 50)
+    }
+
+    playErrorBuzz(){
+        this.tone(130, 'square', 0.15, 0.06)
+    }
+
+    playBuild(){
+        this.tone(220, 'triangle', 0.12, 0.1)
+        setTimeout(() => this.tone(330, 'triangle', 0.09, 0.09), 70)
+    }
+
+    playAttackHit(){
+        this.tone(180, 'sawtooth', 0.06, 0.07)
+    }
+
+    playCannonFire(){
+        this.init()
+        if(!this.ctx) return
+        try{
+            const now = this.ctx.currentTime
+            const osc = this.ctx.createOscillator()
+            const g = this.ctx.createGain()
+            osc.type = 'square'
+            osc.frequency.setValueAtTime(110, now)
+            osc.frequency.exponentialRampToValueAtTime(40, now + 0.22)
+            g.gain.setValueAtTime(0.12, now)
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.22)
+            osc.connect(g)
+            g.connect(this.ctx.destination)
+            osc.start(now)
+            osc.stop(now + 0.22)
+        }catch(e){}
+    }
+
+    playCannonImpact(){
+        this.tone(85, 'triangle', 0.25, 0.14)
+    }
+
+    playSpawn(){
+        this.tone(520, 'sine', 0.08, 0.06)
+        setTimeout(() => this.tone(780, 'sine', 0.12, 0.06), 70)
+    }
+
+    playAttackAlert(currentTime){
+        if(currentTime - this.lastAlertTime < 5) return
+        this.lastAlertTime = currentTime
+        this.tone(440, 'sawtooth', 0.12, 0.09)
+        setTimeout(() => this.tone(350, 'sawtooth', 0.15, 0.09), 110)
+    }
+
+    playVictory(){
+        const notes = [440, 554, 659, 880]
+        notes.forEach((freq, idx) => {
+            setTimeout(() => this.tone(freq, 'triangle', 0.32, 0.13), idx * 120)
+        })
+    }
+
+    playDefeat(){
+        const notes = [440, 392, 349, 261]
+        notes.forEach((freq, idx) => {
+            setTimeout(() => this.tone(freq, 'sawtooth', 0.35, 0.14), idx * 130)
+        })
+    }
+}
+
+// ----------------------------------------------------
+// Particles, Projectiles & Ground Rings
+// ----------------------------------------------------
+class ParticleSystem {
+    constructor(){
+        this.particles = []
+        this.orderRings = []
+        this.minimapPings = []
+    }
+
+    emit(x, y, color, count = 6, speed = 1.5, life = 0.4, radius = 2.5){
+        for(let i = 0; i < count; i++){
+            const angle = Math.random() * Math.PI * 2
+            const spd = (Math.random() * 0.7 + 0.3) * speed
+            this.particles.push({
+                x, y,
+                vx: Math.cos(angle) * spd,
+                vy: Math.sin(angle) * spd,
+                color, life, maxLife: life, radius
+            })
+        }
+    }
+
+    addOrderRing(x, y, color = '#38bdf8'){
+        this.orderRings.push({x, y, color, radius: 2, maxRadius: 16, life: 0.35, maxLife: 0.35})
+    }
+
+    addMinimapPing(tileX, tileY, color = '#ff4757'){
+        this.minimapPings.push({x: tileX, y: tileY, color, life: 1.8, maxLife: 1.8})
+    }
+
+    update(dt){
+        for(const p of this.particles){
+            p.x += p.vx * dt * 60
+            p.y += p.vy * dt * 60
+            p.life -= dt
+        }
+        this.particles = this.particles.filter(p => p.life > 0)
+
+        for(const r of this.orderRings){
+            r.life -= dt
+            r.radius += (r.maxRadius - r.radius) * dt * 10
+        }
+        this.orderRings = this.orderRings.filter(r => r.life > 0)
+
+        for(const m of this.minimapPings){
+            m.life -= dt
+        }
+        this.minimapPings = this.minimapPings.filter(m => m.life > 0)
+    }
+
+    draw(ctx){
+        for(const r of this.orderRings){
+            const alpha = Math.max(0, r.life / r.maxLife)
+            ctx.save()
+            ctx.globalAlpha = alpha
+            ctx.strokeStyle = r.color
+            ctx.lineWidth = 2
+            ctx.beginPath()
+            ctx.arc(r.x * TILE_SIZE, r.y * TILE_SIZE, r.radius, 0, Math.PI * 2)
+            ctx.stroke()
+            ctx.restore()
+        }
+
+        for(const p of this.particles){
+            const alpha = Math.max(0, p.life / p.maxLife)
+            ctx.save()
+            ctx.globalAlpha = alpha
+            ctx.fillStyle = p.color
+            ctx.beginPath()
+            ctx.arc(p.x * TILE_SIZE, p.y * TILE_SIZE, p.radius, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.restore()
+        }
+    }
+}
+
+// ----------------------------------------------------
+// Tile & Map System
+// ----------------------------------------------------
+class Tile {
+    constructor(x, y, type){
+        this.x = x
+        this.y = y
+        this.type = type
+        this.building = null
+        this.resourceType = null
+        this.resourceAmount = 0
+
+        if(type === TILE_TYPES.FOREST){
+            this.resourceType = 'wood'
+            this.resourceAmount = 800
+        }
+        if(type === TILE_TYPES.GOLD){
+            this.resourceType = 'gold'
+            this.resourceAmount = 1200
+        }
+    }
+
+    isWalkable(isWorkerGathering = false){
+        if(this.type === TILE_TYPES.WATER) return false
+        if(this.building){
+            if(isWorkerGathering && this.building.type === BUILDING_TYPES.MINE) return true
+            return false
+        }
+        return true
+    }
+}
+
+class GameMap {
+    constructor(width, height){
+        this.width = width
+        this.height = height
+        this.tiles = []
+        this.generate()
+    }
+
+    generate(){
+        this.tiles = Array.from({length: this.height}, (_, y) =>
+            Array.from({length: this.width}, (_, x) => {
+                const r = Math.random()
+                let type = TILE_TYPES.LAND
+                if(r < 0.12) type = TILE_TYPES.WATER
+                else if(r < 0.25) type = TILE_TYPES.FOREST
+                else if(r < 0.29) type = TILE_TYPES.GOLD
+                return new Tile(x, y, type)
+            })
+        )
+
+        this.makeSafeArea(6, 6, 8)
+        this.makeSafeArea(this.width - 7, this.height - 7, 8)
+
+        this.placeCluster(11, 6, TILE_TYPES.GOLD, 2)
+        this.placeCluster(6, 11, TILE_TYPES.FOREST, 3)
+
+        this.placeCluster(this.width - 12, this.height - 7, TILE_TYPES.GOLD, 2)
+        this.placeCluster(this.width - 7, this.height - 12, TILE_TYPES.FOREST, 3)
+    }
+
+    placeCluster(cx, cy, type, radius){
+        for(let y = cy - radius; y <= cy + radius; y++){
+            for(let x = cx - radius; x <= cx + radius; x++){
+                if(this.inBounds(x, y)){
+                    const tile = this.getTile(x, y)
+                    tile.type = type
+                    tile.building = null
+                    tile.resourceType = type === TILE_TYPES.FOREST ? 'wood' : 'gold'
+                    tile.resourceAmount = type === TILE_TYPES.FOREST ? 800 : 1200
+                }
+            }
+        }
+    }
+
+    makeSafeArea(cx, cy, r){
+        for(let y = cy - r; y <= cy + r; y++){
+            for(let x = cx - r; x <= cx + r; x++){
+                if(this.inBounds(x, y)){
+                    const d = Math.hypot(x - cx, y - cy)
+                    if(d <= r){
+                        const tile = this.getTile(x, y)
+                        tile.type = TILE_TYPES.LAND
+                        tile.resourceType = null
+                        tile.resourceAmount = 0
+                    }
+                }
+            }
+        }
+    }
+
+    inBounds(x, y){
+        return x >= 0 && y >= 0 && x < this.width && y < this.height
+    }
+
+    getTile(x, y){
+        if(!this.inBounds(x, y)) return null
+        return this.tiles[y][x]
+    }
+}
+
+// ----------------------------------------------------
+// Player & Economy Roster
+// ----------------------------------------------------
+class Player {
+    constructor(name, team){
+        this.name = name
+        this.team = team
+        this.resources = {
+            food: 300,
+            wood: 250,
+            gold: 200
+        }
+        this.buildings = []
+        this.units = []
+        this.defeated = false
+        this.stats = {
+            workersCreated: 1,
+            infantryCreated: 0,
+            heavyCreated: 0,
+            buildingsBuilt: 1,
+            enemiesKilled: 0,
+            gathered: {food: 0, wood: 0, gold: 0}
+        }
+    }
+
+    get population(){
+        return this.units.filter(u => u.hp > 0).length
+    }
+
+    get queuedUnitsCount(){
+        let count = 0
+        for(const b of this.buildings) count += b.productionQueue.length
+        return count
+    }
+
+    get maxPopulation(){
+        let cap = 0
+        for(const b of this.buildings){
+            if(b.underConstruction) continue
+            if(b.type === BUILDING_TYPES.TOWN_HALL){
+                if(b.level === 3) cap += 24
+                else if(b.level === 2) cap += 16
+                else cap += 10
+            }
+            if(b.type === BUILDING_TYPES.FARM) cap += 6
+        }
+        return Math.min(75, cap)
+    }
+
+    canAfford(cost){
+        if(!cost) return true
+        return Object.entries(cost).every(([r, v]) => (this.resources[r] || 0) >= v)
+    }
+
+    spend(cost){
+        if(!this.canAfford(cost)) return false
+        for(const [r, v] of Object.entries(cost)) this.resources[r] -= v
+        return true
+    }
+
+    addResource(type, amount){
+        this.resources[type] = (this.resources[type] || 0) + amount
+        if(this.stats.gathered[type] !== undefined) this.stats.gathered[type] += amount
+    }
+}
+
+// ----------------------------------------------------
+// Buildings (Including Automated Mine)
+// ----------------------------------------------------
+class Building {
+    constructor(game, x, y, owner, constructionTime = 5){
+        this.game = game
+        this.x = x
+        this.y = y
+        this.owner = owner
+        this.type = 'building'
+        this.maxHp = 500
+        this.hp = 50
+        this.underConstruction = true
+        this.constructionTime = constructionTime
+        this.constructionProgress = 0
+        this.productionQueue = []
+        this.productionProgress = 0
+    }
+
+    update(dt){
+        if(this.underConstruction){
+            this.constructionProgress += dt
+            const p = Math.min(1, this.constructionProgress / this.constructionTime)
+            this.hp = Math.max(1, Math.floor(this.maxHp * (0.1 + 0.9 * p)))
+
+            if(Math.random() < 0.2){
+                this.game.particles.emit(this.x + 0.5, this.y + 0.5, '#d2b48c', 1, 0.8, 0.3, 2)
+            }
+
+            if(this.constructionProgress >= this.constructionTime){
+                this.underConstruction = false
+                this.hp = this.maxHp
+                this.game.sounds.playBuild()
+                this.game.particles.emit(this.x + 0.5, this.y + 0.5, '#2ecc71', 10, 2, 0.5, 3)
+            }
+        }
+    }
+}
+
+class TownHall extends Building {
+    constructor(game, x, y, owner, instant = false){
+        super(game, x, y, owner, 8)
+        this.type = BUILDING_TYPES.TOWN_HALL
+        this.level = 1
+        this.maxLevel = 3
+        this.maxHp = 1200
+        this.isUpgrading = false
+        this.upgradeProgress = 0
+        this.upgradeDuration = 0
+        this.upgradeCosts = {1: {wood: 200, gold: 150}, 2: {wood: 350, gold: 300}}
+        this.upgradeTimes = {1: 10, 2: 15}
+
+        if(instant){
+            this.underConstruction = false
+            this.hp = this.maxHp
+            this.constructionProgress = this.constructionTime
+        }else{
+            this.hp = 120
+        }
+    }
+
+    canUpgrade(){
+        if(this.underConstruction || this.isUpgrading || this.level >= this.maxLevel) return false
+        if(this.productionQueue.length > 0) return false
+        return this.owner.canAfford(this.upgradeCosts[this.level])
+    }
+
+    startUpgrade(){
+        if(!this.canUpgrade()) return false
+        if(!this.owner.spend(this.upgradeCosts[this.level])) return false
+        this.isUpgrading = true
+        this.upgradeProgress = 0
+        this.upgradeDuration = this.upgradeTimes[this.level]
+        this.game.sounds.playBuild()
+        return true
+    }
+
+    update(dt){
+        super.update(dt)
+        if(this.isUpgrading){
+            this.upgradeProgress += dt
+            if(Math.random() < 0.2){
+                this.game.particles.emit(this.x + 0.5, this.y + 0.5, '#9b59b6', 1, 0.8, 0.4, 2)
+            }
+            if(this.upgradeProgress >= this.upgradeDuration){
+                this.isUpgrading = false
+                this.level++
+                if(this.level === 2){
+                    this.maxHp = 1800
+                    this.hp = Math.min(this.maxHp, this.hp + 600)
+                }else if(this.level === 3){
+                    this.maxHp = 2600
+                    this.hp = Math.min(this.maxHp, this.hp + 800)
+                }
+                this.game.sounds.playSpawn()
+                this.game.particles.emit(this.x + 0.5, this.y + 0.5, '#f1c40f', 15, 2.5, 0.6, 3)
+            }
+        }
+    }
+}
+
+class Barracks extends Building {
+    constructor(game, x, y, owner){
+        super(game, x, y, owner, 6)
+        this.type = BUILDING_TYPES.BARRACKS
+        this.maxHp = 750
+        this.hp = 75
+    }
+}
+
+class Farm extends Building {
+    constructor(game, x, y, owner){
+        super(game, x, y, owner, 4)
+        this.type = BUILDING_TYPES.FARM
+        this.maxHp = 380
+        this.hp = 40
+        this.foodTimer = 0
+        this.foodInterval = 3.0
+        this.foodYield = 3
+    }
+
+    update(dt){
+        super.update(dt)
+        if(!this.underConstruction && this.hp > 0){
+            this.foodTimer += dt
+            if(this.foodTimer >= this.foodInterval){
+                this.foodTimer = 0
+                this.owner.addResource('food', this.foodYield)
+            }
+        }
+    }
+}
+
+class Mine extends Building {
+    constructor(game, x, y, owner){
+        super(game, x, y, owner, 5)
+        this.type = BUILDING_TYPES.MINE
+        this.maxHp = 500
+        this.hp = 50
+        this.goldTimer = 0
+        this.goldInterval = 3.0
+        this.goldYield = 5
+    }
+
+    update(dt){
+        super.update(dt)
+        if(!this.underConstruction && this.hp > 0){
+            this.goldTimer += dt
+            if(this.goldTimer >= this.goldInterval){
+                this.goldTimer = 0
+                this.owner.addResource('gold', this.goldYield)
+                this.game.particles.emit(this.x + 0.5, this.y + 0.5, '#ffe066', 3, 1.2, 0.4, 2)
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------
+// Units (Worker, Infantry, Heavy) & Soft-Push Physics
+// ----------------------------------------------------
+class Unit {
+    constructor(game, x, y, owner){
+        this.game = game
+        this.x = x
+        this.y = y
+        this.owner = owner
+        this.selected = false
+        this.path = []
+        this.pathIndex = 0
+        this.moveSpeed = 3
+        this.radius = 0.28
+        this.target = null
+        this.targetType = null
+        this.state = 'idle'
+        this.hp = this.maxHp = 100
+        this.repathTimer = 0
+        this.aggroScanTimer = Math.random() * 0.5
+    }
+
+    get tileX(){
+        return Math.floor(this.x)
+    }
+
+    get tileY(){
+        return Math.floor(this.y)
+    }
+
+    setPath(path){
+        this.path = path || []
+        this.pathIndex = 0
+        this.state = this.path.length ? 'moving' : 'idle'
+    }
+
+    applySeparation(dt){
+        const searchRadius = 0.65
+        let pushX = 0
+        let pushY = 0
+
+        for(const other of this.game.units){
+            if(other === this || other.hp <= 0) continue
+            const dx = this.x - other.x
+            const dy = this.y - other.y
+            const dist = Math.hypot(dx, dy)
+
+            if(dist > 0.0001 && dist < searchRadius){
+                const force = (searchRadius - dist) / searchRadius
+                pushX += (dx / dist) * force
+                pushY += (dy / dist) * force
+            }
+        }
+
+        if(pushX !== 0 || pushY !== 0){
+            const pushSpeed = 1.4 * dt
+            const newX = this.x + pushX * pushSpeed
+            const newY = this.y + pushY * pushSpeed
+            const tX = Math.floor(newX)
+            const tY = Math.floor(newY)
+
+            if(this.game.map.inBounds(tX, tY)){
+                const tile = this.game.map.getTile(tX, tY)
+                if(tile && tile.isWalkable()){
+                    this.x = newX
+                    this.y = newY
+                }
+            }
+        }
+    }
+
+    moveAlongPath(dt){
+        if(this.pathIndex >= this.path.length){
+            if(this.state === 'moving') this.state = 'idle'
+            return true
+        }
+
+        const node = this.path[this.pathIndex]
+        const tx = node.x + 0.5
+        const ty = node.y + 0.5
+        const dx = tx - this.x
+        const dy = ty - this.y
+        const dist = Math.hypot(dx, dy)
+
+        if(dist < 0.08){
+            this.x = tx
+            this.y = ty
+            this.pathIndex++
+            return this.pathIndex >= this.path.length
+        }
+
+        const step = this.moveSpeed * dt
+        this.x += (dx / dist) * Math.min(step, dist)
+        this.y += (dy / dist) * Math.min(step, dist)
+        return false
+    }
+}
+
+class Worker extends Unit {
+    constructor(game, x, y, owner){
+        super(game, x, y, owner)
+        this.type = UNIT_TYPES.WORKER
+        this.maxHp = this.hp = 75
+        this.moveSpeed = 2.8
+        this.carrying = {type: null, amount: 0}
+        this.workTarget = null
+        this.returnTarget = null
+        this.gatherTimer = 0
+        this.damage = 6
+        this.attackRange = 0.8
+        this.attackCooldown = 0
+        this.attackInterval = 1.1
+    }
+
+    get maxCarry(){
+        const th = this.findTownHall()
+        if(th && th.level === 3) return 80
+        if(th && th.level === 2) return 65
+        return 50
+    }
+
+    get gatherRateMultiplier(){
+        const th = this.findTownHall()
+        if(th && th.level === 3) return 1.4
+        if(th && th.level === 2) return 1.2
+        return 1.0
+    }
+
+    commandGather(tile){
+        if(!tile || !tile.resourceType || tile.resourceAmount <= 0) return false
+        this.workTarget = tile
+        this.returnTarget = tile
+        this.target = null
+        this.carrying = {type: null, amount: 0}
+        this.moveToTile(tile.x, tile.y)
+        return true
+    }
+
+    moveToTile(x, y){
+        const path = this.game.findPath(this.tileX, this.tileY, x, y, true)
+        this.setPath(path)
+    }
+
+    findTownHall(){
+        return this.owner.buildings.find(b => b.type === BUILDING_TYPES.TOWN_HALL && !b.underConstruction)
+    }
+
+    findNearbyResource(resourceType, originTile, radius = 7){
+        let nearest = null
+        let bestDist = Infinity
+        for(let dy = -radius; dy <= radius; dy++){
+            for(let dx = -radius; dx <= radius; dx++){
+                const nx = originTile.x + dx
+                const ny = originTile.y + dy
+                const t = this.game.map.getTile(nx, ny)
+                if(t && t.resourceType === resourceType && t.resourceAmount > 0){
+                    const d = Math.hypot(this.x - (nx + 0.5), this.y - (ny + 0.5))
+                    if(d < bestDist){
+                        bestDist = d
+                        nearest = t
+                    }
+                }
+            }
+        }
+        return nearest
+    }
+
+    update(dt){
+        this.applySeparation(dt)
+
+        if(this.state === 'moving'){
+            const arrived = this.moveAlongPath(dt)
+            if(arrived && this.workTarget) this.state = 'gathering'
+            return
+        }
+
+        if(this.state === 'gathering'){
+            if(!this.workTarget || this.workTarget.resourceAmount <= 0){
+                const rType = this.workTarget ? this.workTarget.resourceType : (this.carrying.type || 'wood')
+                const nextTile = this.findNearbyResource(rType, this.workTarget || {x: this.tileX, y: this.tileY})
+                if(nextTile){
+                    this.commandGather(nextTile)
+                }else{
+                    this.workTarget = null
+                    this.state = 'idle'
+                }
+                return
+            }
+
+            this.gatherTimer += dt * this.gatherRateMultiplier
+            if(this.gatherTimer >= 1){
+                this.gatherTimer = 0
+                const amount = Math.min(10, this.workTarget.resourceAmount)
+                this.workTarget.resourceAmount -= amount
+                this.carrying.type = this.workTarget.resourceType
+                this.carrying.amount += amount
+
+                if(this.carrying.amount >= this.maxCarry || this.workTarget.resourceAmount <= 0){
+                    const townHall = this.findTownHall()
+                    if(townHall){
+                        const oldTarget = this.workTarget
+                        this.workTarget = null
+                        this.moveToTile(townHall.x, townHall.y)
+                        this.state = 'returning'
+                        this.returnTarget = oldTarget
+                    }else{
+                        this.state = 'idle'
+                    }
+                }
+            }
+            return
+        }
+
+        if(this.state === 'returning'){
+            const arrived = this.moveAlongPath(dt)
+            if(arrived){
+                if(this.carrying.type && this.carrying.amount){
+                    this.owner.addResource(this.carrying.type, this.carrying.amount)
+                }
+                const returnedType = this.carrying.type
+                this.carrying = {type: null, amount: 0}
+
+                if(this.returnTarget && this.returnTarget.resourceAmount > 0){
+                    this.workTarget = this.returnTarget
+                    this.moveToTile(this.workTarget.x, this.workTarget.y)
+                    this.state = 'moving'
+                }else{
+                    const nextTile = this.findNearbyResource(returnedType || 'wood', this.returnTarget || {x: this.tileX, y: this.tileY})
+                    if(nextTile){
+                        this.commandGather(nextTile)
+                    }else{
+                        this.returnTarget = null
+                        this.state = 'idle'
+                    }
+                }
+            }
+        }
+    }
+}
+
+class CombatUnit extends Unit {
+    constructor(game, x, y, owner){
+        super(game, x, y, owner)
+        this.damage = 20
+        this.attackRange = 1.2
+        this.attackCooldown = 0
+        this.attackInterval = 1.0
+        this.aggroRange = 4.5
+        this.lastTargetTile = {x: -1, y: -1}
+    }
+
+    commandMove(x, y){
+        this.target = null
+        this.targetType = null
+        const path = this.game.findPath(this.tileX, this.tileY, x, y, false)
+        this.setPath(path)
+    }
+
+    commandAttack(target){
+        if(!target || target.owner === this.owner || target.hp <= 0) return
+        this.target = target
+        this.targetType = target instanceof Unit ? 'unit' : 'building'
+        this.path = []
+        this.pathIndex = 0
+        this.state = 'attacking'
+        this.repathTimer = 0
+    }
+
+    getTargetPosition(){
+        if(this.target instanceof Unit) return {x: this.target.x, y: this.target.y}
+        return {x: this.target.x + 0.5, y: this.target.y + 0.5}
+    }
+
+    getTargetRange(){
+        return this.target instanceof Unit ? this.attackRange : this.attackRange + 0.35
+    }
+
+    scanForAggro(dt){
+        this.aggroScanTimer -= dt
+        if(this.aggroScanTimer > 0) return
+        this.aggroScanTimer = 0.5
+
+        if(this.state !== 'idle') return
+
+        const candidates = [...this.game.units, ...this.game.buildings].filter(
+            t => t.owner !== this.owner && t.hp > 0
+        )
+
+        let best = null
+        let bestDist = this.aggroRange
+
+        for(const c of candidates){
+            const pos = c instanceof Unit ? {x: c.x, y: c.y} : {x: c.x + 0.5, y: c.y + 0.5}
+            const dist = Math.hypot(pos.x - this.x, pos.y - this.y)
+            if(dist <= bestDist){
+                bestDist = dist
+                best = c
+            }
+        }
+
+        if(best){
+            this.commandAttack(best)
+        }
+    }
+
+    update(dt){
+        this.applySeparation(dt)
+        if(this.attackCooldown > 0) this.attackCooldown -= dt
+        if(this.repathTimer > 0) this.repathTimer -= dt
+
+        if(this.state === 'idle'){
+            this.scanForAggro(dt)
+            return
+        }
+
+        if(this.state === 'moving'){
+            this.moveAlongPath(dt)
+            return
+        }
+
+        if(this.state === 'attacking' || this.state === 'chasing'){
+            if(!this.target || this.target.hp <= 0){
+                this.target = null
+                this.targetType = null
+                this.state = 'idle'
+                return
+            }
+
+            const pos = this.getTargetPosition()
+            const dist = Math.hypot(pos.x - this.x, pos.y - this.y)
+            const range = this.getTargetRange()
+
+            if(dist > range){
+                const tx = Math.floor(pos.x)
+                const ty = Math.floor(pos.y)
+
+                if(this.repathTimer <= 0 && (tx !== this.lastTargetTile.x || ty !== this.lastTargetTile.y || this.path.length === 0)){
+                    this.repathTimer = 0.35
+                    this.lastTargetTile = {x: tx, y: ty}
+                    const path = this.game.findPath(this.tileX, this.tileY, tx, ty, false)
+                    if(path && path.length){
+                        this.path = path
+                        this.pathIndex = 0
+                        this.state = 'chasing'
+                    }else{
+                        this.state = 'idle'
+                    }
+                }
+
+                if(this.state === 'chasing'){
+                    this.moveAlongPath(dt)
+                }
+                return
+            }
+
+            this.state = 'attacking'
+            if(this.attackCooldown <= 0){
+                this.performAttack(this.target)
+                this.attackCooldown = this.attackInterval
+            }
+        }
+    }
+
+    performAttack(target){
+        this.game.combat.attack(this, target)
+    }
+}
+
+class Infantry extends CombatUnit {
+    constructor(game, x, y, owner){
+        super(game, x, y, owner)
+        this.type = UNIT_TYPES.INFANTRY
+        this.maxHp = this.hp = 130
+        this.moveSpeed = 3.0
+        this.damage = 22
+        this.attackRange = 1.2
+        this.attackInterval = 0.9
+        this.aggroRange = 4.5
+    }
+}
+
+class Heavy extends CombatUnit {
+    constructor(game, x, y, owner){
+        super(game, x, y, owner)
+        this.type = UNIT_TYPES.HEAVY
+        this.maxHp = this.hp = 220
+        this.moveSpeed = 1.85
+        this.damage = 45
+        this.attackRange = 4.5
+        this.attackInterval = 2.1
+        this.aggroRange = 5.2
+    }
+
+    performAttack(target){
+        const pos = this.getTargetPosition()
+        this.game.combat.launchProjectile(this, pos.x, pos.y, target)
+    }
+}
+
+// ----------------------------------------------------
+// Combat System & Rock-Paper-Scissors Matrix
+// ----------------------------------------------------
+class CombatSystem {
+    constructor(game){
+        this.game = game
+        this.damageLog = []
+        this.projectiles = []
+    }
+
+    launchProjectile(attacker, targetX, targetY, targetRef){
+        this.game.sounds.playCannonFire()
+        this.projectiles.push({
+            attacker,
+            startX: attacker.x,
+            startY: attacker.y,
+            targetX,
+            targetY,
+            targetRef,
+            progress: 0,
+            duration: 0.55
+        })
+    }
+
+    attack(attacker, target){
+        if(!attacker || !target || target.hp <= 0) return
+        if(attacker.owner === target.owner) return
+
+        let damage = attacker.damage || 10
+
+        if(attacker.type === UNIT_TYPES.HEAVY && target instanceof Building){
+            damage *= 1.75
+        }else if(attacker.type === UNIT_TYPES.INFANTRY && target.type === UNIT_TYPES.HEAVY){
+            damage *= 1.30
+        }else if(attacker.type === UNIT_TYPES.HEAVY && target.type === UNIT_TYPES.INFANTRY){
+            damage *= 1.15
+        }else if(target instanceof Building){
+            damage *= 0.75
+        }
+
+        damage = Math.round(damage)
+        target.hp -= damage
+        this.game.sounds.playAttackHit()
+
+        const tx = target instanceof Unit ? target.x : target.x + 0.5
+        const ty = target instanceof Unit ? target.y : target.y + 0.5
+        this.game.particles.emit(tx, ty, target instanceof Unit ? '#e74c3c' : '#f39c12', 6, 1.8, 0.35, 2.5)
+
+        this.damageLog.push({x: tx, y: ty, amount: damage, time: 1.0})
+
+        if(target.owner === this.game.player){
+            this.game.particles.addMinimapPing(Math.floor(tx), Math.floor(ty))
+            this.game.sounds.playAttackAlert(this.game.gameTime)
+        }
+
+        if(target instanceof CombatUnit && target.state === 'idle'){
+            target.commandAttack(attacker)
+        }
+
+        if(target.hp <= 0){
+            if(attacker && attacker.owner) attacker.owner.stats.enemiesKilled++
+            this.destroy(target)
+        }
+    }
+
+    destroy(target){
+        target.hp = 0
+        const tx = target instanceof Unit ? target.x : target.x + 0.5
+        const ty = target instanceof Unit ? target.y : target.y + 0.5
+        this.game.particles.emit(tx, ty, '#ff4757', 16, 2.5, 0.6, 3)
+
+        if(target instanceof Unit){
+            target.state = 'dead'
+            target.target = null
+        }
+
+        if(target instanceof Building){
+            const tile = this.game.map.getTile(target.x, target.y)
+            if(tile && tile.building === target) tile.building = null
+
+            const index = target.owner.buildings.indexOf(target)
+            if(index >= 0) target.owner.buildings.splice(index, 1)
+
+            const globalIndex = this.game.buildings.indexOf(target)
+            if(globalIndex >= 0) this.game.buildings.splice(globalIndex, 1)
+
+            if(target.type === BUILDING_TYPES.TOWN_HALL){
+                target.owner.defeated = true
+            }
+        }
+    }
+
+    update(dt){
+        for(const hit of this.damageLog) hit.time -= dt
+        this.damageLog = this.damageLog.filter(hit => hit.time > 0)
+
+        for(const p of this.projectiles){
+            p.progress += dt / p.duration
+            if(p.progress >= 1){
+                this.game.sounds.playCannonImpact()
+                this.game.particles.emit(p.targetX, p.targetY, '#f59e0b', 12, 2.2, 0.45, 3)
+
+                const radius = 1.1
+                const targets = [...this.game.units, ...this.game.buildings].filter(
+                    t => t.owner !== p.attacker.owner && t.hp > 0
+                )
+
+                for(const t of targets){
+                    const tx = t instanceof Unit ? t.x : t.x + 0.5
+                    const ty = t instanceof Unit ? t.y : t.y + 0.5
+                    const dist = Math.hypot(tx - p.targetX, ty - p.targetY)
+                    if(dist <= radius){
+                        const falloff = 1 - (dist / radius) * 0.4
+                        const dmg = Math.round((p.attacker.damage || 45) * falloff)
+                        t.hp -= dmg
+                        this.damageLog.push({x: tx, y: ty, amount: dmg, time: 1.0})
+                        if(t.hp <= 0){
+                            p.attacker.owner.stats.enemiesKilled++
+                            this.destroy(t)
+                        }
+                    }
+                }
+            }
+        }
+        this.projectiles = this.projectiles.filter(p => p.progress < 1)
+    }
+
+    drawProjectiles(ctx){
+        for(const p of this.projectiles){
+            const curX = p.startX + (p.targetX - p.startX) * p.progress
+            const curY = p.startY + (p.targetY - p.startY) * p.progress
+            const arcHeight = Math.sin(p.progress * Math.PI) * 1.5
+
+            ctx.save()
+            ctx.fillStyle = 'rgba(0,0,0,.3)'
+            ctx.beginPath()
+            ctx.arc(curX * TILE_SIZE, curY * TILE_SIZE, 3, 0, Math.PI * 2)
+            ctx.fill()
+
+            ctx.fillStyle = '#1e293b'
+            ctx.strokeStyle = '#f59e0b'
+            ctx.lineWidth = 1.5
+            ctx.beginPath()
+            ctx.arc(curX * TILE_SIZE, (curY - arcHeight) * TILE_SIZE, 4.5, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.stroke()
+            ctx.restore()
+        }
+    }
+}
+
+// ----------------------------------------------------
+// Building System & Production
+// ----------------------------------------------------
+class BuildingSystem {
+    constructor(game){
+        this.game = game
+        this.costs = {
+            [BUILDING_TYPES.TOWN_HALL]: {wood: 150, gold: 100},
+            [BUILDING_TYPES.BARRACKS]: {wood: 120, gold: 50},
+            [BUILDING_TYPES.FARM]: {wood: 70},
+            [BUILDING_TYPES.MINE]: {wood: 100}
+        }
+    }
+
+    canPlace(type, x, y, player, checkRadius = true){
+        const map = this.game.map
+        if(!map.inBounds(x, y)) return false
+        const tile = map.getTile(x, y)
+        if(!tile || tile.building) return false
+
+        if(tile.type === TILE_TYPES.WATER) return false
+        if(tile.type === TILE_TYPES.FOREST) return false
+
+        if(type === BUILDING_TYPES.MINE){
+            if(tile.type !== TILE_TYPES.GOLD) return false
+        }else{
+            if(tile.type === TILE_TYPES.GOLD) return false
+        }
+
+        const occupiedByUnit = this.game.units.some(u => u.hp > 0 && u.tileX === x && u.tileY === y)
+        if(occupiedByUnit) return false
+
+        if(checkRadius){
+            let nearExisting = false
+            for(const b of player.buildings){
+                const d = Math.hypot(b.x - x, b.y - y)
+                if(d <= MAX_BUILD_DISTANCE){
+                    nearExisting = true
+                    break
+                }
+            }
+            if(!nearExisting) return false
+        }
+        return true
+    }
+
+    create(type, x, y, owner, ignoreRadius = false){
+        if(!this.canPlace(type, x, y, owner, !ignoreRadius)) return null
+        const cost = this.costs[type]
+        if(!owner.spend(cost)) return null
+
+        let building = null
+        if(type === BUILDING_TYPES.TOWN_HALL) building = new TownHall(this.game, x, y, owner)
+        if(type === BUILDING_TYPES.BARRACKS) building = new Barracks(this.game, x, y, owner)
+        if(type === BUILDING_TYPES.FARM) building = new Farm(this.game, x, y, owner)
+        if(type === BUILDING_TYPES.MINE) building = new Mine(this.game, x, y, owner)
+
+        if(!building) return null
+
+        owner.buildings.push(building)
+        owner.stats.buildingsBuilt++
+        this.game.map.getTile(x, y).building = building
+        this.game.sounds.playBuild()
+        return building
+    }
+}
+
+class ProductionSystem {
+    constructor(game){
+        this.game = game
+        this.times = {
+            [UNIT_TYPES.WORKER]: 5,
+            [UNIT_TYPES.INFANTRY]: 6,
+            [UNIT_TYPES.HEAVY]: 9
+        }
+        this.costs = {
+            [UNIT_TYPES.WORKER]: {food: 50},
+            [UNIT_TYPES.INFANTRY]: {food: 50, gold: 25},
+            [UNIT_TYPES.HEAVY]: {food: 90, gold: 75, wood: 50}
+        }
+    }
+
+    queue(building, type){
+        if(!building || building.underConstruction || building.isUpgrading) return false
+        if(type === UNIT_TYPES.WORKER && building.type !== BUILDING_TYPES.TOWN_HALL) return false
+        if((type === UNIT_TYPES.INFANTRY || type === UNIT_TYPES.HEAVY) && building.type !== BUILDING_TYPES.BARRACKS) return false
+
+        const owner = building.owner
+        if(owner.population + owner.queuedUnitsCount >= owner.maxPopulation) return false
+        if(!owner.spend(this.costs[type])) return false
+
+        building.productionQueue.push(type)
+        this.game.sounds.playOrderConfirmation()
+        return true
+    }
+
+    update(dt){
+        for(const player of [this.game.player, this.game.enemy]){
+            const th = player.buildings.find(b => b.type === BUILDING_TYPES.TOWN_HALL && !b.underConstruction)
+            const speedBoost = th ? (th.level === 3 ? 1.5 : (th.level === 2 ? 1.25 : 1.0)) : 1.0
+
+            for(const building of player.buildings){
+                if(building.underConstruction || building.isUpgrading) continue
+                if(!building.productionQueue.length) continue
+
+                building.productionProgress += dt * speedBoost
+                const type = building.productionQueue[0]
+
+                if(building.productionProgress >= this.times[type]){
+                    building.productionProgress = 0
+                    building.productionQueue.shift()
+                    this.spawn(building, type)
+                }
+            }
+        }
+    }
+
+    spawn(building, type){
+        const spots = [
+            [building.x + 1, building.y],
+            [building.x - 1, building.y],
+            [building.x, building.y + 1],
+            [building.x, building.y - 1],
+            [building.x + 1, building.y + 1],
+            [building.x - 1, building.y - 1],
+            [building.x + 1, building.y - 1],
+            [building.x - 1, building.y + 1]
+        ]
+
+        let spawn = null
+        for(const [x, y] of spots){
+            const tile = this.game.map.getTile(x, y)
+            if(tile && tile.isWalkable()){
+                spawn = {x: x + 0.5, y: y + 0.5}
+                break
+            }
+        }
+
+        if(!spawn) spawn = {x: building.x + 0.5, y: building.y + 0.5}
+
+        let unit = null
+        if(type === UNIT_TYPES.WORKER){
+            unit = new Worker(this.game, spawn.x, spawn.y, building.owner)
+            building.owner.stats.workersCreated++
+        }
+        if(type === UNIT_TYPES.INFANTRY){
+            unit = new Infantry(this.game, spawn.x, spawn.y, building.owner)
+            building.owner.stats.infantryCreated++
+        }
+        if(type === UNIT_TYPES.HEAVY){
+            unit = new Heavy(this.game, spawn.x, spawn.y, building.owner)
+            building.owner.stats.heavyCreated++
+        }
+
+        if(unit){
+            building.owner.units.push(unit)
+            this.game.units.push(unit)
+            if(building.owner === this.game.player){
+                this.game.sounds.playSpawn()
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------
+// Camera & Viewport
+// ----------------------------------------------------
+class Camera {
+    constructor(){
+        this.x = 0
+        this.y = 0
+        this.zoom = 1
+    }
+
+    update(dt, input){
+        const speed = 550 * dt / this.zoom
+        if(input.keys.has('w') || input.keys.has('arrowup')) this.y -= speed
+        if(input.keys.has('s') || input.keys.has('arrowdown')) this.y += speed
+        if(input.keys.has('a') || input.keys.has('arrowleft')) this.x -= speed
+        if(input.keys.has('d') || input.keys.has('arrowright')) this.x += speed
+        this.clamp()
+    }
+
+    clamp(){
+        this.x = Math.max(0, Math.min(this.x, MAP_WIDTH * TILE_SIZE - canvas.width / this.zoom))
+        this.y = Math.max(0, Math.min(this.y, MAP_HEIGHT * TILE_SIZE - canvas.height / this.zoom))
+    }
+
+    screenToWorld(sx, sy){
+        return {
+            x: sx / this.zoom + this.x,
+            y: sy / this.zoom + this.y
+        }
+    }
+
+    screenToTile(sx, sy){
+        const p = this.screenToWorld(sx, sy)
+        return {
+            x: Math.floor(p.x / TILE_SIZE),
+            y: Math.floor(p.y / TILE_SIZE)
+        }
+    }
+
+    apply(context){
+        context.scale(this.zoom, this.zoom)
+        context.translate(-this.x, -this.y)
+    }
+
+    zoomAt(sx, sy, delta){
+        const before = this.screenToWorld(sx, sy)
+        this.zoom *= delta
+        this.zoom = Math.max(0.65, Math.min(2.1, this.zoom))
+        const after = this.screenToWorld(sx, sy)
+        this.x += before.x - after.x
+        this.y += before.y - after.y
+        this.clamp()
+    }
+
+    centerOn(tileX, tileY){
+        this.x = (tileX + 0.5) * TILE_SIZE - canvas.width / (2 * this.zoom)
+        this.y = (tileY + 0.5) * TILE_SIZE - canvas.height / (2 * this.zoom)
+        this.clamp()
+    }
+}
+
+// ----------------------------------------------------
+// Input System & Unified Context Commands
+// ----------------------------------------------------
+class Input {
+    constructor(game){
+        this.game = game
+        this.keys = new Set()
+        this.mouseX = 0
+        this.mouseY = 0
+        this.isMouseDown = false
+        this.dragStart = null
+        this.isDragging = false
+
+        this.touchStartTime = 0
+        this.touchStartPos = {x: 0, y: 0}
+        this.longPressTimer = null
+        this.isBoxSelecting = false
+        this.touchPinchDist = 0
+        this.hasMovedSignificant = false
+
+        this.setupKeyboard()
+        this.setupMouse()
+        this.setupTouch()
+        this.setupUIButtons()
+    }
+
+    setupKeyboard(){
+        addEventListener('keydown', e => {
+            this.game.sounds.init()
+            this.keys.add(e.key.toLowerCase())
+
+            if(e.ctrlKey && ['1', '2', '3', '4'].includes(e.key)){
+                e.preventDefault()
+                this.game.assignControlGroup(parseInt(e.key))
+                return
+            }
+
+            if(e.key === '1') this.game.setBuildMode(BUILDING_TYPES.TOWN_HALL)
+            if(e.key === '2') this.game.setBuildMode(BUILDING_TYPES.BARRACKS)
+            if(e.key === '3') this.game.setBuildMode(BUILDING_TYPES.FARM)
+            if(e.key === '4') this.game.setBuildMode(BUILDING_TYPES.MINE)
+            if(e.key.toLowerCase() === 'q') this.game.queueSelectedWorker()
+            if(e.key.toLowerCase() === 'w') this.game.queueSelectedInfantry()
+            if(e.key.toLowerCase() === 'e') this.game.queueSelectedHeavy()
+            if(e.key.toLowerCase() === 'u') this.game.upgradeSelectedTownHall()
+            if(e.key === 'Escape') this.game.setBuildMode(null)
+        })
+
+        addEventListener('keyup', e => {
+            this.keys.delete(e.key.toLowerCase())
+        })
+    }
+
+    setupMouse(){
+        canvas.addEventListener('mousedown', e => {
+            this.game.sounds.init()
+            if(e.button === 0){
+                this.isMouseDown = true
+                this.dragStart = {x: e.clientX, y: e.clientY}
+                this.isDragging = false
+            }
+        })
+
+        canvas.addEventListener('mousemove', e => {
+            this.mouseX = e.clientX
+            this.mouseY = e.clientY
+            if(this.isMouseDown && this.dragStart){
+                const dist = Math.hypot(e.clientX - this.dragStart.x, e.clientY - this.dragStart.y)
+                if(dist > 6) this.isDragging = true
+            }
+        })
+
+        canvas.addEventListener('mouseup', e => {
+            if(e.button === 0 && this.isMouseDown){
+                if(this.isDragging && this.dragStart){
+                    this.game.handleBoxSelection(this.dragStart.x, this.dragStart.y, e.clientX, e.clientY)
+                }else{
+                    this.game.handleLeftClick(e.clientX, e.clientY)
+                }
+                this.isMouseDown = false
+                this.isDragging = false
+                this.dragStart = null
+            }
+        })
+
+        canvas.addEventListener('contextmenu', e => {
+            e.preventDefault()
+            this.game.handleRightClick(e.clientX, e.clientY)
+        })
+
+        canvas.addEventListener('wheel', e => {
+            this.game.camera.zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.12 : 0.89)
+        }, {passive: true})
+    }
+
+    setupTouch(){
+        canvas.addEventListener('touchstart', e => {
+            this.game.sounds.init()
+            if(e.touches.length === 1){
+                const t = e.touches[0]
+                this.touchStartTime = performance.now()
+                this.touchStartPos = {x: t.clientX, y: t.clientY}
+                this.mouseX = t.clientX
+                this.mouseY = t.clientY
+                this.hasMovedSignificant = false
+                this.isBoxSelecting = false
+
+                clearTimeout(this.longPressTimer)
+                this.longPressTimer = setTimeout(() => {
+                    if(!this.hasMovedSignificant){
+                        this.isBoxSelecting = true
+                        this.dragStart = {x: this.touchStartPos.x, y: this.touchStartPos.y}
+                        this.isDragging = true
+                        if(navigator.vibrate) navigator.vibrate(30)
+                    }
+                }, 280)
+            }else if(e.touches.length === 2){
+                clearTimeout(this.longPressTimer)
+                this.isBoxSelecting = false
+                this.isDragging = false
+                this.dragStart = null
+                const dx = e.touches[0].clientX - e.touches[1].clientX
+                const dy = e.touches[0].clientY - e.touches[1].clientY
+                this.touchPinchDist = Math.hypot(dx, dy)
+            }
+        }, {passive: false})
+
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault()
+            if(e.touches.length === 1){
+                const t = e.touches[0]
+                const dx = t.clientX - this.mouseX
+                const dy = t.clientY - this.mouseY
+                this.mouseX = t.clientX
+                this.mouseY = t.clientY
+
+                if(Math.hypot(t.clientX - this.touchStartPos.x, t.clientY - this.touchStartPos.y) > 10){
+                    this.hasMovedSignificant = true
+                }
+
+                if(this.isBoxSelecting){
+                    this.isDragging = true
+                }else{
+                    clearTimeout(this.longPressTimer)
+                    this.game.camera.x -= dx / this.game.camera.zoom
+                    this.game.camera.y -= dy / this.game.camera.zoom
+                    this.game.camera.clamp()
+                }
+            }else if(e.touches.length === 2){
+                const dx = e.touches[0].clientX - e.touches[1].clientX
+                const dy = e.touches[0].clientY - e.touches[1].clientY
+                const dist = Math.hypot(dx, dy)
+                if(this.touchPinchDist > 0){
+                    const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2
+                    const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2
+                    const delta = dist / this.touchPinchDist
+                    this.game.camera.zoomAt(midX, midY, delta)
+                }
+                this.touchPinchDist = dist
+            }
+        }, {passive: false})
+
+        canvas.addEventListener('touchend', e => {
+            clearTimeout(this.longPressTimer)
+            if(this.isBoxSelecting && this.dragStart){
+                this.game.handleBoxSelection(this.dragStart.x, this.dragStart.y, this.mouseX, this.mouseY)
+                this.isBoxSelecting = false
+                this.isDragging = false
+                this.dragStart = null
+                return
+            }
+
+            const duration = performance.now() - this.touchStartTime
+            if(duration < 280 && !this.hasMovedSignificant){
+                const sx = this.touchStartPos.x
+                const sy = this.touchStartPos.y
+
+                if(this.game.buildMode){
+                    this.game.handleLeftClick(sx, sy)
+                }else if(this.game.selectedGroup.size > 0 || (this.game.selected instanceof Unit && this.game.selected.owner === this.game.player)){
+                    this.game.handleRightClick(sx, sy)
+                }else{
+                    this.game.handleLeftClick(sx, sy)
+                }
+            }
+        }, {passive: false})
+
+        minimapCanvas.addEventListener('pointerdown', e => this.handleMinimap(e))
+        minimapCanvas.addEventListener('pointermove', e => {if(e.buttons === 1) this.handleMinimap(e)})
+    }
+
+    setupUIButtons(){
+        document.getElementById('lang-toggle').onclick = () => {
+            this.game.sounds.init()
+            this.game.sounds.playOrderConfirmation()
+            setLanguage(currentLang === 'en' ? 'ru' : 'en')
+        }
+
+        btnBuildTh.onclick = () => this.game.setBuildMode(BUILDING_TYPES.TOWN_HALL)
+        btnBuildBarracks.onclick = () => this.game.setBuildMode(BUILDING_TYPES.BARRACKS)
+        btnBuildFarm.onclick = () => this.game.setBuildMode(BUILDING_TYPES.FARM)
+        btnBuildMine.onclick = () => this.game.setBuildMode(BUILDING_TYPES.MINE)
+        btnTrainWorker.onclick = () => this.game.queueSelectedWorker()
+        btnTrainWarrior.onclick = () => this.game.queueSelectedInfantry()
+        btnTrainHeavy.onclick = () => this.game.queueSelectedHeavy()
+        btnUpgrade.onclick = () => this.game.upgradeSelectedTownHall()
+
+        for(let i = 1; i <= 4; i++){
+            document.getElementById(`gb-${i}`).onclick = () => this.game.selectControlGroup(i)
+        }
+    }
+
+    handleMinimap(e){
+        this.game.sounds.init()
+        const rect = minimapCanvas.getBoundingClientRect()
+        const mx = e.clientX - rect.left
+        const my = e.clientY - rect.top
+        const mapX = (mx / rect.width) * MAP_WIDTH * TILE_SIZE
+        const mapY = (my / rect.height) * MAP_HEIGHT * TILE_SIZE
+        this.game.camera.x = mapX - canvas.width / (2 * this.game.camera.zoom)
+        this.game.camera.y = mapY - canvas.height / (2 * this.game.camera.zoom)
+        this.game.camera.clamp()
+    }
+}
+
+// ----------------------------------------------------
+// 3-Stage Skirmish AI
+// ----------------------------------------------------
+class SkirmishAI {
+    constructor(game){
+        this.game = game
+        this.stage = 1
+        this.timer = 0
+        this.waveTimer = 0
+        this.waveInterval = 38
+        this.buildTimer = 0
+        this.stagedUnits = []
+    }
+
+    getRallyPoint(){
+        return {x: MAP_WIDTH - 22, y: MAP_HEIGHT - 20}
+    }
+
+    update(dt){
+        this.timer += dt
+        this.waveTimer += dt
+        this.buildTimer += dt
+
+        const enemy = this.game.enemy
+        const townHall = enemy.buildings.find(b => b.type === BUILDING_TYPES.TOWN_HALL)
+        if(!townHall){
+            enemy.defeated = true
+            return
+        }
+
+        if(this.timer < 90) this.stage = 1
+        else if(this.timer < 180) this.stage = 2
+        else this.stage = 3
+
+        const workers = enemy.units.filter(u => u.type === UNIT_TYPES.WORKER)
+        const warriors = enemy.units.filter(u => u.type === UNIT_TYPES.INFANTRY)
+        const heavies = enemy.units.filter(u => u.type === UNIT_TYPES.HEAVY)
+        const combatants = [...warriors, ...heavies]
+        const barracks = enemy.buildings.find(b => b.type === BUILDING_TYPES.BARRACKS && !b.underConstruction)
+
+        const intruders = [...this.game.player.units, ...this.game.player.buildings].filter(e => {
+            if(e.hp <= 0) return false
+            const ex = e instanceof Unit ? e.x : e.x + 0.5
+            const ey = e instanceof Unit ? e.y : e.y + 0.5
+            return Math.hypot(ex - (townHall.x + 0.5), ey - (townHall.y + 0.5)) <= 13
+        })
+
+        if(intruders.length > 0){
+            const primeThreat = intruders[0]
+            for(const soldier of combatants){
+                if(soldier.state !== 'attacking') soldier.commandAttack(primeThreat)
+            }
+            return
+        }
+
+        for(const worker of workers){
+            if(worker.state === 'idle'){
+                const resource = this.game.findNearestResource(worker.tileX, worker.tileY)
+                if(resource) worker.commandGather(resource)
+            }
+        }
+
+        if(this.stage >= 1){
+            if(workers.length < 4 && townHall && !townHall.underConstruction && !townHall.isUpgrading){
+                if(townHall.productionQueue.length < 1 && enemy.resources.food >= 50){
+                    this.game.productionSystem.queue(townHall, UNIT_TYPES.WORKER)
+                }
+            }
+
+            if(enemy.resources.wood >= 100 && this.buildTimer > 4){
+                const goldTile = this.game.findNearestResource(townHall.x, townHall.y, 'gold')
+                if(goldTile && this.game.buildingSystem.canPlace(BUILDING_TYPES.MINE, goldTile.x, goldTile.y, enemy, false)){
+                    const b = this.game.buildingSystem.create(BUILDING_TYPES.MINE, goldTile.x, goldTile.y, enemy, true)
+                    if(b) this.game.buildings.push(b)
+                }
+            }
+
+            if(enemy.population + enemy.queuedUnitsCount >= enemy.maxPopulation - 2 && enemy.resources.wood >= 70){
+                const spots = this.game.getBuildSpotsNear(townHall, BUILDING_TYPES.FARM, enemy)
+                if(spots.length){
+                    const b = this.game.buildingSystem.create(BUILDING_TYPES.FARM, spots[0].x, spots[0].y, enemy, true)
+                    if(b) this.game.buildings.push(b)
+                }
+            }
+        }
+
+        if(this.stage >= 2){
+            const pendingBarracks = enemy.buildings.find(b => b.type === BUILDING_TYPES.BARRACKS)
+            if(!pendingBarracks && enemy.resources.wood >= 120 && enemy.resources.gold >= 50){
+                const spots = this.game.getBuildSpotsNear(townHall, BUILDING_TYPES.BARRACKS, enemy)
+                if(spots.length){
+                    const b = this.game.buildingSystem.create(BUILDING_TYPES.BARRACKS, spots[0].x, spots[0].y, enemy, true)
+                    if(b) this.game.buildings.push(b)
+                }
+            }
+
+            if(townHall && !townHall.underConstruction && !townHall.isUpgrading && townHall.level < townHall.maxLevel){
+                const cost = townHall.upgradeCosts[townHall.level]
+                if(enemy.resources.wood >= cost.wood + 60 && enemy.resources.gold >= cost.gold + 40){
+                    townHall.startUpgrade()
+                }
+            }
+
+            if(barracks && barracks.productionQueue.length < 2){
+                if(this.stage === 3 && enemy.resources.food >= 90 && enemy.resources.gold >= 75 && enemy.resources.wood >= 50){
+                    this.game.productionSystem.queue(barracks, UNIT_TYPES.HEAVY)
+                }else if(enemy.resources.food >= 50 && enemy.resources.gold >= 25){
+                    this.game.productionSystem.queue(barracks, UNIT_TYPES.INFANTRY)
+                }
+            }
+        }
+
+        if(this.stage >= 3){
+            const rally = this.getRallyPoint()
+
+            for(const soldier of combatants){
+                if(soldier.state === 'idle'){
+                    const distToRally = Math.hypot(soldier.x - rally.x, soldier.y - rally.y)
+                    if(distToRally > 3){
+                        soldier.commandMove(rally.x, rally.y)
+                    }
+                }
+            }
+
+            if(this.waveTimer >= this.waveInterval || combatants.length >= 6){
+                this.waveTimer = 0
+                if(combatants.length >= 3){
+                    const target = this.game.choosePlayerTarget(combatants)
+                    if(target){
+                        for(const soldier of combatants){
+                            soldier.commandAttack(target)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------
+// Renderer (Crisp Retro HUD, Selection, Minimap)
+// ----------------------------------------------------
+class Renderer {
+    constructor(game){
+        this.game = game
+    }
+
+    draw(){
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        ctx.fillStyle = '#090d14'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+        ctx.save()
+        this.game.camera.apply(ctx)
+
+        this.drawMap()
+        this.drawBuildZones()
+        this.drawPaths()
+        this.drawBuildings()
+        this.drawUnits()
+        this.drawHover()
+        this.game.combat.drawProjectiles(ctx)
+        this.game.particles.draw(ctx)
+        this.drawDamageNumbers()
+
+        ctx.restore()
+
+        this.drawSelectionBox()
+        this.drawMinimap()
+        this.updateHUD()
+    }
+
+    drawMap(){
+        const map = this.game.map
+        const cam = this.game.camera
+        const startX = Math.max(0, Math.floor(cam.x / TILE_SIZE))
+        const endX = Math.min(map.width - 1, Math.ceil((cam.x + canvas.width / cam.zoom) / TILE_SIZE))
+        const startY = Math.max(0, Math.floor(cam.y / TILE_SIZE))
+        const endY = Math.min(map.height - 1, Math.ceil((cam.y + canvas.height / cam.zoom) / TILE_SIZE))
+
+        for(let y = startY; y <= endY; y++){
+            for(let x = startX; x <= endX; x++){
+                const tile = map.tiles[y][x]
+                let color = COLORS.land
+
+                if(tile.type === TILE_TYPES.WATER) color = COLORS.water
+                if(tile.type === TILE_TYPES.FOREST) color = COLORS.forest
+                if(tile.type === TILE_TYPES.GOLD) color = COLORS.gold
+
+                ctx.fillStyle = color
+                ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+
+                ctx.strokeStyle = COLORS.landGrid
+                ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+
+                if(tile.type === TILE_TYPES.FOREST){
+                    ctx.fillStyle = COLORS.forestTree
+                    ctx.beginPath()
+                    ctx.arc(x * TILE_SIZE + 10, y * TILE_SIZE + 17, 7, 0, Math.PI * 2)
+                    ctx.arc(x * TILE_SIZE + 20, y * TILE_SIZE + 13, 8, 0, Math.PI * 2)
+                    ctx.arc(x * TILE_SIZE + 25, y * TILE_SIZE + 20, 6, 0, Math.PI * 2)
+                    ctx.fill()
+                }
+
+                if(tile.type === TILE_TYPES.GOLD){
+                    ctx.fillStyle = COLORS.goldRock
+                    ctx.beginPath()
+                    ctx.arc(x * TILE_SIZE + 16, y * TILE_SIZE + 16, 6.5, 0, Math.PI * 2)
+                    ctx.fill()
+                }
+            }
+        }
+    }
+
+    drawBuildZones(){
+        if(!this.game.buildMode) return
+        ctx.fillStyle = COLORS.buildZone
+        for(const b of this.game.player.buildings){
+            ctx.beginPath()
+            ctx.arc((b.x + 0.5) * TILE_SIZE, (b.y + 0.5) * TILE_SIZE, MAX_BUILD_DISTANCE * TILE_SIZE, 0, Math.PI * 2)
+            ctx.fill()
+        }
+    }
+
+    drawBuildings(){
+        for(const building of this.game.buildings){
+            const x = building.x * TILE_SIZE
+            const y = building.y * TILE_SIZE
+            const isSelected = this.game.selected === building
+
+            if(isSelected){
+                ctx.strokeStyle = COLORS.selected
+                ctx.lineWidth = 2.5
+                ctx.strokeRect(x - 2, y - 2, TILE_SIZE + 4, TILE_SIZE + 4)
+                ctx.lineWidth = 1
+            }
+
+            ctx.fillStyle = building.owner.team === 1 ? COLORS.player : COLORS.enemy
+
+            if(building.type === BUILDING_TYPES.TOWN_HALL){
+                ctx.fillRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4)
+                ctx.fillStyle = building.level === 3 ? '#f1c40f' : (building.level === 2 ? '#ecf0f1' : '#94a3b8')
+                ctx.fillRect(x + 8, y + 8, 16, 16)
+                if(building.level >= 2){
+                    ctx.strokeStyle = '#f59e0b'
+                    ctx.strokeRect(x + 5, y + 5, TILE_SIZE - 10, TILE_SIZE - 10)
+                }
+            }
+
+            if(building.type === BUILDING_TYPES.BARRACKS){
+                ctx.fillRect(x + 4, y + 5, TILE_SIZE - 8, TILE_SIZE - 9)
+                ctx.fillStyle = '#1e293b'
+                ctx.fillRect(x + 10, y + 10, 12, 16)
+            }
+
+            if(building.type === BUILDING_TYPES.FARM){
+                ctx.fillRect(x + 3, y + 3, TILE_SIZE - 6, TILE_SIZE - 6)
+                ctx.strokeStyle = '#e5c17c'
+                for(let i = 0; i < 4; i++) ctx.strokeRect(x + 6 + i * 5, y + 6, 3, 20)
+                ctx.fillStyle = '#22c55e'
+                ctx.fillRect(x + 5, y + 6, TILE_SIZE - 10, 4)
+            }
+
+            if(building.type === BUILDING_TYPES.MINE){
+                ctx.fillRect(x + 4, y + 6, TILE_SIZE - 8, TILE_SIZE - 10)
+                ctx.fillStyle = '#0f172a'
+                ctx.beginPath()
+                ctx.arc(x + 16, y + 16, 8, 0, Math.PI * 2)
+                ctx.fill()
+                ctx.fillStyle = '#f59e0b'
+                ctx.fillRect(x + 12, y + 12, 8, 8)
+            }
+
+            if(building.underConstruction){
+                ctx.fillStyle = 'rgba(15,23,42,.75)'
+                ctx.fillRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4)
+                const p = building.constructionProgress / building.constructionTime
+                this.bar(x, y + TILE_SIZE - 6, TILE_SIZE, p, '#38bdf8')
+            }else if(building.isUpgrading){
+                const p = building.upgradeProgress / building.upgradeDuration
+                this.bar(x, y + TILE_SIZE - 6, TILE_SIZE, p, '#a855f7')
+            }
+
+            this.bar(x, y - 5, TILE_SIZE, building.hp / building.maxHp, building.owner.team === 1 ? '#22c55e' : '#f43f5e')
+        }
+    }
+
+    drawUnits(){
+        for(const unit of this.game.units){
+            const x = unit.x * TILE_SIZE
+            const y = unit.y * TILE_SIZE
+            const isSelected = this.game.selectedGroup.has(unit) || (this.game.selected === unit)
+
+            if(isSelected){
+                ctx.strokeStyle = COLORS.selected
+                ctx.lineWidth = 1.8
+                ctx.beginPath()
+                ctx.arc(x, y, 14, 0, Math.PI * 2)
+                ctx.stroke()
+                ctx.lineWidth = 1
+            }
+
+            ctx.fillStyle = unit.owner.team === 1 ? COLORS.player : COLORS.enemy
+
+            if(unit.type === UNIT_TYPES.WORKER){
+                ctx.beginPath()
+                ctx.arc(x, y, 7, 0, Math.PI * 2)
+                ctx.fill()
+            }
+
+            if(unit.type === UNIT_TYPES.INFANTRY){
+                ctx.beginPath()
+                ctx.moveTo(x, y - 10)
+                ctx.lineTo(x + 9, y + 7)
+                ctx.lineTo(x - 9, y + 7)
+                ctx.closePath()
+                ctx.fill()
+            }
+
+            if(unit.type === UNIT_TYPES.HEAVY){
+                ctx.fillRect(x - 9, y - 9, 18, 18)
+                ctx.fillStyle = '#0f172a'
+                ctx.fillRect(x - 5, y - 5, 10, 10)
+                ctx.fillStyle = unit.owner.team === 1 ? COLORS.playerLight : COLORS.enemyLight
+                ctx.fillRect(x - 2, y - 13, 4, 9)
+            }
+
+            this.bar(x - 10, y - 15, 20, unit.hp / unit.maxHp, unit.owner.team === 1 ? '#22c55e' : '#f43f5e')
+
+            if(unit.carrying && unit.carrying.amount > 0){
+                ctx.fillStyle = '#fff'
+                ctx.font = 'bold 9px sans-serif'
+                ctx.textAlign = 'center'
+                ctx.fillText(unit.carrying.amount, x, y + 19)
+            }
+        }
+    }
+
+    drawPaths(){
+        for(const unit of this.game.selectedGroup){
+            if(!unit.path || !unit.path.length) continue
+            ctx.strokeStyle = 'rgba(255,228,92,.4)'
+            ctx.lineWidth = 1.5
+            ctx.beginPath()
+            ctx.moveTo(unit.x * TILE_SIZE, unit.y * TILE_SIZE)
+            for(let i = unit.pathIndex; i < unit.path.length; i++){
+                ctx.lineTo((unit.path[i].x + 0.5) * TILE_SIZE, (unit.path[i].y + 0.5) * TILE_SIZE)
+            }
+            ctx.stroke()
+            ctx.lineWidth = 1
+        }
+    }
+
+    drawDamageNumbers(){
+        for(const hit of this.game.combat.damageLog){
+            const alpha = Math.max(0, hit.time)
+            ctx.fillStyle = `rgba(255,235,80,${alpha})`
+            ctx.font = 'bold 13px sans-serif'
+            ctx.textAlign = 'center'
+            ctx.fillText(`-${hit.amount}`, hit.x * TILE_SIZE, hit.y * TILE_SIZE - 18 - (1 - hit.time) * 16)
+        }
+    }
+
+    drawHover(){
+        const tPos = this.game.camera.screenToTile(this.game.input.mouseX, this.game.input.mouseY)
+        if(!this.game.map.inBounds(tPos.x, tPos.y)) return
+
+        if(this.game.buildMode){
+            const canAfford = this.game.player.canAfford(this.game.buildingSystem.costs[this.game.buildMode])
+            const canPlace = this.game.buildingSystem.canPlace(this.game.buildMode, tPos.x, tPos.y, this.game.player)
+            const isValid = canAfford && canPlace
+
+            ctx.fillStyle = isValid ? COLORS.validGhost : COLORS.invalidGhost
+            ctx.fillRect(tPos.x * TILE_SIZE, tPos.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+
+            ctx.strokeStyle = isValid ? '#22c55e' : '#f43f5e'
+            ctx.lineWidth = 2
+            ctx.strokeRect(tPos.x * TILE_SIZE, tPos.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+            ctx.lineWidth = 1
+        }
+    }
+
+    drawSelectionBox(){
+        if(this.game.input.isDragging && this.game.input.dragStart){
+            const start = this.game.input.dragStart
+            const cur = {x: this.game.input.mouseX, y: this.game.input.mouseY}
+            const sx = Math.min(start.x, cur.x)
+            const sy = Math.min(start.y, cur.y)
+            const sw = Math.abs(cur.x - start.x)
+            const sh = Math.abs(cur.y - start.y)
+
+            ctx.fillStyle = 'rgba(56,189,248,.16)'
+            ctx.fillRect(sx, sy, sw, sh)
+            ctx.strokeStyle = '#38bdf8'
+            ctx.lineWidth = 1.5
+            ctx.strokeRect(sx, sy, sw, sh)
+            ctx.lineWidth = 1
+        }
+    }
+
+    drawMinimap(){
+        mctx.fillStyle = '#05070a'
+        mctx.fillRect(0, 0, minimapCanvas.width, minimapCanvas.height)
+
+        const sx = minimapCanvas.width / MAP_WIDTH
+        const sy = minimapCanvas.height / MAP_HEIGHT
+
+        for(let y = 0; y < MAP_HEIGHT; y++){
+            for(let x = 0; x < MAP_WIDTH; x++){
+                const tTile = this.game.map.tiles[y][x]
+                if(tTile.type === TILE_TYPES.WATER) mctx.fillStyle = '#1d486d'
+                else if(tTile.type === TILE_TYPES.FOREST) mctx.fillStyle = '#183f20'
+                else if(tTile.type === TILE_TYPES.GOLD) mctx.fillStyle = '#c29b27'
+                else mctx.fillStyle = '#263424'
+                mctx.fillRect(x * sx, y * sy, sx, sy)
+            }
+        }
+
+        for(const b of this.game.buildings){
+            mctx.fillStyle = b.owner.team === 1 ? '#38bdf8' : '#f43f5e'
+            mctx.fillRect(b.x * sx - 1, b.y * sy - 1, sx * 2, sy * 2)
+        }
+
+        for(const u of this.game.units){
+            mctx.fillStyle = u.owner.team === 1 ? '#38bdf8' : '#f43f5e'
+            mctx.fillRect(u.x * sx - 1.5, u.y * sy - 1.5, 4, 4)
+        }
+
+        for(const ping of this.game.particles.minimapPings){
+            const alpha = Math.max(0, ping.life / ping.maxLife)
+            const r = (1 - alpha) * 12 + 2
+            mctx.strokeStyle = `rgba(244,63,94,${alpha})`
+            mctx.lineWidth = 1.5
+            mctx.beginPath()
+            mctx.arc(ping.x * sx, ping.y * sy, r, 0, Math.PI * 2)
+            mctx.stroke()
+        }
+
+        const cam = this.game.camera
+        const cx = (cam.x / TILE_SIZE) * sx
+        const cy = (cam.y / TILE_SIZE) * sy
+        const cw = (canvas.width / cam.zoom / TILE_SIZE) * sx
+        const ch = (canvas.height / cam.zoom / TILE_SIZE) * sy
+
+        mctx.strokeStyle = '#ffe45c'
+        mctx.lineWidth = 1.5
+        mctx.strokeRect(cx, cy, cw, ch)
+        mctx.lineWidth = 1
+    }
+
+    bar(x, y, w, p, color){
+        ctx.fillStyle = 'rgba(0,0,0,.6)'
+        ctx.fillRect(x, y, w, 4)
+        ctx.fillStyle = color
+        ctx.fillRect(x, y, w * Math.max(0, Math.min(1, p)), 4)
+    }
+
+    updateHUD(){
+        const p = this.game.player
+        resFoodEl.textContent = Math.floor(p.resources.food)
+        resWoodEl.textContent = Math.floor(p.resources.wood)
+        resGoldEl.textContent = Math.floor(p.resources.gold)
+        resPopEl.textContent = `${p.population}/${p.maxPopulation}`
+        hudKillsEl.textContent = `${t('kills')}: ${p.stats.enemiesKilled}`
+
+        const enemyTH = this.game.enemy.buildings.find(b => b.type === BUILDING_TYPES.TOWN_HALL)
+        if(enemyTH){
+            const hpPct = Math.ceil((enemyTH.hp / enemyTH.maxHp) * 100)
+            hudEnemyHqEl.textContent = `${t('enemyHq')}: ${hpPct}%`
+            hudEnemyHqEl.className = hpPct <= 30 ? 'badge badge-alert' : 'badge badge-gold'
+        }else{
+            hudEnemyHqEl.textContent = `${t('enemyHq')}: 0%`
+        }
+
+        for(let i = 1; i <= 4; i++){
+            const el = document.getElementById(`gb-${i}`)
+            const cntEl = document.getElementById(`gb-cnt-${i}`)
+            if(el){
+                const grp = this.game.controlGroups[i] || []
+                const count = grp.filter(u => u.hp > 0).length
+                el.classList.toggle('active', count > 0)
+                if(cntEl) cntEl.textContent = count > 0 ? count : ''
+            }
+        }
+
+        const costs = this.game.buildingSystem.costs
+        const prodCosts = this.game.productionSystem.costs
+        const popFull = p.population + p.queuedUnitsCount >= p.maxPopulation
+
+        btnBuildTh.disabled = !p.canAfford(costs[BUILDING_TYPES.TOWN_HALL])
+        btnBuildBarracks.disabled = !p.canAfford(costs[BUILDING_TYPES.BARRACKS])
+        btnBuildFarm.disabled = !p.canAfford(costs[BUILDING_TYPES.FARM])
+        btnBuildMine.disabled = !p.canAfford(costs[BUILDING_TYPES.MINE])
+
+        const friendlyTH = p.buildings.find(b => b.type === BUILDING_TYPES.TOWN_HALL && !b.underConstruction)
+        const friendlyBarracks = p.buildings.find(b => b.type === BUILDING_TYPES.BARRACKS && !b.underConstruction)
+
+        btnTrainWorker.disabled = !friendlyTH || popFull || !p.canAfford(prodCosts[UNIT_TYPES.WORKER])
+        btnTrainWarrior.disabled = !friendlyBarracks || popFull || !p.canAfford(prodCosts[UNIT_TYPES.INFANTRY])
+        btnTrainHeavy.disabled = !friendlyBarracks || popFull || !p.canAfford(prodCosts[UNIT_TYPES.HEAVY])
+
+        const bCostUpgrade = document.getElementById('btn-cost-upgrade')
+        if(friendlyTH && friendlyTH.level < friendlyTH.maxLevel){
+            btnUpgrade.disabled = !friendlyTH.canUpgrade()
+            if(bCostUpgrade) bCostUpgrade.textContent = `${t('lvl')} ${friendlyTH.level + 1}`
+        }else{
+            btnUpgrade.disabled = true
+            if(bCostUpgrade) bCostUpgrade.textContent = t('max')
+        }
+
+        const groupSize = this.game.selectedGroup.size
+        if(groupSize > 1){
+            portraitBox.textContent = '⚔'
+            portraitBox.className = ''
+            entityTag.style.display = 'inline-block'
+            entityTag.className = 'tag-player'
+            entityTag.textContent = t('tagSquad')
+            entityTitle.textContent = `${t('squadTitle')} (${groupSize})`
+            if(entityHpWrap) entityHpWrap.style.display = 'none'
+
+            let warriors = 0, workers = 0, heavies = 0
+            for(const u of this.game.selectedGroup){
+                if(u.type === UNIT_TYPES.INFANTRY) warriors++
+                if(u.type === UNIT_TYPES.WORKER) workers++
+                if(u.type === UNIT_TYPES.HEAVY) heavies++
+            }
+            entityDesc.textContent = `${t('squadInfantry')}: ${warriors} | ${t('squadHeavy')}: ${heavies} | ${t('squadWorkers')}: ${workers}`
+            return
+        }
+
+        const selected = this.game.selected
+        if(selected){
+            const isFriendly = selected.owner === this.game.player
+            portraitBox.className = isFriendly ? '' : 'enemy'
+            entityTag.style.display = 'inline-block'
+            entityTag.className = isFriendly ? 'tag-player' : 'tag-enemy'
+            entityTag.textContent = isFriendly ? t('tagAlly') : t('tagEnemy')
+
+            if(entityHpWrap){
+                entityHpWrap.style.display = 'block'
+                entityHpFill.className = isFriendly ? '' : 'enemy'
+                entityHpFill.style.width = `${Math.max(0, (selected.hp / selected.maxHp) * 100)}%`
+            }
+
+            if(selected instanceof Building){
+                portraitBox.textContent = '🏛'
+                let title = ''
+                if(selected.type === BUILDING_TYPES.TOWN_HALL) title = `${t('bldTownHall')} (${t('lvl')} ${selected.level})`
+                else if(selected.type === BUILDING_TYPES.BARRACKS) title = t('bldBarracks')
+                else if(selected.type === BUILDING_TYPES.FARM) title = t('bldFarm')
+                else if(selected.type === BUILDING_TYPES.MINE) title = t('bldMine')
+                else title = selected.type.toUpperCase()
+                entityTitle.textContent = title
+
+                if(selected.underConstruction){
+                    const rem = (selected.constructionTime - selected.constructionProgress).toFixed(1)
+                    entityDesc.textContent = `${t('constructing')}: ${rem}s | ${t('statHp')}: ${Math.ceil(selected.hp)}/${selected.maxHp}`
+                }else if(selected.isUpgrading){
+                    const rem = (selected.upgradeDuration - selected.upgradeProgress).toFixed(1)
+                    entityDesc.textContent = `${t('upgrading')}: ${rem}s | ${t('statHp')}: ${Math.ceil(selected.hp)}/${selected.maxHp}`
+                }else{
+                    let desc = `${t('statHp')}: ${Math.ceil(selected.hp)}/${selected.maxHp}`
+                    if(selected.productionQueue.length) desc += ` | ${t('queue')}: ${selected.productionQueue.length}`
+                    if(selected.type === BUILDING_TYPES.MINE) desc += ` | ${t('autoMineYield')}`
+                    if(selected.type === BUILDING_TYPES.FARM) desc += ` | ${t('farmYield')}`
+                    entityDesc.textContent = desc
+                }
+            }else if(selected instanceof Unit){
+                portraitBox.textContent = selected.type === UNIT_TYPES.WORKER ? '⛏' : (selected.type === UNIT_TYPES.INFANTRY ? '⚔' : '🛡')
+                let title = ''
+                if(selected.type === UNIT_TYPES.WORKER) title = t('unitWorker')
+                else if(selected.type === UNIT_TYPES.INFANTRY) title = t('unitInfantry')
+                else if(selected.type === UNIT_TYPES.HEAVY) title = t('unitHeavy')
+                else title = selected.type.toUpperCase()
+                entityTitle.textContent = title
+
+                let st = t('stateIdle')
+                if(selected.state === 'moving') st = t('stateMoving')
+                else if(selected.state === 'gathering') st = t('stateGathering')
+                else if(selected.state === 'returning') st = t('stateReturning')
+                else if(selected.state === 'attacking') st = t('stateAttacking')
+                else if(selected.state === 'chasing') st = t('stateChasing')
+                else if(selected.state === 'dead') st = t('stateDead')
+
+                let desc = `${t('statHp')}: ${Math.ceil(selected.hp)}/${selected.maxHp} | ${t('statDmg')}: ${selected.damage || 0} | ${st}`
+                if(selected.carrying && selected.carrying.amount){
+                    desc += ` | ${t('statCarrying')}: ${selected.carrying.amount}`
+                }
+                entityDesc.textContent = desc
+            }
+        }else{
+            portraitBox.textContent = '-'
+            portraitBox.className = ''
+            entityTag.style.display = 'none'
+            entityTitle.textContent = t('nothingSelected')
+            if(entityHpWrap) entityHpWrap.style.display = 'none'
+            entityDesc.textContent = t('selectionHelp')
+        }
+    }
+}
+
+// ----------------------------------------------------
+// Main Game Controller
+// ----------------------------------------------------
+class Game {
+    constructor(){
+        window.game = this
+        this.sounds = new SoundSystem()
+        this.particles = new ParticleSystem()
+        this.camera = new Camera()
+        this.controlGroups = {}
+        this.selectedGroup = new Set()
+
+        this.restart()
+        this.renderer = new Renderer(this)
+        this.input = new Input(this)
+
+        restartBtn.onclick = () => this.restart()
+
+        this.lastTime = performance.now()
+        applyLanguageDOM()
+        requestAnimationFrame(t => this.loop(t))
+    }
+
+    restart(){
+        this.gameTime = 0
+        this.gameOver = null
+        endScreen.style.display = 'none'
+
+        this.map = new GameMap(MAP_WIDTH, MAP_HEIGHT)
+        this.player = new Player('Player', 1)
+        this.enemy = new Player('Enemy', 2)
+
+        this.units = []
+        this.buildings = []
+        this.selected = null
+        this.selectedGroup.clear()
+        this.buildMode = null
+        this.controlGroups = {1: [], 2: [], 3: [], 4: []}
+
+        this.buildingSystem = new BuildingSystem(this)
+        this.productionSystem = new ProductionSystem(this)
+        this.combat = new CombatSystem(this)
+        this.ai = new SkirmishAI(this)
+
+        this.setupBases()
+        this.camera.centerOn(6, 6)
+    }
+
+    setupBases(){
+        const pTH = new TownHall(this, 6, 6, this.player, true)
+        const eTH = new TownHall(this, MAP_WIDTH - 7, MAP_HEIGHT - 7, this.enemy, true)
+
+        this.player.buildings.push(pTH)
+        this.enemy.buildings.push(eTH)
+        this.buildings.push(pTH, eTH)
+
+        this.map.getTile(6, 6).building = pTH
+        this.map.getTile(MAP_WIDTH - 7, MAP_HEIGHT - 7).building = eTH
+
+        const worker = new Worker(this, 7.5, 6.5, this.player)
+        this.player.units.push(worker)
+        this.units.push(worker)
+
+        const enemyWorker = new Worker(this, MAP_WIDTH - 8.5, MAP_HEIGHT - 7.5, this.enemy)
+        this.enemy.units.push(enemyWorker)
+        this.units.push(enemyWorker)
+    }
+
+    formatTime(sec){
+        const m = Math.floor(sec / 60)
+        const s = Math.floor(sec % 60)
+        return `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`
+    }
+
+    showGameOverScreen(type){
+        endScreen.style.display = 'flex'
+        const isVictory = type === 'victory'
+        endTitle.textContent = isVictory ? t('victory') : t('defeat')
+        endTitle.style.color = isVictory ? '#22c55e' : '#f43f5e'
+
+        if(isVictory) this.sounds.playVictory()
+        else this.sounds.playDefeat()
+
+        const pStats = this.player.stats
+        endStats.innerHTML = `
+            <b>${t('statTime')}</b> ${this.formatTime(this.gameTime)}<br>
+            <b>${t('statEnemiesKilled')}</b> ${pStats.enemiesKilled}<br>
+            <b>${t('statWorkersCreated')}</b> ${pStats.workersCreated}<br>
+            <b>${t('statInfantryCreated')}</b> ${pStats.infantryCreated}<br>
+            <b>${t('statHeavyCreated')}</b> ${pStats.heavyCreated}<br>
+            <b>${t('statBuildingsBuilt')}</b> ${pStats.buildingsBuilt}<br>
+            <b>${t('statWoodGathered')}</b> ${Math.floor(pStats.gathered.wood)}<br>
+            <b>${t('statGoldGathered')}</b> ${Math.floor(pStats.gathered.gold)}<br>
+            <b>${t('statFoodGathered')}</b> ${Math.floor(pStats.gathered.food)}
+        `
+        restartBtn.textContent = t('playAgain')
+    }
+
+    setBuildMode(type){
+        if(!type){
+            this.buildMode = null
+            return
+        }
+        if(!this.player.canAfford(this.buildingSystem.costs[type])){
+            this.sounds.playErrorBuzz()
+            return
+        }
+        this.buildMode = type
+        this.sounds.playOrderConfirmation()
+    }
+
+    assignControlGroup(num){
+        const units = [...this.selectedGroup].filter(u => u.hp > 0 && u.owner === this.player)
+        if(units.length){
+            this.controlGroups[num] = units
+            this.sounds.playOrderConfirmation()
+        }
+    }
+
+    selectControlGroup(num){
+        const valid = (this.controlGroups[num] || []).filter(u => u.hp > 0)
+        this.controlGroups[num] = valid
+        if(valid.length){
+            this.clearSelection()
+            for(const u of valid){
+                this.selectedGroup.add(u)
+                u.selected = true
+            }
+            this.selected = valid[0]
+            this.playSelectionSound(this.selected)
+        }
+    }
+
+    clearSelection(){
+        for(const u of this.units) u.selected = false
+        this.selectedGroup.clear()
+        this.selected = null
+    }
+
+    playSelectionSound(entity){
+        if(!entity) return
+        if(entity instanceof Worker) this.sounds.playWorkerSelect()
+        else if(entity instanceof Infantry) this.sounds.playInfantrySelect()
+        else if(entity instanceof Heavy) this.sounds.playHeavySelect()
+        else if(entity instanceof Building) this.sounds.playBuildingSelect()
+    }
+
+    handleBoxSelection(x1, y1, x2, y2){
+        this.clearSelection()
+        const minX = Math.min(x1, x2)
+        const maxX = Math.max(x1, x2)
+        const minY = Math.min(y1, y2)
+        const maxY = Math.max(y1, y2)
+
+        for(const u of this.units){
+            if(u.owner !== this.player || u.hp <= 0) continue
+            const sx = (u.x * TILE_SIZE - this.camera.x) * this.camera.zoom
+            const sy = (u.y * TILE_SIZE - this.camera.y) * this.camera.zoom
+
+            if(sx >= minX && sx <= maxX && sy >= minY && sy <= maxY){
+                this.selectedGroup.add(u)
+                u.selected = true
+            }
+        }
+
+        if(this.selectedGroup.size > 0){
+            this.selected = [...this.selectedGroup][0]
+            this.playSelectionSound(this.selected)
+        }
+    }
+
+    handleLeftClick(sx, sy){
+        if(this.gameOver) return
+
+        const tilePos = this.camera.screenToTile(sx, sy)
+        if(!this.map.inBounds(tilePos.x, tilePos.y)) return
+
+        if(this.buildMode){
+            const b = this.buildingSystem.create(this.buildMode, tilePos.x, tilePos.y, this.player)
+            if(b){
+                this.buildings.push(b)
+                this.buildMode = null
+            }else{
+                this.sounds.playErrorBuzz()
+            }
+            return
+        }
+
+        const world = this.camera.screenToWorld(sx, sy)
+        const wx = world.x / TILE_SIZE
+        const wy = world.y / TILE_SIZE
+
+        const clickedUnit = this.units.find(u => u.hp > 0 && Math.hypot(u.x - wx, u.y - wy) <= 0.8)
+        if(clickedUnit){
+            this.clearSelection()
+            this.selected = clickedUnit
+            if(clickedUnit.owner === this.player){
+                this.selectedGroup.add(clickedUnit)
+                clickedUnit.selected = true
+            }
+            this.playSelectionSound(clickedUnit)
+            return
+        }
+
+        const building = this.getBuildingAtTile(tilePos.x, tilePos.y)
+        if(building){
+            this.clearSelection()
+            this.selected = building
+            this.playSelectionSound(building)
+            return
+        }
+
+        this.clearSelection()
+    }
+
+    handleRightClick(sx, sy){
+        if(this.gameOver) return
+        if(!this.selectedGroup.size && (!this.selected || this.selected.owner !== this.player)) return
+
+        const pos = this.camera.screenToTile(sx, sy)
+        if(!this.map.inBounds(pos.x, pos.y)) return
+
+        const world = this.camera.screenToWorld(sx, sy)
+        const wx = world.x / TILE_SIZE
+        const wy = world.y / TILE_SIZE
+
+        const enemyUnit = this.units.find(u => u.owner !== this.player && u.hp > 0 && Math.hypot(u.x - wx, u.y - wy) <= 0.85)
+        const enemyBuilding = this.getBuildingAtTile(pos.x, pos.y)
+        const target = enemyUnit || (enemyBuilding && enemyBuilding.owner !== this.player ? enemyBuilding : null)
+
+        const tile = this.map.getTile(pos.x, pos.y)
+        const units = [...this.selectedGroup]
+        if(!units.length && this.selected instanceof Unit && this.selected.owner === this.player){
+            units.push(this.selected)
+        }
+
+        if(target){
+            for(const u of units){
+                if(u instanceof CombatUnit){
+                    u.commandAttack(target)
+                }else if(u instanceof Worker){
+                    u.workTarget = null
+                    u.returnTarget = null
+                    u.setPath(this.findPath(u.tileX, u.tileY, pos.x, pos.y, false))
+                }
+            }
+            this.particles.addOrderRing(wx, wy, '#ef4444')
+            this.sounds.playAttackOrder()
+        }else if(tile && tile.resourceType && tile.resourceAmount > 0){
+            for(const u of units){
+                if(u instanceof Worker){
+                    u.commandGather(tile)
+                }else if(u instanceof CombatUnit){
+                    u.commandMove(pos.x, pos.y)
+                }
+            }
+            this.particles.addOrderRing(pos.x + 0.5, pos.y + 0.5, '#f59e0b')
+            this.sounds.playOrderConfirmation()
+        }else{
+            let idx = 0
+            for(const u of units){
+                const offsetX = (idx % 3) - 1
+                const offsetY = Math.floor(idx / 3)
+                const targetX = Math.max(0, Math.min(MAP_WIDTH - 1, pos.x + offsetX))
+                const targetY = Math.max(0, Math.min(MAP_HEIGHT - 1, pos.y + offsetY))
+
+                const targetTile = this.map.getTile(targetX, targetY)
+                const finalX = (targetTile && targetTile.isWalkable()) ? targetX : pos.x
+                const finalY = (targetTile && targetTile.isWalkable()) ? targetY : pos.y
+
+                if(u instanceof CombatUnit){
+                    u.commandMove(finalX, finalY)
+                }else if(u instanceof Worker){
+                    u.workTarget = null
+                    u.returnTarget = null
+                    u.setPath(this.findPath(u.tileX, u.tileY, finalX, finalY, false))
+                }
+                idx++
+            }
+            this.particles.addOrderRing(wx, wy, '#38bdf8')
+            this.sounds.playOrderConfirmation()
+        }
+    }
+
+    queueSelectedWorker(){
+        const th = this.player.buildings.find(b => b.type === BUILDING_TYPES.TOWN_HALL && !b.underConstruction)
+        if(th){
+            if(!this.productionSystem.queue(th, UNIT_TYPES.WORKER)){
+                this.sounds.playErrorBuzz()
+            }
+        }
+    }
+
+    queueSelectedInfantry(){
+        const barracks = this.player.buildings.find(b => b.type === BUILDING_TYPES.BARRACKS && !b.underConstruction)
+        if(barracks){
+            if(!this.productionSystem.queue(barracks, UNIT_TYPES.INFANTRY)){
+                this.sounds.playErrorBuzz()
+            }
+        }
+    }
+
+    queueSelectedHeavy(){
+        const barracks = this.player.buildings.find(b => b.type === BUILDING_TYPES.BARRACKS && !b.underConstruction)
+        if(barracks){
+            if(!this.productionSystem.queue(barracks, UNIT_TYPES.HEAVY)){
+                this.sounds.playErrorBuzz()
+            }
+        }
+    }
+
+    upgradeSelectedTownHall(){
+        const th = this.player.buildings.find(b => b.type === BUILDING_TYPES.TOWN_HALL && !b.underConstruction)
+        if(th){
+            if(!th.startUpgrade()){
+                this.sounds.playErrorBuzz()
+            }
+        }
+    }
+
+    findPath(startX, startY, endX, endY, allowResourceTarget = false){
+        if(!this.map.inBounds(startX, startY) || !this.map.inBounds(endX, endY)) return []
+        const start = {x: startX, y: startY}
+        const goal = {x: endX, y: endY}
+        if(start.x === goal.x && start.y === goal.y) return []
+
+        const goalTile = this.map.getTile(goal.x, goal.y)
+        if(!goalTile) return []
+
+        const passable = (x, y) => {
+            const tile = this.map.getTile(x, y)
+            if(!tile || tile.type === TILE_TYPES.WATER) return false
+            if(tile.building && !(x === start.x && y === start.y)){
+                if(allowResourceTarget && tile.building.type === BUILDING_TYPES.MINE) return true
+                return false
+            }
+            return true
+        }
+
+        if(!passable(goal.x, goal.y) && !(goalTile.building === this.selected)){
+            const alternatives = [
+                [goal.x + 1, goal.y], [goal.x - 1, goal.y], [goal.x, goal.y + 1], [goal.x, goal.y - 1],
+                [goal.x + 1, goal.y + 1], [goal.x - 1, goal.y - 1], [goal.x + 1, goal.y - 1], [goal.x - 1, goal.y + 1]
+            ].filter(([x, y]) => this.map.inBounds(x, y) && passable(x, y))
+
+            if(alternatives.length){
+                goal.x = alternatives[0][0]
+                goal.y = alternatives[0][1]
+            }else return []
+        }
+
+        const open = []
+        const closed = new Set()
+        const nodes = new Map()
+        const key = (x, y) => `${x},${y}`
+        const heuristic = (x, y) => Math.abs(x - goal.x) + Math.abs(y - goal.y)
+
+        const first = {x: start.x, y: start.y, g: 0, h: heuristic(start.x, start.y), parent: null}
+        first.f = first.g + first.h
+        open.push(first)
+        nodes.set(key(first.x, first.y), first)
+
+        const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+
+        while(open.length){
+            let best = 0
+            for(let i = 1; i < open.length; i++){
+                if(open[i].f < open[best].f) best = i
+            }
+
+            const current = open.splice(best, 1)[0]
+            const currentKey = key(current.x, current.y)
+
+            if(current.x === goal.x && current.y === goal.y){
+                const path = []
+                let n = current
+                while(n){
+                    if(!(n.x === start.x && n.y === start.y)) path.unshift({x: n.x, y: n.y})
+                    n = n.parent
+                }
+                return path
+            }
+
+            closed.add(currentKey)
+
+            for(const [dx, dy] of dirs){
+                const nx = current.x + dx
+                const ny = current.y + dy
+                if(!this.map.inBounds(nx, ny) || !passable(nx, ny)) continue
+
+                const nk = key(nx, ny)
+                if(closed.has(nk)) continue
+
+                const g = current.g + 1
+                const existing = nodes.get(nk)
+
+                if(!existing || g < existing.g){
+                    const node = {x: nx, y: ny, g, h: heuristic(nx, ny), parent: current}
+                    node.f = node.g + node.h
+                    nodes.set(nk, node)
+                    const index = open.indexOf(existing)
+                    if(index >= 0) open.splice(index, 1)
+                    open.push(node)
+                }
+            }
+        }
+        return []
+    }
+
+    getUnitAtTile(x, y, ignore = null){
+        return this.units.find(u => {
+            if(u === ignore || u.hp <= 0) return false
+            return Math.floor(u.x) === x && Math.floor(u.y) === y
+        })
+    }
+
+    getBuildingAtTile(x, y){
+        return this.buildings.find(b => b.x === x && b.y === y && b.hp > 0)
+    }
+
+    findNearestResource(x, y, type = null){
+        let nearest = null
+        let best = Infinity
+        for(let yy = 0; yy < this.map.height; yy++){
+            for(let xx = 0; xx < this.map.width; xx++){
+                const tile = this.map.getTile(xx, yy)
+                if(!tile.resourceType || tile.resourceAmount <= 0) continue
+                if(type && tile.resourceType !== type) continue
+                const d = Math.abs(xx - x) + Math.abs(yy - y)
+                if(d < best){best = d; nearest = tile}
+            }
+        }
+        return nearest
+    }
+
+    getBuildSpotsNear(building, type, player){
+        const result = []
+        for(let radius = 1; radius <= 8; radius++){
+            for(let y = building.y - radius; y <= building.y + radius; y++){
+                for(let x = building.x - radius; x <= building.x + radius; x++){
+                    if(this.map.inBounds(x, y) && this.buildingSystem.canPlace(type, x, y, player, false)){
+                        result.push({x, y})
+                    }
+                }
+            }
+            if(result.length) return result
+        }
+        return result
+    }
+
+    choosePlayerTarget(units){
+        const targets = [...this.player.units, ...this.player.buildings].filter(t => t.hp > 0)
+        if(!targets.length) return null
+
+        let bestTarget = null
+        let bestScore = Infinity
+
+        for(const target of targets){
+            let score = 0
+            for(const unit of units){
+                const tx = target instanceof Unit ? target.x : target.x + 0.5
+                const ty = target instanceof Unit ? target.y : target.y + 0.5
+                score += Math.hypot(unit.x - tx, unit.y - ty)
+            }
+            if(target instanceof TownHall) score -= 30
+            if(target instanceof Barracks) score -= 15
+            if(target instanceof Worker) score -= 8
+
+            if(score < bestScore){
+                bestScore = score
+                bestTarget = target
+            }
+        }
+        return bestTarget
+    }
+
+    cleanup(){
+        const dead = this.units.filter(u => u.hp <= 0)
+        for(const unit of dead){
+            const index = unit.owner.units.indexOf(unit)
+            if(index >= 0) unit.owner.units.splice(index, 1)
+            this.selectedGroup.delete(unit)
+            if(this.selected === unit) this.selected = null
+        }
+
+        this.units = this.units.filter(u => u.hp > 0)
+
+        if(!this.gameOver){
+            if(this.player.defeated){
+                this.gameOver = 'defeat'
+                this.showGameOverScreen('defeat')
+            }else if(this.enemy.defeated){
+                this.gameOver = 'victory'
+                this.showGameOverScreen('victory')
+            }
+        }
+    }
+
+    update(dt){
+        if(!this.gameOver){
+            this.gameTime += dt
+            hudTimerEl.textContent = this.formatTime(this.gameTime)
+        }
+
+        this.camera.update(dt, this.input)
+        this.particles.update(dt)
+
+        if(this.gameOver) return
+
+        for(const b of this.buildings) b.update(dt)
+        for(const unit of this.units) unit.update(dt)
+
+        this.productionSystem.update(dt)
+        this.combat.update(dt)
+        if(this.ai) this.ai.update(dt)
+        this.cleanup()
+    }
+
+    loop(time){
+        const dt = Math.min((time - this.lastTime) / 1000, 0.1)
+        this.lastTime = time
+
+        this.update(dt)
+        this.renderer.draw()
+
+        requestAnimationFrame(t => this.loop(t))
+    }
+}
+
+const game = new Game()
+</script>
+</body>
+</html>

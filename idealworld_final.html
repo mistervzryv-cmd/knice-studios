@@ -1,0 +1,2026 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Идеальный Мир 2026: The Great Finish</title>
+    
+    <!-- Leaflet Engine -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #020617;
+            --panel-bg: rgba(15, 23, 42, 0.95);
+            --border-color: #334155;
+            --accent: #38bdf8;
+            --accent-hover: #0284c7;
+            --gold: #fbbf24;
+            --red: #ef4444;
+            --red-hover: #dc2626;
+            --green: #10b981;
+            --green-hover: #059669;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        * { box-sizing: border-box; }
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            background-color: var(--bg-dark);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            overflow: hidden; user-select: none; color: var(--text-main);
+        }
+
+        #map { height: 100vh; width: 100vw; background-color: var(--bg-dark); z-index: 1; }
+
+        .aoh-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* Start Screen */
+        #start-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            z-index: 3000; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .menu-container {
+            width: 640px; max-width: 92%; padding: 36px; border-radius: 16px;
+            text-align: center; border: 1px solid #475569;
+        }
+        .menu-container h1 {
+            color: var(--accent); font-size: 32px; margin: 0 0 10px 0; letter-spacing: -0.5px;
+            text-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        }
+        .menu-container p { color: var(--text-dim); font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+
+        .lang-switch { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .lang-btn {
+            padding: 8px 18px; border-radius: 6px; background: #1e293b; border: 1px solid #475569;
+            color: var(--text-dim); font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .lang-btn.active {
+            background: var(--accent-hover); border-color: var(--accent); color: #fff;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+        }
+
+        select, .btn {
+            width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px;
+            background: #1e293b; border: 1px solid #475569; color: var(--text-main);
+            font-size: 14px; cursor: pointer; transition: 0.2s; font-weight: 600; min-height: 44px;
+        }
+        select:focus, .btn:focus { outline: none; border-color: var(--accent); }
+        .btn { background: var(--green-hover); border-color: var(--green); }
+        .btn:hover:not(:disabled) { background: var(--green); box-shadow: 0 0 12px rgba(16, 185, 129, 0.4); }
+        .btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; border-color: #475569; }
+
+        .btn-load { background: #0284c7; border-color: var(--accent); margin-top: 6px; }
+        .btn-load:hover:not(:disabled) { background: var(--accent); }
+
+        /* Top Bar */
+        #top-bar {
+            position: absolute; top: 0; left: 0; right: 0; min-height: 60px; z-index: 1000;
+            display: none; align-items: center; justify-content: space-between;
+            padding: 8px 16px; border-bottom: 2px solid var(--border-color); flex-wrap: wrap; gap: 8px;
+        }
+        .stats { display: flex; gap: 10px; font-size: 13px; font-weight: 600; flex-wrap: wrap; align-items: center; }
+        .stat-box {
+            background: #1e293b; padding: 6px 12px; border-radius: 6px; border: 1px solid #475569;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .stat-box b { color: var(--gold); }
+        .stat-pill { background: rgba(56, 189, 248, 0.15); border-color: var(--accent); color: var(--accent); }
+
+        .top-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .top-btn {
+            width: auto; margin: 0; padding: 7px 12px; font-size: 12px; min-height: 36px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+        }
+        #btn-sandbox-toggle.active { background: #d97706; border-color: var(--gold); color: #fff; box-shadow: 0 0 12px rgba(251, 191, 36, 0.5); }
+        #btn-next-turn { background: #2563eb; border-color: #3b82f6; font-weight: bold; }
+        #btn-next-turn:hover { background: #3b82f6; }
+
+        /* Fast Travel Bar */
+        #fast-travel-bar {
+            position: absolute; top: 68px; left: 50%; transform: translateX(-50%);
+            z-index: 999; display: none; gap: 6px; padding: 4px 8px; border-radius: 20px;
+            overflow-x: auto; max-width: 95vw; white-space: nowrap;
+        }
+        .fast-travel-pill {
+            padding: 5px 12px; border-radius: 14px; background: #1e293b; border: 1px solid #475569;
+            color: var(--text-dim); font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .fast-travel-pill:hover { background: #334155; color: #fff; border-color: var(--accent); }
+
+        /* God-Tools Floating Dock */
+        #god-tools-panel {
+            position: absolute; top: 110px; left: 14px; z-index: 1000;
+            display: none; flex-direction: column; gap: 6px; width: 170px;
+            padding: 10px; border-radius: 12px; border: 1px solid #475569;
+        }
+        .god-header {
+            font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--gold); text-align: center; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .god-btn {
+            padding: 8px 10px; font-size: 12px; text-align: left; background: #1e293b;
+            border: 1px solid #475569; border-radius: 6px; color: #cbd5e1; cursor: pointer;
+            transition: 0.2s; font-weight: 600; display: flex; align-items: center; gap: 6px;
+        }
+        .god-btn:hover { background: #334155; color: #fff; border-color: var(--accent); }
+        .god-btn.active { background: #d97706; border-color: var(--gold); color: #fff; box-shadow: 0 0 10px rgba(251, 191, 36, 0.4); }
+
+        #god-brush-indicator {
+            position: absolute; top: 110px; left: 195px; z-index: 1000;
+            padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold;
+            display: none; align-items: center; gap: 8px; background: rgba(180, 83, 9, 0.95);
+            border: 1px solid var(--gold); color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+        }
+
+        /* Side Panels */
+        .side-panel {
+            position: absolute; top: 70px; width: 340px; max-height: calc(100vh - 90px);
+            z-index: 1000; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s;
+            padding: 18px; display: flex; flex-direction: column;
+            border: 1px solid var(--border-color); border-radius: 12px; overflow-y: auto;
+            opacity: 0; pointer-events: none;
+        }
+        #diplomacy-panel { right: 14px; transform: translateX(380px); }
+        #diplomacy-panel.active { transform: translateX(0); opacity: 1; pointer-events: auto; }
+        
+        #division-panel { left: 14px; transform: translateX(-380px); }
+        #division-panel.active { transform: translateX(0); opacity: 1; pointer-events: auto; }
+
+        .panel-close {
+            position: absolute; top: 12px; right: 12px; background: transparent;
+            border: none; color: var(--text-dim); font-size: 18px; cursor: pointer;
+        }
+        .panel-close:hover { color: #fff; }
+
+        .panel-title { font-size: 20px; font-weight: bold; text-align: center; color: #fff; margin-bottom: 2px; }
+        .panel-subtitle { font-size: 13px; text-align: center; color: var(--accent); margin-bottom: 14px; }
+        
+        .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+        .stat-card {
+            background: #1e293b; padding: 8px; border-radius: 6px; text-align: center;
+            border: 1px solid var(--border-color); font-size: 12px; color: var(--text-dim);
+        }
+        .stat-card b { font-size: 14px; display: block; color: var(--gold); margin-top: 2px; }
+        
+        .btn-war { background: var(--red-hover); border-color: var(--red); }
+        .btn-war:hover { background: var(--red); }
+        .btn-action { background: #8b5cf6; border-color: #7c3aed; }
+        .btn-action:hover { background: #7c3aed; }
+        .btn-target { background: #d97706; border-color: #f59e0b; animation: pulse 1.5s infinite; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        /* Army Icons and Markers */
+        .army-icon {
+            background-color: #2563eb; color: white; border: 2px solid #fff;
+            border-radius: 6px; text-align: center; font-weight: bold; font-size: 11px;
+            line-height: 22px; box-shadow: 0 4px 10px rgba(0,0,0,0.85); cursor: pointer;
+            position: relative; transition: transform 0.15s;
+        }
+        .army-icon:hover { transform: scale(1.15); }
+        .army-enemy { background-color: var(--red-hover); border-color: #fca5a5; }
+        .army-neutral { background-color: #475569; border-color: #94a3b8; }
+        .army-selected { border: 2px solid var(--gold); box-shadow: 0 0 16px var(--gold); transform: scale(1.2); }
+        .stack-badge {
+            position: absolute; top: -6px; right: -6px; background: var(--gold); color: #020617;
+            font-size: 9px; font-weight: 900; line-height: 12px; padding: 1px 4px; border-radius: 8px;
+            border: 1px solid #000; box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+        }
+
+        /* Log Panel */
+        #log-panel {
+            position: absolute; bottom: 16px; right: 16px; width: 380px; max-width: 90vw; max-height: 180px;
+            overflow-y: auto; z-index: 1000; padding: 12px 14px; font-size: 12px; border-radius: 8px;
+            display: none; border: 1px solid var(--border-color);
+        }
+        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #334155; padding-bottom: 4px; line-height: 1.4; }
+        
+        .order-line { stroke-dasharray: 6, 6; animation: dash 20s linear infinite; }
+        @keyframes dash { to { stroke-dashoffset: 1000; } }
+
+        /* Leaflet Custom Tooltip */
+        .leaflet-tooltip.region-tooltip {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--accent);
+            color: #f8fafc; font-family: inherit; font-size: 12px; border-radius: 6px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.85); padding: 8px 12px; line-height: 1.4;
+        }
+        .leaflet-tooltip-left:before, .leaflet-tooltip-right:before { display: none; }
+
+        /* Modals: Game Over & Crisis */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(10px);
+            z-index: 4000; display: none; justify-content: center; align-items: center;
+        }
+        .modal-card {
+            width: 520px; max-width: 92%; padding: 32px; border-radius: 16px;
+            text-align: center; border: 2px solid var(--border-color);
+            background: var(--panel-bg); box-shadow: 0 20px 40px rgba(0,0,0,0.9);
+        }
+        .modal-card h2 { font-size: 28px; margin: 0 0 10px 0; }
+        .modal-card p { font-size: 14px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.5; }
+        .modal-stats {
+            background: #1e293b; border-radius: 8px; border: 1px solid #334155;
+            padding: 14px; margin-bottom: 20px; text-align: left; font-size: 13px;
+        }
+        .modal-stat-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #334155; }
+        .modal-stat-row:last-child { border-bottom: none; }
+        .modal-stat-row b { color: var(--gold); }
+
+        /* Responsive Mobile Drawer Behavior */
+        @media (max-width: 768px) {
+            #top-bar { padding: 6px 10px; }
+            .stats { font-size: 11px; gap: 6px; }
+            .stat-box { padding: 4px 8px; }
+            .side-panel {
+                width: 100vw !important; height: 50vh !important; max-height: 50vh !important;
+                top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important;
+                border-radius: 16px 16px 0 0 !important; border-bottom: none !important;
+                transform: translateY(100%) !important; opacity: 1;
+            }
+            #diplomacy-panel.active, #division-panel.active { transform: translateY(0) !important; }
+            #god-tools-panel { top: auto; bottom: 70px; left: 10px; width: 150px; }
+            #fast-travel-bar { top: 95px; }
+            #log-panel { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Start / Setup Screen -->
+    <div id="start-screen">
+        <div class="menu-container aoh-panel">
+            <div class="lang-switch">
+                <button class="lang-btn active" id="btn-lang-ru" onclick="setLanguage('ru')">РУССКИЙ</button>
+                <button class="lang-btn" id="btn-lang-en" onclick="setLanguage('en')">ENGLISH</button>
+            </div>
+            <h1 id="txt-menu-title">Идеальный Мир 2026</h1>
+            <p id="txt-menu-desc">Глобальная песочница и геостратегический симулятор. Командуйте державой, влияйте на экосистемы или наблюдайте за миром в режиме Творца.</p>
+            
+            <label for="country-select" style="display:block; text-align:left; font-size:12px; color:var(--text-dim); margin-bottom:4px;" id="lbl-select-country">Выберите государство:</label>
+            <select id="country-select"></select>
+            
+            <button class="btn" id="btn-start-game" onclick="startGame()">Начать кампанию</button>
+            <button class="btn btn-load" id="btn-continue-game" onclick="loadGame()" style="display:none;">💾 Продолжить сохранение</button>
+        </div>
+    </div>
+
+    <!-- Top HUD Navigation & Status Bar -->
+    <div id="top-bar" class="aoh-panel">
+        <div class="stats">
+            <div class="stat-box stat-pill" id="player-faction">Фракция: -</div>
+            <div class="stat-box">💰 <span id="player-money">0</span></div>
+            <div class="stat-box">👥 <span id="player-pop">0</span>M</div>
+            <div class="stat-box">⚡ <span id="lbl-ap">ОД</span>: <span id="player-ap">10</span>/10</div>
+            <div class="stat-box">📅 <span id="lbl-turn">Ход</span>: <span id="turn-counter">1</span></div>
+            <div class="stat-box" title="Доля мирового ВВП">👑 <span id="world-hegemony">0%</span></div>
+        </div>
+        <div class="top-right">
+            <button id="btn-sandbox-toggle" class="btn top-btn" onclick="toggleSandboxMode()">🛠️ Песочница</button>
+            <button id="btn-save-game" class="btn top-btn" onclick="saveGame()" style="background:#0369a1; border-color:#38bdf8;">💾</button>
+            <button id="btn-load-game" class="btn top-btn" onclick="loadGame()" style="background:#475569; border-color:#64748b;">📂</button>
+            <button id="btn-audio-toggle" class="btn top-btn" onclick="toggleAudio()" style="background:#334155; border-color:#64748b;">🔊</button>
+            <button id="btn-lang-toggle" class="btn top-btn" onclick="toggleLanguage()" style="background:#334155; border-color:#64748b;">EN</button>
+            <button id="btn-next-turn" class="btn top-btn" onclick="nextTurn()">Завершить ход</button>
+        </div>
+    </div>
+
+    <!-- Fast Travel Theater Bar -->
+    <div id="fast-travel-bar" class="aoh-panel">
+        <button class="fast-travel-pill" onclick="flyToTheater('europe')">🌍 Европа</button>
+        <button class="fast-travel-pill" onclick="flyToTheater('caucasus')">🏔️ Кавказ</button>
+        <button class="fast-travel-pill" onclick="flyToTheater('asia')">🏯 Азия</button>
+        <button class="fast-travel-pill" onclick="flyToTheater('americas')">🗽 Америка</button>
+        <button class="fast-travel-pill" onclick="flyToTheater('africa')">🦁 Африка</button>
+        <button class="fast-travel-pill" onclick="flyToTheater('oceania')">🦘 Океания</button>
+    </div>
+
+    <!-- God-Tools Dock -->
+    <div id="god-tools-panel" class="aoh-panel">
+        <div class="god-header">
+            <span id="lbl-god-tools">⚡ Силы Творца</span>
+            <span style="font-size:10px; cursor:pointer;" onclick="toggleGodDock()">✕</span>
+        </div>
+        <button class="god-btn" id="god-btn-terraform" onclick="selectGodTool('terraform')">🌾 Терраформинг</button>
+        <button class="god-btn" id="god-btn-spawn" onclick="selectGodTool('spawn')">⚔️ Спавн армии</button>
+        <button class="god-btn" id="god-btn-disaster" onclick="selectGodTool('disaster')">☄️ Катаклизм</button>
+        <button class="god-btn" id="god-btn-bless" onclick="selectGodTool('bless')">✨ Благословение</button>
+    </div>
+
+    <!-- Active Brush Indicator -->
+    <div id="god-brush-indicator">
+        <span id="txt-active-brush">Кисть: Терраформинг</span>
+        <button onclick="clearGodTool()" style="background:transparent; border:none; color:#fff; cursor:pointer; font-weight:bold;">✕</button>
+    </div>
+
+    <!-- Diplomacy & Territory Inspector Panel -->
+    <div id="diplomacy-panel" class="side-panel aoh-panel">
+        <button class="panel-close" onclick="closeSidePanels()">✕</button>
+        <div class="panel-title" id="country-name">-</div>
+        <div class="panel-subtitle" id="region-name">-</div>
+        
+        <div class="grid-stats">
+            <div class="stat-card"><span id="lbl-gdp">ВВП</span><b id="diplo-econ">0</b></div>
+            <div class="stat-card"><span id="lbl-garrison">Гарнизон</span><b id="diplo-garrison">0</b></div>
+            <div class="stat-card"><span id="lbl-pop">Население</span><b id="diplo-pop">0M</b></div>
+            <div class="stat-card"><span id="lbl-morale">Мораль</span><b id="diplo-morale">100%</b></div>
+        </div>
+        
+        <div style="margin-bottom: 12px; border-bottom: 1px solid #334155; padding-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+                <span id="lbl-relations">Отношения:</span> <span id="diplo-relations" style="font-weight:bold;">0</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:13px;">
+                <span id="lbl-status">Статус:</span> <span id="diplo-status" style="font-weight:bold;">Мир</span>
+            </div>
+        </div>
+        
+        <div id="action-buttons">
+            <button class="btn btn-action" id="btn-recruit" onclick="recruitDivision()">Сформировать Дивизию (⚡3, 💰150)</button>
+            <button class="btn btn-action" id="btn-mobilize" onclick="mobilizeGarrison()" style="background:#0d9488; border-color:#14b8a6;">Мобилизовать Гарнизон (⚡2, 💰100)</button>
+            <button class="btn" id="btn-improve" onclick="doDiplo('improve')">Улучшить отношения (⚡2)</button>
+            <button class="btn" id="btn-alliance" onclick="doDiplo('alliance')">Предложить Альянс (⚡5)</button>
+            <button class="btn btn-war" id="btn-war" onclick="doDiplo('war')">Объявить войну (⚡5)</button>
+        </div>
+    </div>
+
+    <!-- Military Division Inspector Panel -->
+    <div id="division-panel" class="side-panel aoh-panel">
+        <button class="panel-close" onclick="closeSidePanels()">✕</button>
+        <div class="panel-title" id="div-title">Дивизия</div>
+        <div class="panel-subtitle" id="div-owner">-</div>
+        
+        <div class="grid-stats">
+            <div class="stat-card"><span id="lbl-strength">Численность</span><b id="div-strength">0</b></div>
+            <div class="stat-card"><span id="lbl-order">Приказ</span><b id="div-order">Удержание</b></div>
+        </div>
+
+        <button class="btn btn-action" id="btn-order-move" onclick="startTargeting()">Отдать приказ: Вторжение/Марш</button>
+        <button class="btn" id="btn-order-cancel" onclick="cancelOrder()" style="display:none; background:#475569; border-color:#64748b;">Отменить приказ</button>
+        <button class="btn" id="btn-order-disband" onclick="disbandDivision()" style="background:#991b1b; border-color:#ef4444; margin-top:6px;">Расформировать (+💰75)</button>
+    </div>
+
+    <!-- Event & Combat Log -->
+    <div id="log-panel" class="aoh-panel"></div>
+
+    <!-- Map Viewport -->
+    <div id="map"></div>
+
+    <!-- Game Over / Victory Modal -->
+    <div class="modal-overlay" id="game-over-modal">
+        <div class="modal-card">
+            <h2 id="modal-title" style="color:var(--gold);">ПОБЕДА!</h2>
+            <p id="modal-desc">Вы достигли абсолютного геополитического доминирования.</p>
+            
+            <div class="modal-stats">
+                <div class="modal-stat-row"><span>Пройдено ходов:</span> <b id="stat-turns">0</b></div>
+                <div class="modal-stat-row"><span>Контролируемых регионов:</span> <b id="stat-regions">0</b></div>
+                <div class="modal-stat-row"><span>Доля мировой экономики:</span> <b id="stat-gdp">0%</b></div>
+                <div class="modal-stat-row"><span>Потери личного состава:</span> <b id="stat-casualties">0</b></div>
+            </div>
+
+            <button class="btn" onclick="continueInSandbox()" style="background:#0284c7; border-color:#38bdf8;" id="btn-modal-sandbox">🛠️ Продолжить в режиме Песочницы</button>
+            <button class="btn btn-load" onclick="loadGame(); closeModal('game-over-modal');" id="btn-modal-load">💾 Загрузить сохранение</button>
+            <button class="btn" onclick="restartGame()" style="background:#475569; border-color:#64748b;" id="btn-modal-restart">🔄 Новая кампания</button>
+        </div>
+    </div>
+
+    <!-- Crisis Alert Modal -->
+    <div class="modal-overlay" id="crisis-modal">
+        <div class="modal-card" style="border-color:var(--red);">
+            <h2 style="color:var(--red);" id="crisis-title">🚨 ГЛОБАЛЬНЫЙ КРИЗИС</h2>
+            <p id="crisis-desc" style="font-size:15px; color:#f8fafc;">Мировой порядок пошатнулся.</p>
+            <button class="btn btn-war" onclick="closeModal('crisis-modal')">Принять вызов</button>
+        </div>
+    </div>
+
+    <!-- God Tool Dialog Modal -->
+    <div class="modal-overlay" id="god-dialog-modal">
+        <div class="modal-card" style="width:400px;">
+            <h2 id="god-dialog-title" style="color:var(--gold);">Выбор воздействия</h2>
+            <p id="god-dialog-desc">Выберите эффект для региона</p>
+            <div id="god-dialog-actions" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <button class="btn" onclick="closeModal('god-dialog-modal')" style="background:#475569; border-color:#64748b; margin-top:10px;">Отмена</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. PROCEDURAL WEB AUDIO API SYNTHESIZER
+        // ==========================================
+        const AudioEngine = {
+            ctx: null,
+            isMuted: localStorage.getItem('idealworld_muted') === 'true',
+            
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+            
+            playTone(freq, type, duration, vol = 0.15) {
+                if (this.isMuted) return;
+                this.init();
+                if (!this.ctx) return;
+                
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {
+                    console.warn("Audio error:", e);
+                }
+            },
+
+            click() { this.playTone(850, 'sine', 0.05, 0.1); },
+            march() {
+                if (this.isMuted) return;
+                this.playTone(180, 'triangle', 0.12, 0.2);
+                setTimeout(() => this.playTone(140, 'triangle', 0.15, 0.2), 70);
+            },
+            combat() {
+                if (this.isMuted) return;
+                this.init();
+                if (!this.ctx) return;
+                const bufferSize = this.ctx.sampleRate * 0.35;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(400, this.ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.35);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start();
+            },
+            disaster() {
+                if (this.isMuted) return;
+                this.playTone(55, 'sawtooth', 0.9, 0.4);
+                setTimeout(() => this.playTone(38, 'sine', 1.2, 0.5), 100);
+            },
+            bless() {
+                if (this.isMuted) return;
+                [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+                    setTimeout(() => this.playTone(f, 'sine', 0.25, 0.15), i * 80);
+                });
+            },
+            victory() {
+                if (this.isMuted) return;
+                [440, 554.37, 659.25, 880].forEach((f, i) => {
+                    setTimeout(() => this.playTone(f, 'triangle', 0.45, 0.25), i * 140);
+                });
+            },
+            defeat() {
+                if (this.isMuted) return;
+                [330, 311.13, 293.66, 220].forEach((f, i) => {
+                    setTimeout(() => this.playTone(f, 'sawtooth', 0.5, 0.2), i * 160);
+                });
+            }
+        };
+
+        function toggleAudio() {
+            AudioEngine.isMuted = !AudioEngine.isMuted;
+            localStorage.setItem('idealworld_muted', AudioEngine.isMuted);
+            document.getElementById('btn-audio-toggle').innerText = AudioEngine.isMuted ? '🔇' : '🔊';
+            if (!AudioEngine.isMuted) AudioEngine.click();
+        }
+
+        // ==========================================
+        // 2. LOCALIZATION SYSTEM (I18N)
+        // ==========================================
+        let currentLang = localStorage.getItem('rasulworld_lang') || 'ru';
+
+        const i18n = {
+            ru: {
+                menuTitle: "Идеальный Мир 2026",
+                menuDesc: "Глобальная песочница и геостратегический симулятор. Командуйте державой, влияйте на экосистемы или наблюдайте за миром в режиме Творца.",
+                startCampaign: "Начать кампанию",
+                selectCountry: "Выберите государство:",
+                continueCampaign: "💾 Продолжить сохранение",
+                factionLabel: "Фракция",
+                playerPrefix: "Игрок",
+                aiPrefix: "ИИ",
+                apLabel: "ОД",
+                turnLabel: "Ход",
+                nextTurnBtn: "Завершить ход",
+                sandboxOn: "🛠️ Песочница: ВКЛ",
+                sandboxOff: "🛠️ Песочница",
+                gdp: "ВВП",
+                garrison: "Гарнизон",
+                pop: "Население",
+                morale: "Мораль",
+                relations: "Отношения:",
+                status: "Статус:",
+                statusOwn: "Ваша территория",
+                statusPeace: "Мир",
+                statusWar: "ВОЙНА",
+                statusAlliance: "Альянс",
+                recruitBtn: "Сформировать Дивизию (⚡3, 💰150)",
+                mobilizeBtn: "Мобилизовать Гарнизон (⚡2, 💰100)",
+                improveBtn: "Улучшить отношения (⚡2)",
+                allianceBtn: "Предложить Альянс (⚡5)",
+                warBtn: "Объявить войну (⚡5)",
+                divisionTitle: "Дивизия",
+                divStrength: "Численность",
+                divOrder: "Приказ",
+                orderHold: "Удержание",
+                orderMoveTo: "Движение в {name}",
+                orderMoveBtn: "Отдать приказ: Вторжение/Марш",
+                orderTargeting: "Кликните по соседнему региону...",
+                orderCancelBtn: "Отменить приказ",
+                orderDisbandBtn: "Расформировать (+💰75)",
+                noResources: "❌ Недостаточно ресурсов (нужно ⚡3, 💰150).",
+                noResourcesMob: "❌ Недостаточно ресурсов для мобилизации (нужно ⚡2, 💰100 и 10k гарнизона).",
+                maxDivsReached: "❌ В регионе уже максимальное число дивизий (максимум 3).",
+                noAdjacency: "❌ Нет прямого сухопутного или морского сообщения между регионами!",
+                divFormed: "⚔️ Дивизия сформирована в {name}.",
+                garrisonMobilized: "🛡️ 10,000 бойцов мобилизованы из гарнизона в {name}.",
+                noAP: "❌ Недостаточно ОД.",
+                warDeclared: "🚨 ВЫ ОБЪЯВИЛИ ВОЙНУ {name}!",
+                allianceMade: "🛡️ Альянс с {name} заключен.",
+                allianceRejected: "❌ {name} отвергает предложение альянса (отношения слишком низкие).",
+                relationsImproved: "🕊️ Отношения с {name} улучшены (+25).",
+                orderCancelledNoWar: "❌ Приказ отменен: нет состояния войны с {name}.",
+                combatWin: "🚩 ПОБЕДА! Войска захватили {name}!",
+                combatLoss: "💀 ПОРАЖЕНИЕ. Наступление на {name} отбито.",
+                mapInitLog: "Глобальная карта инициализирована. Дивизии развернуты. Удачи, Главнокомандующий.",
+                turnEndLog: "--- Ход {turn} завершен ---",
+                godToolsTitle: "⚡ Силы Творца",
+                godTerraform: "🌾 Терраформинг",
+                godSpawn: "⚔️ Спавн армии",
+                godDisaster: "☄️ Катаклизм",
+                godBless: "✨ Благословение",
+                brushActive: "Кисть: {tool} (клик по региону)",
+                savedMsg: "💾 Кампания успешно сохранена в LocalStorage.",
+                loadedMsg: "📂 Сохранение успешно загружено!",
+                noSaveMsg: "❌ Сохраненная игра не найдена."
+            },
+            en: {
+                menuTitle: "Ideal World 2026",
+                menuDesc: "Global geopolitical sandbox simulator. Command a nation, shape environments, or watch the world evolve as an omnipotent Creator.",
+                startCampaign: "Start Campaign",
+                selectCountry: "Select Nation:",
+                continueCampaign: "💾 Continue Saved Game",
+                factionLabel: "Faction",
+                playerPrefix: "Player",
+                aiPrefix: "AI",
+                apLabel: "AP",
+                turnLabel: "Turn",
+                nextTurnBtn: "End Turn",
+                sandboxOn: "🛠️ Sandbox: ON",
+                sandboxOff: "🛠️ Sandbox",
+                gdp: "GDP",
+                garrison: "Garrison",
+                pop: "Population",
+                morale: "Morale",
+                relations: "Relations:",
+                status: "Status:",
+                statusOwn: "Your Territory",
+                statusPeace: "Peace",
+                statusWar: "WAR",
+                statusAlliance: "Alliance",
+                recruitBtn: "Recruit Division (⚡3, 💰150)",
+                mobilizeBtn: "Mobilize Garrison (⚡2, 💰100)",
+                improveBtn: "Improve Relations (⚡2)",
+                allianceBtn: "Propose Alliance (⚡5)",
+                warBtn: "Declare War (⚡5)",
+                divisionTitle: "Division",
+                divStrength: "Manpower",
+                divOrder: "Order",
+                orderHold: "Hold Position",
+                orderMoveTo: "Moving to {name}",
+                orderMoveBtn: "Issue Order: Invasion/March",
+                orderTargeting: "Click adjacent region on map...",
+                orderCancelBtn: "Cancel Order",
+                orderDisbandBtn: "Disband (+💰75)",
+                noResources: "❌ Insufficient resources (requires ⚡3, 💰150).",
+                noResourcesMob: "❌ Insufficient resources to mobilize (requires ⚡2, 💰100, 10k garrison).",
+                maxDivsReached: "❌ Region already at maximum capacity (max 3 divisions).",
+                noAdjacency: "❌ No direct land border or sea crossing between these regions!",
+                divFormed: "⚔️ Division recruited in {name}.",
+                garrisonMobilized: "🛡️ 10,000 garrison mobilized into field division in {name}.",
+                noAP: "❌ Not enough Action Points (AP).",
+                warDeclared: "🚨 YOU DECLARED WAR ON {name}!",
+                allianceMade: "🛡️ Alliance with {name} established.",
+                allianceRejected: "❌ {name} rejected alliance proposal (relations too low).",
+                relationsImproved: "🕊️ Relations with {name} improved (+25).",
+                orderCancelledNoWar: "❌ Order cancelled: not at war with {name}.",
+                combatWin: "🚩 VICTORY! Troops captured {name}!",
+                combatLoss: "💀 DEFEAT. Assault on {name} was repelled.",
+                mapInitLog: "Global theater initialized. Armies deployed. Good luck, Commander.",
+                turnEndLog: "--- Turn {turn} finished ---",
+                godToolsTitle: "⚡ God Powers",
+                godTerraform: "🌾 Terraform",
+                godSpawn: "⚔️ Spawn Army",
+                godDisaster: "☄️ Disaster",
+                godBless: "✨ Blessing",
+                brushActive: "Brush: {tool} (click region)",
+                savedMsg: "💾 Campaign saved to LocalStorage.",
+                loadedMsg: "📂 Saved campaign loaded successfully!",
+                noSaveMsg: "❌ No saved game found."
+            }
+        };
+
+        const countryNames = {
+            aze: { ru: 'Объединенный Азербайджан', en: 'United Azerbaijan' },
+            geo: { ru: 'Грузия', en: 'Georgia' },
+            arm: { ru: 'Армения', en: 'Armenia' },
+            ady: { ru: 'Адыгея', en: 'Adygea' },
+            kar: { ru: 'Карачай', en: 'Karachay' },
+            bal: { ru: 'Балкария', en: 'Balkaria' },
+            ose: { ru: 'Северная Осетия', en: 'North Ossetia' },
+            ing: { ru: 'Ингушетия', en: 'Ingushetia' },
+            che: { ru: 'Чечня', en: 'Chechnya' },
+            nog: { ru: 'Ногайстан', en: 'Nogaistan' },
+            kum: { ru: 'Кумыкия', en: 'Kumykia' },
+            ava: { ru: 'Аварская Респ.', en: 'Avar Republic' },
+            dar: { ru: 'Даргинская Респ.', en: 'Dargin Republic' },
+            lez: { ru: 'Лезгинская Респ.', en: 'Lezgin Republic' },
+            tat: { ru: 'Татарстан', en: 'Tatarstan' },
+            bas: { ru: 'Башкортостан', en: 'Bashkortostan' },
+            chu: { ru: 'Чувашия', en: 'Chuvashia' },
+            udm: { ru: 'Удмуртия', en: 'Udmurtia' },
+            mar: { ru: 'Марий Эл', en: 'Mari El' },
+            mor: { ru: 'Мордовия', en: 'Mordovia' },
+            rus: { ru: 'Российская Федерация', en: 'Russian Federation' },
+            kom: { ru: 'Республика Коми', en: 'Komi Republic' },
+            kha: { ru: 'Хантская Респ.', en: 'Khanty Republic' },
+            nen: { ru: 'Ненецкая Респ.', en: 'Nenets Republic' },
+            yak: { ru: 'Якутия', en: 'Yakutia' },
+            zel: { ru: 'Зеленый Клин', en: 'Zeleny Klyn' },
+            niv: { ru: 'Нивхи', en: 'Nivkhia' },
+            kor_r: { ru: 'Корякия', en: 'Koryakia' },
+            chu_r: { ru: 'Чукотка', en: 'Chukotka' },
+            kaz: { ru: 'Казахстан', en: 'Kazakhstan' },
+            uzb: { ru: 'Узбекистан', en: 'Uzbekistan' },
+            kar_p: { ru: 'Каракалпакстан', en: 'Karakalpakstan' },
+            tkm: { ru: 'Туркменистан', en: 'Turkmenistan' },
+            ger: { ru: 'Великая Германия', en: 'Greater Germany' },
+            pru: { ru: 'Пруссия (Германия)', en: 'Prussia (Germany)' },
+            pol: { ru: 'Польша', en: 'Poland' },
+            ukr: { ru: 'Украина', en: 'Ukraine' },
+            fra: { ru: 'Франция', en: 'France' },
+            ita: { ru: 'Италия (с Корсикой)', en: 'Italy (with Corsica)' },
+            spa: { ru: 'Испания', en: 'Spain' },
+            cat: { ru: 'Каталония', en: 'Catalonia' },
+            uk: { ru: 'Великобритания', en: 'United Kingdom' },
+            fin: { ru: 'Финляндия (с Карелией)', en: 'Finland (with Karelia)' },
+            gre: { ru: 'Греция (с Измиром)', en: 'Greece (with Izmir)' },
+            bul: { ru: 'Болгария', en: 'Bulgaria' },
+            ser: { ru: 'Сербское Царство', en: 'Serbian Tsardom' },
+            tur: { ru: 'Турция', en: 'Turkey' },
+            irn: { ru: 'Иран', en: 'Iran' },
+            chi: { ru: 'Китайская Республика', en: 'Republic of China' },
+            tib: { ru: 'Тибет', en: 'Tibet' },
+            uyg: { ru: 'Восточный Туркестан', en: 'East Turkestan' },
+            mon: { ru: 'Монголия', en: 'Mongolia' },
+            kor: { ru: 'Единая Корея', en: 'Unified Korea' },
+            jpn: { ru: 'Япония', en: 'Japan' },
+            ind: { ru: 'Новая Индия', en: 'New India' },
+            ban: { ru: 'Бангладеш', en: 'Bangladesh' },
+            nei: { ru: 'Северо-Восточный Союз', en: 'Northeast Union' },
+            ear: { ru: 'Восточноафриканская Респ.', en: 'East African Rep.' },
+            aza: { ru: 'Азавад', en: 'Azawad' },
+            som: { ru: 'Объединенное Сомали', en: 'United Somalia' },
+            egy: { ru: 'Египет', en: 'Egypt' },
+            saf: { ru: 'ЮАР', en: 'South Africa' },
+            les: { ru: 'Лесото', en: 'Lesotho' },
+            usa: { ru: 'США', en: 'United States' },
+            bra: { ru: 'Бразилия', en: 'Brazil' },
+            lag: { ru: 'Лагвианн', en: 'Lagviann' },
+            cub: { ru: 'Куба', en: 'Cuba' },
+            pur: { ru: 'Пуэрто-Рико', en: 'Puerto Rico' },
+            aus: { ru: 'Австралия', en: 'Australia' },
+            nzl: { ru: 'Новая Зеландия', en: 'New Zealand' },
+            kan: { ru: 'Респ. Канак Нувель', en: 'Kanak Nouvel Rep.' }
+        };
+
+        function getCountryName(id) {
+            return (countryNames[id] && countryNames[id][currentLang]) || id;
+        }
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('rasulworld_lang', lang);
+            const t = i18n[lang];
+
+            document.getElementById('btn-lang-ru').classList.toggle('active', lang === 'ru');
+            document.getElementById('btn-lang-en').classList.toggle('active', lang === 'en');
+            document.getElementById('btn-lang-toggle').innerText = lang === 'ru' ? 'EN' : 'RU';
+
+            document.getElementById('txt-menu-title').innerText = t.menuTitle;
+            document.getElementById('txt-menu-desc').innerText = t.menuDesc;
+            document.getElementById('lbl-select-country').innerText = t.selectCountry;
+            document.getElementById('btn-start-game').innerText = t.startCampaign;
+            document.getElementById('btn-continue-game').innerText = t.continueCampaign;
+
+            document.getElementById('lbl-ap').innerText = t.apLabel;
+            document.getElementById('lbl-turn').innerText = t.turnLabel;
+            document.getElementById('btn-next-turn').innerText = t.nextTurnBtn;
+
+            document.getElementById('lbl-gdp').innerText = t.gdp;
+            document.getElementById('lbl-garrison').innerText = t.garrison;
+            document.getElementById('lbl-pop').innerText = t.pop;
+            document.getElementById('lbl-morale').innerText = t.morale;
+            document.getElementById('lbl-relations').innerText = t.relations;
+            document.getElementById('lbl-status').innerText = t.status;
+            document.getElementById('btn-recruit').innerText = t.recruitBtn;
+            document.getElementById('btn-mobilize').innerText = t.mobilizeBtn;
+            document.getElementById('btn-improve').innerText = t.improveBtn;
+            document.getElementById('btn-alliance').innerText = t.allianceBtn;
+            document.getElementById('btn-war').innerText = t.warBtn;
+
+            document.getElementById('div-title').innerText = t.divisionTitle;
+            document.getElementById('lbl-strength').innerText = t.divStrength;
+            document.getElementById('lbl-order').innerText = t.divOrder;
+            document.getElementById('btn-order-move').innerText = isTargeting ? t.orderTargeting : t.orderMoveBtn;
+            document.getElementById('btn-order-cancel').innerText = t.orderCancelBtn;
+            document.getElementById('btn-order-disband').innerText = t.orderDisbandBtn;
+
+            document.getElementById('lbl-god-tools').innerText = t.godToolsTitle;
+            document.getElementById('god-btn-terraform').innerText = t.godTerraform;
+            document.getElementById('god-btn-spawn').innerText = t.godSpawn;
+            document.getElementById('god-btn-disaster').innerText = t.godDisaster;
+            document.getElementById('god-btn-bless').innerText = t.godBless;
+
+            populateCountrySelect();
+            if (playerFacId) {
+                updateUI();
+                if (selectedRegion) updateDiploUI();
+                if (selectedDivision) updateDivUI();
+            }
+        }
+
+        function toggleLanguage() {
+            AudioEngine.click();
+            setLanguage(currentLang === 'ru' ? 'en' : 'ru');
+        }
+
+        // ==========================================
+        // 3. MAP & GEOGRAPHY DATA MODEL
+        // ==========================================
+        const map = L.map('map', { center: [35, 40], zoom: 3, minZoom: 2, maxZoom: 8, zoomControl: false });
+        L.control.zoom({ position: 'topleft' }).addTo(map);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png').addTo(map);
+
+        const regionsData = [
+            { id: 'aze', faction: 'aze', name: 'Объединенный Азербайджан', coords: [[37, 44], [41.5, 45], [41.5, 50], [37, 49]], color: '#1f77b4', econ: 450, pop: 18 },
+            { id: 'geo', faction: 'geo', name: 'Грузия', coords: [[41.5, 40], [43.5, 40], [43.5, 45], [41.5, 45]], color: '#d62728', econ: 200, pop: 5 },
+            { id: 'arm', faction: 'arm', name: 'Армения', coords: [[39, 43.5], [41.2, 43.5], [41.2, 45], [39, 45]], color: '#e67e22', econ: 150, pop: 3 },
+            { id: 'ady', faction: 'ady', name: 'Адыгея', coords: [[44, 38], [45, 38], [45, 40.5], [44, 40.5]], color: '#2ca02c', econ: 80, pop: 1 },
+            { id: 'kar', faction: 'kar', name: 'Карачай', coords: [[43.5, 40.5], [44, 40.5], [44, 42], [43.5, 42]], color: '#f1c40f', econ: 70, pop: 0.8 },
+            { id: 'bal', faction: 'bal', name: 'Балкария', coords: [[43.5, 42], [44, 42], [44, 43.5], [43.5, 43.5]], color: '#e74c3c', econ: 70, pop: 0.8 },
+            { id: 'ose', faction: 'ose', name: 'Северная Осетия', coords: [[42.8, 43.5], [43.8, 43.5], [43.8, 44.5], [42.8, 44.5]], color: '#9b59b6', econ: 90, pop: 1.2 },
+            { id: 'ing', faction: 'ing', name: 'Ингушетия', coords: [[42.8, 44.5], [43.5, 44.5], [43.5, 45.2], [42.8, 45.2]], color: '#34495e', econ: 80, pop: 1 },
+            { id: 'che', faction: 'che', name: 'Чечня', coords: [[42.8, 45.2], [44, 45.2], [44, 46.5], [42.8, 46.5]], color: '#27ae60', econ: 120, pop: 1.5 },
+            { id: 'nog', faction: 'nog', name: 'Ногайстан', coords: [[44, 45], [45, 45], [45, 47], [44, 47]], color: '#e377c2', econ: 60, pop: 0.5 },
+            { id: 'kum', faction: 'kum', name: 'Кумыкия', coords: [[42.8, 46.5], [43.5, 46.5], [43.5, 47.5], [42.8, 47.5]], color: '#8e44ad', econ: 80, pop: 0.9 },
+            { id: 'ava', faction: 'ava', name: 'Аварская Респ.', coords: [[42, 45.5], [42.8, 45.5], [42.8, 47], [42, 47]], color: '#d35400', econ: 90, pop: 1.1 },
+            { id: 'dar', faction: 'dar', name: 'Даргинская Респ.', coords: [[42, 47], [42.8, 47], [42.8, 48], [42, 48]], color: '#16a085', econ: 85, pop: 1 },
+            { id: 'lez', faction: 'lez', name: 'Лезгинская Респ.', coords: [[41.5, 47], [42, 47], [42, 48.5], [41.5, 48.5]], color: '#2980b9', econ: 85, pop: 1 },
+            { id: 'tat', faction: 'tat', name: 'Татарстан', coords: [[54.5, 48.5], [56.5, 48.5], [56.5, 53], [54.5, 53]], color: '#2ecc71', econ: 350, pop: 4 },
+            { id: 'bas', faction: 'bas', name: 'Башкортостан', coords: [[52, 53], [56.5, 53], [56.5, 60], [52, 60]], color: '#3498db', econ: 300, pop: 4 },
+            { id: 'chu', faction: 'chu', name: 'Чувашия', coords: [[54.5, 46], [56.5, 46], [56.5, 48.5], [54.5, 48.5]], color: '#f1c40f', econ: 120, pop: 1.2 },
+            { id: 'udm', faction: 'udm', name: 'Удмуртия', coords: [[56.5, 51], [58.5, 51], [58.5, 54], [56.5, 54]], color: '#e74c3c', econ: 140, pop: 1.5 },
+            { id: 'mar', faction: 'mar', name: 'Марий Эл', coords: [[56.5, 46], [57.5, 46], [57.5, 50], [56.5, 50]], color: '#9b59b6', econ: 90, pop: 0.7 },
+            { id: 'mor', faction: 'mor', name: 'Мордовия', coords: [[53.5, 42.5], [55, 42.5], [55, 46], [53.5, 46]], color: '#1abc9c', econ: 100, pop: 0.8 },
+            { id: 'rus', faction: 'rus', name: 'Российская Федерация', coords: [[50, 30], [60, 30], [60, 46], [50, 46]], color: '#7f8c8d', econ: 1200, pop: 90 },
+            { id: 'kom', faction: 'kom', name: 'Республика Коми', coords: [[60, 48], [67, 48], [67, 60], [60, 60]], color: '#27ae60', econ: 150, pop: 1 },
+            { id: 'kha', faction: 'kha', name: 'Хантская Респ.', coords: [[60, 60], [67, 60], [67, 80], [60, 80]], color: '#f1c40f', econ: 200, pop: 1.5 },
+            { id: 'nen', faction: 'nen', name: 'Ненецкая Респ.', coords: [[69, 80], [77, 80], [77, 115], [69, 115]], color: '#3498db', econ: 100, pop: 0.5 },
+            { id: 'yak', faction: 'yak', name: 'Якутия', coords: [[55, 105], [72, 105], [72, 135], [55, 135]], color: '#9b59b6', econ: 250, pop: 1.5 },
+            { id: 'zel', faction: 'zel', name: 'Зеленый Клин', coords: [[43, 130], [50, 130], [50, 140], [43, 140]], color: '#2ecc71', econ: 300, pop: 5 },
+            { id: 'niv', faction: 'niv', name: 'Нивхи', coords: [[51, 139], [54, 139], [54, 144], [51, 144]], color: '#e67e22', econ: 50, pop: 0.5 },
+            { id: 'kor_r', faction: 'kor_r', name: 'Корякия', coords: [[60, 160], [65, 160], [65, 168], [60, 168]], color: '#34495e', econ: 40, pop: 0.3 },
+            { id: 'chu_r', faction: 'chu_r', name: 'Чукотка', coords: [[65, 160], [70, 160], [70, 175], [65, 175]], color: '#ecf0f1', econ: 60, pop: 0.2 },
+            { id: 'kaz', faction: 'kaz', name: 'Казахстан', coords: [[42, 50], [55, 50], [55, 85], [42, 85]], color: '#3498db', econ: 600, pop: 22 },
+            { id: 'uzb', faction: 'uzb', name: 'Узбекистан', coords: [[37, 56], [42, 56], [42, 65], [37, 65]], color: '#27ae60', econ: 300, pop: 25 },
+            { id: 'kar_p', faction: 'kar_p', name: 'Каракалпакстан', coords: [[42, 56], [45, 56], [45, 62], [42, 62]], color: '#e67e22', econ: 80, pop: 2 },
+            { id: 'tkm', faction: 'tkm', name: 'Туркменистан', coords: [[35, 52], [42, 52], [42, 65], [35, 65]], color: '#16a085', econ: 350, pop: 12 },
+            { id: 'ger', faction: 'ger', name: 'Великая Германия', coords: [[47, 6], [54, 6], [54, 15], [47, 15]], color: '#555', econ: 1500, pop: 90 },
+            { id: 'pru', faction: 'pru', name: 'Пруссия (Германия)', coords: [[52, 15], [54, 15], [54, 22], [52, 22]], color: '#555', econ: 400, pop: 15 },
+            { id: 'pol', faction: 'pol', name: 'Польша', coords: [[50, 15], [52, 15], [52, 22], [50, 22]], color: '#e74c3c', econ: 450, pop: 30 },
+            { id: 'ukr', faction: 'ukr', name: 'Украина', coords: [[45, 22], [52, 22], [52, 40], [45, 40]], color: '#f1c40f', econ: 500, pop: 50 },
+            { id: 'fra', faction: 'fra', name: 'Франция', coords: [[43, -4], [51, -4], [51, 6], [43, 6]], color: '#2980b9', econ: 1100, pop: 65 },
+            { id: 'ita', faction: 'ita', name: 'Италия (с Корсикой)', coords: [[38, 7], [46, 7], [46, 14], [38, 14]], color: '#27ae60', econ: 800, pop: 60 },
+            { id: 'spa', faction: 'spa', name: 'Испания', coords: [[36, -9], [43, -9], [43, -1], [36, -1]], color: '#f39c12', econ: 700, pop: 40 },
+            { id: 'cat', faction: 'cat', name: 'Каталония', coords: [[40, -1], [43, -1], [43, 3], [40, 3]], color: '#e74c3c', econ: 200, pop: 8 },
+            { id: 'uk', faction: 'uk', name: 'Великобритания', coords: [[50, -8], [58, -8], [58, 2], [50, 2]], color: '#8e44ad', econ: 1000, pop: 67 },
+            { id: 'fin', faction: 'fin', name: 'Финляндия (с Карелией)', coords: [[60, 20], [70, 20], [70, 40], [60, 40]], color: '#3498db', econ: 300, pop: 6 },
+            { id: 'gre', faction: 'gre', name: 'Греция (с Измиром)', coords: [[35, 20], [41, 20], [41, 27], [35, 27]], color: '#2980b9', econ: 250, pop: 11 },
+            { id: 'bul', faction: 'bul', name: 'Болгария', coords: [[41, 22], [44, 22], [44, 28], [41, 28]], color: '#27ae60', econ: 150, pop: 7 },
+            { id: 'ser', faction: 'ser', name: 'Сербское Царство', coords: [[42, 18], [46, 18], [46, 23], [42, 23]], color: '#c0392b', econ: 300, pop: 15 },
+            { id: 'tur', faction: 'tur', name: 'Турция', coords: [[36, 27], [42, 27], [42, 40], [36, 40]], color: '#c0392b', econ: 700, pop: 80 },
+            { id: 'irn', faction: 'irn', name: 'Иран', coords: [[25, 44], [37, 44], [35, 52], [25, 60]], color: '#d35400', econ: 600, pop: 75 },
+            { id: 'chi', faction: 'chi', name: 'Китайская Республика', coords: [[20, 100], [42, 100], [42, 122], [20, 122]], color: '#ff7f0e', econ: 3000, pop: 400 },
+            { id: 'tib', faction: 'tib', name: 'Тибет', coords: [[28, 78], [35, 78], [35, 95], [28, 95]], color: '#8e44ad', econ: 100, pop: 6 },
+            { id: 'uyg', faction: 'uyg', name: 'Восточный Туркестан', coords: [[36, 80], [48, 80], [48, 95], [36, 95]], color: '#3498db', econ: 150, pop: 12 },
+            { id: 'mon', faction: 'mon', name: 'Монголия', coords: [[42, 95], [55, 95], [55, 120], [42, 120]], color: '#d35400', econ: 120, pop: 5 },
+            { id: 'kor', faction: 'kor', name: 'Единая Корея', coords: [[34, 125], [43, 125], [43, 130], [34, 130]], color: '#16a085', econ: 800, pop: 75 },
+            { id: 'jpn', faction: 'jpn', name: 'Япония', coords: [[31, 130], [45, 130], [45, 145], [31, 145]], color: '#e74c3c', econ: 1500, pop: 125 },
+            { id: 'ind', faction: 'ind', name: 'Новая Индия', coords: [[8, 70], [30, 70], [30, 88], [8, 88]], color: '#f39c12', econ: 1800, pop: 1000 },
+            { id: 'ban', faction: 'ban', name: 'Бангладеш', coords: [[21, 88], [27, 88], [27, 92], [21, 92]], color: '#27ae60', econ: 300, pop: 200 },
+            { id: 'nei', faction: 'nei', name: 'Северо-Восточный Союз', coords: [[23, 92], [29, 92], [29, 97], [23, 97]], color: '#e67e22', econ: 100, pop: 40 },
+            { id: 'ear', faction: 'ear', name: 'Восточноафриканская Респ.', coords: [[-11, 29], [4, 29], [4, 41], [-11, 41]], color: '#17becf', econ: 500, pop: 160 },
+            { id: 'aza', faction: 'aza', name: 'Азавад', coords: [[14, -10], [25, -10], [25, 5], [14, 5]], color: '#e377c2', econ: 150, pop: 6 },
+            { id: 'som', faction: 'som', name: 'Объединенное Сомали', coords: [[-2, 38], [12, 42], [12, 51], [-2, 51]], color: '#bcbd22', econ: 250, pop: 45 },
+            { id: 'egy', faction: 'egy', name: 'Египет', coords: [[22, 25], [31, 25], [31, 35], [22, 35]], color: '#d35400', econ: 400, pop: 100 },
+            { id: 'saf', faction: 'saf', name: 'ЮАР', coords: [[-35, 16], [-22, 16], [-22, 33], [-35, 33]], color: '#2ecc71', econ: 600, pop: 60 },
+            { id: 'les', faction: 'les', name: 'Лесото', coords: [[-30.5, 27], [-28.5, 27], [-28.5, 29.5], [-30.5, 29.5]], color: '#8e44ad', econ: 20, pop: 2 },
+            { id: 'usa', faction: 'usa', name: 'США', coords: [[30, -125], [49, -125], [49, -70], [30, -70]], color: '#2ca02c', econ: 4000, pop: 340 },
+            { id: 'bra', faction: 'bra', name: 'Бразилия', coords: [[5, -70], [-30, -70], [-30, -35], [5, -35]], color: '#27ae60', econ: 1200, pop: 215 },
+            { id: 'lag', faction: 'lag', name: 'Лагвианн', coords: [[2, -54], [6, -54], [6, -51], [2, -51]], color: '#2ecc71', econ: 60, pop: 1 },
+            { id: 'cub', faction: 'cub', name: 'Куба', coords: [[20, -85], [23, -85], [23, -74], [20, -74]], color: '#e74c3c', econ: 100, pop: 11 },
+            { id: 'pur', faction: 'pur', name: 'Пуэрто-Рико', coords: [[18, -67], [18.5, -67], [18.5, -65], [18, -65]], color: '#3498db', econ: 50, pop: 3 },
+            { id: 'aus', faction: 'aus', name: 'Австралия', coords: [[-40, 110], [-10, 110], [-10, 155], [-40, 155]], color: '#f39c12', econ: 1200, pop: 26 },
+            { id: 'nzl', faction: 'nzl', name: 'Новая Зеландия', coords: [[-47, 166], [-34, 166], [-34, 179], [-47, 179]], color: '#2980b9', econ: 300, pop: 5 },
+            { id: 'kan', faction: 'kan', name: 'Респ. Канак Нувель', coords: [[-23, 163], [-20, 163], [-20, 168], [-23, 168]], color: '#9b59b6', econ: 30, pop: 0.3 }
+        ];
+
+        // Specific Naval / Strait crossing corridors
+        const seaPassages = {
+            'uk': ['fra', 'ger'],
+            'fra': ['uk', 'spa', 'ita', 'ger', 'cat'],
+            'jpn': ['kor', 'zel', 'niv'],
+            'kor': ['jpn', 'chi', 'zel'],
+            'cub': ['usa', 'pur'],
+            'pur': ['cub'],
+            'lag': ['bra'],
+            'aus': ['nzl', 'kan', 'ind'],
+            'nzl': ['aus'],
+            'kan': ['aus'],
+            'spa': ['aza', 'fra', 'cat'],
+            'cat': ['spa', 'fra', 'ita'],
+            'ita': ['fra', 'gre', 'cat', 'ser'],
+            'gre': ['tur', 'bul', 'ita', 'ser'],
+            'tur': ['gre', 'bul', 'geo', 'arm', 'irn', 'aze', 'egy'],
+            'egy': ['tur', 'som', 'aza'],
+            'saf': ['les', 'ear'],
+            'les': ['saf'],
+            'zel': ['jpn', 'niv', 'chi', 'kor'],
+            'niv': ['jpn', 'zel', 'kor_r'],
+            'kor_r': ['niv', 'chu_r'],
+            'chu_r': ['kor_r', 'yak'],
+            'nen': ['kom', 'kha', 'yak'],
+            'kom': ['rus', 'nen', 'kha', 'udm'],
+            'kha': ['kom', 'nen', 'yak', 'kaz'],
+            'yak': ['kha', 'nen', 'zel', 'chu_r', 'mon'],
+            'mon': ['rus', 'chi', 'yak', 'uyg', 'kaz'],
+            'uyg': ['kaz', 'chi', 'tib', 'mon', 'tkm', 'uzb'],
+            'tib': ['chi', 'ind', 'uyg', 'ban'],
+            'chi': ['kor', 'zel', 'mon', 'uyg', 'tib', 'ind', 'ban', 'nei'],
+            'ind': ['chi', 'tib', 'ban', 'irn', 'nei', 'aus'],
+            'ban': ['ind', 'chi', 'nei', 'tib'],
+            'nei': ['ban', 'ind', 'chi'],
+            'ear': ['som', 'saf', 'egy', 'aza'],
+            'som': ['ear', 'egy', 'aza', 'irn'],
+            'aza': ['ear', 'som', 'egy', 'spa'],
+            'usa': ['cub', 'bra'],
+            'bra': ['usa', 'lag']
+        };
+
+        // State Storage
+        let factions = {};
+        let relations = {}; 
+        let statuses = {}; 
+        let regionLayers = {};
+        let divisions = [];
+        let currentTurn = 1;
+        let selectedRegion = null;
+        let selectedDivision = null;
+        let isTargeting = false;
+        let playerFacId = '';
+        let divIdCounter = 0;
+        let isSandboxMode = false;
+        let activeGodTool = null;
+        let crisisTriggered = false;
+
+        // Statistics for endgame report
+        let campaignStats = {
+            totalTurns: 0,
+            regionsConquered: 0,
+            casualtiesInflicted: 0,
+            casualtiesSuffered: 0
+        };
+
+        const uniqueFactions = [...new Set(regionsData.map(r => r.faction))];
+        const select = document.getElementById('country-select');
+
+        function populateCountrySelect() {
+            const currentVal = select.value || 'aze';
+            select.innerHTML = '';
+            uniqueFactions.slice().sort((a, b) => getCountryName(a).localeCompare(getCountryName(b))).forEach(fid => {
+                let name = getCountryName(fid);
+                select.innerHTML += '<option value="' + fid + '">' + name + '</option>';
+            });
+            select.value = currentVal;
+
+            if (localStorage.getItem('idealworld_save')) {
+                document.getElementById('btn-continue-game').style.display = 'block';
+            }
+        }
+
+        function addLog(msg, isHighlight = false) {
+            const p = document.getElementById('log-panel');
+            p.innerHTML = '<div class="log-entry" style="' + (isHighlight ? 'color:#38bdf8; font-weight:bold; border-bottom:2px solid #38bdf8;' : '') + '">' + msg + '</div>' + p.innerHTML;
+        }
+
+        function getRelKey(f1, f2) { return f1 < f2 ? (f1 + '_' + f2) : (f2 + '_' + f1); }
+        function getStatus(f1, f2) { return statuses[getRelKey(f1, f2)] || 'peace'; }
+        function setStatus(f1, f2, status) { statuses[getRelKey(f1, f2)] = status; }
+        
+        function getRelationsScore(f1, f2) {
+            const k = getRelKey(f1, f2);
+            if (relations[k] === undefined) relations[k] = 0;
+            return relations[k];
+        }
+        function adjustRelations(f1, f2, delta) {
+            const k = getRelKey(f1, f2);
+            relations[k] = (relations[k] || 0) + delta;
+        }
+
+        function getRegionCenter(reg) {
+            if (!reg || !reg.coords || reg.coords.length === 0) return [0, 0];
+            const lat = reg.coords.reduce((sum, p) => sum + p[0], 0) / reg.coords.length;
+            const lng = reg.coords.reduce((sum, p) => sum + p[1], 0) / reg.coords.length;
+            return [lat, lng];
+        }
+
+        // ==========================================
+        // 4. TOPOLOGICAL ADJACENCY & BOUNDARY SAFETY
+        // ==========================================
+        function canMoveBetween(fromRegId, toRegId) {
+            if (isSandboxMode) return true;
+            if (fromRegId === toRegId) return true;
+            
+            if (seaPassages[fromRegId] && seaPassages[fromRegId].includes(toRegId)) return true;
+            if (seaPassages[toRegId] && seaPassages[toRegId].includes(fromRegId)) return true;
+
+            const r1 = regionsData.find(r => r.id === fromRegId);
+            const r2 = regionsData.find(r => r.id === toRegId);
+            if (!r1 || !r2) return false;
+
+            const lats1 = r1.coords.map(p => p[0]), lngs1 = r1.coords.map(p => p[1]);
+            const lats2 = r2.coords.map(p => p[0]), lngs2 = r2.coords.map(p => p[1]);
+
+            const minLat1 = Math.min(...lats1), maxLat1 = Math.max(...lats1);
+            const minLng1 = Math.min(...lngs1), maxLng1 = Math.max(...lngs1);
+            const minLat2 = Math.min(...lats2), maxLat2 = Math.max(...lats2);
+            const minLng2 = Math.min(...lngs2), maxLng2 = Math.max(...lngs2);
+
+            const latOverlap = (minLat1 <= maxLat2 + 3.0) && (minLat2 <= maxLat1 + 3.0);
+            const lngOverlap = (minLng1 <= maxLng2 + 4.5) && (minLng2 <= maxLng1 + 4.5);
+            if (latOverlap && lngOverlap) return true;
+
+            const c1 = getRegionCenter(r1), c2 = getRegionCenter(r2);
+            const dist = Math.hypot(c1[0] - c2[0], c1[1] - c2[1]);
+            return dist <= 12.0;
+        }
+
+        // ==========================================
+        // 5. ECONOMIC CORE & GARRISON ENGINE
+        // ==========================================
+        function recalculateFactionStats() {
+            Object.keys(factions).forEach(fid => {
+                const owned = regionsData.filter(r => r.owner === fid);
+                factions[fid].econ = owned.reduce((sum, r) => sum + r.econ, 0);
+                factions[fid].pop = Math.round(owned.reduce((sum, r) => sum + r.pop, 0) * 10) / 10;
+            });
+
+            const totalGlobalEcon = regionsData.reduce((sum, r) => sum + r.econ, 0);
+            if (playerFacId && factions[playerFacId] && totalGlobalEcon > 0) {
+                const share = Math.round((factions[playerFacId].econ / totalGlobalEcon) * 100);
+                document.getElementById('world-hegemony').innerText = share + '%';
+            }
+        }
+
+        function repositionRegionDivisions(regId) {
+            const divs = divisions.filter(d => d.regionId === regId && !d.targetRegionId);
+            const count = divs.length;
+            const reg = regionsData.find(r => r.id === regId);
+            if (!reg) return;
+            const center = getRegionCenter(reg);
+            const cLat = center[0], cLng = center[1];
+
+            divs.forEach((d, idx) => {
+                let offLat = 0, offLng = 0;
+                if (count === 2) {
+                    offLng = (idx === 0 ? -0.8 : 0.8);
+                } else if (count === 3) {
+                    offLat = (idx === 0 ? 0.7 : -0.5);
+                    offLng = (idx === 1 ? -0.9 : (idx === 2 ? 0.9 : 0));
+                }
+                d.lat = cLat + offLat;
+                d.lng = cLng + offLng;
+                if (d.marker) d.marker.setLatLng([d.lat, d.lng]);
+            });
+        }
+
+        // ==========================================
+        // 6. INITIALIZATION & LIFECYCLE
+        // ==========================================
+        function startGame(loadedState = null) {
+            AudioEngine.click();
+            playerFacId = document.getElementById('country-select').value;
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('top-bar').style.display = 'flex';
+            document.getElementById('fast-travel-bar').style.display = 'flex';
+            document.getElementById('log-panel').style.display = 'block';
+
+            if (!loadedState) {
+                uniqueFactions.forEach(fid => {
+                    let facRegions = regionsData.filter(r => r.faction === fid);
+                    let totalEcon = facRegions.reduce((sum, r) => sum + r.econ, 0);
+                    let totalPop = facRegions.reduce((sum, r) => sum + r.pop, 0);
+                    factions[fid] = {
+                        id: fid,
+                        ap: 10, money: totalEcon * 2, econ: totalEcon, pop: totalPop,
+                        color: facRegions[0].color
+                    };
+                });
+
+                regionsData.forEach(r => {
+                    r.owner = r.faction;
+                    r.garrison = Math.max(3000, Math.floor(r.econ * 10));
+                    r.moralMod = 1.0;
+
+                    const polygon = L.polygon(r.coords, {
+                        color: '#020617', weight: 1.5, fillColor: r.color, fillOpacity: 0.72
+                    }).addTo(map);
+
+                    polygon.on('click', () => handleRegionClick(r.id));
+                    regionLayers[r.id] = polygon;
+
+                    if (r.econ >= 150 || r.faction === playerFacId) {
+                        let center = getRegionCenter(r);
+                        createDivision(r.owner, r.id, center[0], center[1], 15000);
+                    }
+                });
+
+                recalculateFactionStats();
+                addLog(i18n[currentLang].mapInitLog, true);
+            }
+
+            setupRegionTooltips();
+            updateUI();
+            updateGodIndicator();
+        }
+
+        function setupRegionTooltips() {
+            regionsData.forEach(r => {
+                const poly = regionLayers[r.id];
+                if (!poly) return;
+                
+                poly.unbindTooltip();
+                poly.bindTooltip(() => {
+                    const ownerName = getCountryName(r.owner);
+                    const divsInReg = divisions.filter(d => d.regionId === r.id);
+                    return '<div style="font-size:12px; min-width:140px;">' +
+                           '<div style="font-weight:bold; color:var(--accent); font-size:13px; border-bottom:1px solid #334155; margin-bottom:4px; padding-bottom:2px;">' +
+                           getCountryName(r.id) + '</div>' +
+                           '<div>👑 <b>' + ownerName + '</b></div>' +
+                           '<div>💰 ' + i18n[currentLang].gdp + ': <b>' + Math.floor(r.econ) + '</b></div>' +
+                           '<div>👥 ' + i18n[currentLang].pop + ': <b>' + r.pop + 'M</b></div>' +
+                           '<div>🛡️ ' + i18n[currentLang].garrison + ': <b>' + Math.floor(r.garrison).toLocaleString() + '</b></div>' +
+                           '<div>⚔️ ' + i18n[currentLang].divisionTitle + ': <b>' + divsInReg.length + '/3</b></div>' +
+                           '</div>';
+                }, { sticky: true, opacity: 0.95, className: 'region-tooltip' });
+            });
+        }
+
+        // ==========================================
+        // 7. INTERACTION CONTROLLER & GOD-TOOLS
+        // ==========================================
+        function handleRegionClick(regionId) {
+            AudioEngine.click();
+
+            if (activeGodTool) {
+                applyGodTool(activeGodTool, regionId);
+                return;
+            }
+
+            if (isTargeting && selectedDivision) {
+                if (!canMoveBetween(selectedDivision.regionId, regionId)) {
+                    AudioEngine.playTone(200, 'sawtooth', 0.2, 0.3);
+                    addLog(i18n[currentLang].noAdjacency);
+                    return;
+                }
+                
+                const targetDivs = divisions.filter(d => d.regionId === regionId || d.targetRegionId === regionId);
+                if (targetDivs.length >= 3) {
+                    AudioEngine.playTone(200, 'sawtooth', 0.2, 0.3);
+                    addLog(i18n[currentLang].maxDivsReached);
+                    return;
+                }
+
+                setDivisionOrder(selectedDivision, regionId);
+                isTargeting = false;
+                document.getElementById('btn-order-move').innerText = i18n[currentLang].orderMoveBtn;
+                document.getElementById('btn-order-move').classList.remove('btn-target');
+                AudioEngine.march();
+                return;
+            }
+
+            selectedRegion = regionsData.find(r => r.id === regionId);
+            document.getElementById('division-panel').classList.remove('active');
+            
+            document.getElementById('diplomacy-panel').classList.add('active');
+            updateDiploUI();
+        }
+
+        function handleDivisionClick(divId) {
+            if (isTargeting || activeGodTool) return;
+            AudioEngine.click();
+            selectedDivision = divisions.find(d => d.id === divId);
+            if (!selectedDivision) return;
+            if (selectedDivision.owner !== playerFacId && !isSandboxMode) return;
+
+            document.getElementById('diplomacy-panel').classList.remove('active');
+            document.getElementById('division-panel').classList.add('active');
+            updateDivUI();
+
+            document.querySelectorAll('.army-icon').forEach(el => el.classList.remove('army-selected'));
+            if (selectedDivision.marker && selectedDivision.marker._icon) {
+                const el = selectedDivision.marker._icon.querySelector('.army-icon');
+                if (el) el.classList.add('army-selected');
+            }
+        }
+
+        function closeSidePanels() {
+            AudioEngine.click();
+            document.getElementById('diplomacy-panel').classList.remove('active');
+            document.getElementById('division-panel').classList.remove('active');
+            selectedRegion = null;
+            selectedDivision = null;
+            isTargeting = false;
+            document.querySelectorAll('.army-icon').forEach(el => el.classList.remove('army-selected'));
+        }
+
+        function updateDiploUI() {
+            if (!selectedRegion) return;
+            const ownerId = selectedRegion.owner;
+            const isMe = ownerId === playerFacId || isSandboxMode;
+            const t = i18n[currentLang];
+            
+            document.getElementById('country-name').innerText = getCountryName(ownerId);
+            document.getElementById('region-name').innerText = getCountryName(selectedRegion.id);
+            document.getElementById('diplo-econ').innerText = Math.floor(selectedRegion.econ);
+            document.getElementById('diplo-garrison').innerText = Math.floor(selectedRegion.garrison).toLocaleString();
+            document.getElementById('diplo-pop').innerText = selectedRegion.pop + 'M';
+            document.getElementById('diplo-morale').innerText = Math.round((selectedRegion.moralMod || 1) * 100) + '%';
+
+            const status = getStatus(playerFacId, ownerId);
+            let statusText = (ownerId === playerFacId) ? t.statusOwn : (status === 'war' ? t.statusWar : (status === 'alliance' ? t.statusAlliance : t.statusPeace));
+            document.getElementById('diplo-status').innerText = statusText;
+            document.getElementById('diplo-status').style.color = (status === 'war') ? '#ef4444' : '#10b981';
+            document.getElementById('diplo-relations').innerText = getRelationsScore(playerFacId, ownerId);
+
+            document.getElementById('btn-recruit').style.display = isMe ? 'block' : 'none';
+            document.getElementById('btn-mobilize').style.display = (isMe && selectedRegion.garrison >= 10000) ? 'block' : 'none';
+            document.getElementById('btn-improve').style.display = (!isMe && ownerId !== playerFacId) ? 'block' : 'none';
+            document.getElementById('btn-alliance').style.display = (!isMe && ownerId !== playerFacId && status !== 'war') ? 'block' : 'none';
+            document.getElementById('btn-war').style.display = (!isMe && ownerId !== playerFacId && status !== 'war') ? 'block' : 'none';
+        }
+
+        function updateDivUI() {
+            if (!selectedDivision) return;
+            const t = i18n[currentLang];
+            document.getElementById('div-owner').innerText = selectedDivision.owner === playerFacId ? t.playerPrefix : getCountryName(selectedDivision.owner);
+            document.getElementById('div-strength').innerText = Math.floor(selectedDivision.strength).toLocaleString();
+            
+            let orderText = selectedDivision.targetRegionId 
+                ? t.orderMoveTo.replace('{name}', getCountryName(selectedDivision.targetRegionId))
+                : t.orderHold;
+            document.getElementById('div-order').innerText = orderText;
+            document.getElementById('btn-order-cancel').style.display = selectedDivision.targetRegionId ? 'block' : 'none';
+        }
+
+        // ==========================================
+        // 8. MILITARY UNITS & ORDER DISPATCH
+        // ==========================================
+        function createDivision(ownerId, regionId, lat, lng, strength) {
+            let divId = divIdCounter++;
+            let isPlayer = ownerId === playerFacId;
+            let iconHtml = '<div class="army-icon ' + (!isPlayer ? 'army-enemy' : '') + '">' + Math.floor(strength/1000) + 'k</div>';
+            let divIcon = L.divIcon({ className: 'custom-div-icon', html: iconHtml, iconSize: [26, 26], iconAnchor: [13, 13] });
+            
+            let marker = L.marker([lat, lng], { icon: divIcon }).addTo(map);
+            marker.on('click', (e) => {
+                L.DomEvent.stopPropagation(e);
+                handleDivisionClick(divId);
+            });
+
+            const divObj = {
+                id: divId, owner: ownerId, regionId: regionId,
+                lat: lat, lng: lng, strength: strength, marker: marker,
+                targetRegionId: null, orderLine: null
+            };
+            divisions.push(divObj);
+            repositionRegionDivisions(regionId);
+            return divObj;
+        }
+
+        function purgeDivision(div) {
+            if (!div) return;
+            if (div.orderLine) {
+                map.removeLayer(div.orderLine);
+                div.orderLine = null;
+            }
+            if (div.marker) {
+                div.marker.off('click');
+                map.removeLayer(div.marker);
+                div.marker = null;
+            }
+        }
+
+        function recruitDivision() {
+            const myFac = factions[playerFacId];
+            const t = i18n[currentLang];
+            const regionDivs = divisions.filter(d => d.regionId === selectedRegion.id);
+            
+            if (regionDivs.length >= 3) {
+                addLog(t.maxDivsReached);
+                return;
+            }
+            if (!isSandboxMode && (myFac.ap < 3 || myFac.money < 150)) {
+                addLog(t.noResources);
+                return;
+            }
+            if (!isSandboxMode) {
+                myFac.ap -= 3;
+                myFac.money -= 150;
+            }
+            
+            let center = getRegionCenter(selectedRegion);
+            createDivision(selectedRegion.owner, selectedRegion.id, center[0], center[1], 15000);
+            AudioEngine.march();
+            addLog(t.divFormed.replace('{name}', getCountryName(selectedRegion.id)));
+            updateUI(); updateDiploUI();
+        }
+
+        function mobilizeGarrison() {
+            const myFac = factions[playerFacId];
+            const t = i18n[currentLang];
+            const regionDivs = divisions.filter(d => d.regionId === selectedRegion.id);
+
+            if (regionDivs.length >= 3) {
+                addLog(t.maxDivsReached);
+                return;
+            }
+            if (!isSandboxMode && (myFac.ap < 2 || myFac.money < 100 || selectedRegion.garrison < 10000)) {
+                addLog(t.noResourcesMob);
+                return;
+            }
+            if (!isSandboxMode) {
+                myFac.ap -= 2;
+                myFac.money -= 100;
+            }
+            selectedRegion.garrison -= 10000;
+
+            let center = getRegionCenter(selectedRegion);
+            createDivision(selectedRegion.owner, selectedRegion.id, center[0], center[1], 10000);
+            AudioEngine.march();
+            addLog(t.garrisonMobilized.replace('{name}', getCountryName(selectedRegion.id)));
+            updateUI(); updateDiploUI();
+        }
+
+        function startTargeting() {
+            AudioEngine.click();
+            isTargeting = true;
+            document.getElementById('btn-order-move').innerText = i18n[currentLang].orderTargeting;
+            document.getElementById('btn-order-move').classList.add('btn-target');
+        }
+
+        function setDivisionOrder(div, targetRegId) {
+            div.targetRegionId = targetRegId;
+            if (div.orderLine) map.removeLayer(div.orderLine);
+            let targetReg = regionsData.find(r => r.id === targetRegId);
+            let center = getRegionCenter(targetReg);
+            div.orderLine = L.polyline([[div.lat, div.lng], [center[0], center[1]]], {
+                color: '#f59e0b', weight: 2.5, className: 'order-line'
+            }).addTo(map);
+            updateDivUI();
+        }
+
+        function cancelOrder() {
+            AudioEngine.click();
+            if (selectedDivision && selectedDivision.orderLine) {
+                map.removeLayer(selectedDivision.orderLine);
+                selectedDivision.orderLine = null;
+                selectedDivision.targetRegionId = null;
+                updateDivUI();
+            }
+        }
+
+        function disbandDivision() {
+            if (!selectedDivision) return;
+            AudioEngine.click();
+            const myFac = factions[selectedDivision.owner];
+            if (myFac) myFac.money += 75;
+            
+            const regId = selectedDivision.regionId;
+            purgeDivision(selectedDivision);
+            divisions = divisions.filter(d => d.id !== selectedDivision.id);
+            selectedDivision = null;
+            repositionRegionDivisions(regId);
+            closeSidePanels();
+            updateUI();
+        }
+
+        function doDiplo(action) {
+            AudioEngine.click();
+            const ownerId = selectedRegion.owner;
+            const myFac = factions[playerFacId];
+            const t = i18n[currentLang];
+            const cost = (action === 'improve' ? 2 : 5);
+
+            if (!isSandboxMode && myFac.ap < cost) { addLog(t.noAP); return; }
+            if (!isSandboxMode) myFac.ap -= cost;
+
+            if (action === 'war') {
+                setStatus(playerFacId, ownerId, 'war');
+                adjustRelations(playerFacId, ownerId, -60);
+                AudioEngine.playTone(150, 'sawtooth', 0.5, 0.3);
+                addLog(t.warDeclared.replace('{name}', getCountryName(ownerId).toUpperCase()));
+            } else if (action === 'alliance') {
+                const rel = getRelationsScore(playerFacId, ownerId);
+                if (rel >= 20 || isSandboxMode) {
+                    setStatus(playerFacId, ownerId, 'alliance');
+                    AudioEngine.playTone(600, 'sine', 0.3, 0.2);
+                    addLog(t.allianceMade.replace('{name}', getCountryName(ownerId)));
+                } else {
+                    addLog(t.allianceRejected.replace('{name}', getCountryName(ownerId)));
+                }
+            } else if (action === 'improve') {
+                adjustRelations(playerFacId, ownerId, 25);
+                AudioEngine.playTone(500, 'sine', 0.2, 0.15);
+                addLog(t.relationsImproved.replace('{name}', getCountryName(ownerId)));
+            }
+            updateUI(); updateDiploUI();
+        }
+
+        // ==========================================
+        // 9. SIMULATION ENGINE TICK (nextTurn)
+        // ==========================================
+        function nextTurn() {
+            AudioEngine.march();
+            document.getElementById('diplomacy-panel').classList.remove('active');
+            document.getElementById('division-panel').classList.remove('active');
+            selectedDivision = null; isTargeting = false;
+            const t = i18n[currentLang];
+
+            let combats = {};
+            divisions.forEach(div => {
+                if (div.targetRegionId) {
+                    let targetReg = regionsData.find(r => r.id === div.targetRegionId);
+                    const status = getStatus(div.owner, targetReg.owner);
+                    if (targetReg.owner === div.owner || status === 'alliance') {
+                        executeMove(div, targetReg);
+                    } else if (status === 'war') {
+                        if (!combats[targetReg.id]) combats[targetReg.id] = { attackers: [] };
+                        combats[targetReg.id].attackers.push(div);
+                    } else {
+                        if (div.owner === playerFacId) addLog(t.orderCancelledNoWar.replace('{name}', getCountryName(targetReg.owner)));
+                        if (div.orderLine) map.removeLayer(div.orderLine);
+                        div.targetRegionId = null; div.orderLine = null;
+                    }
+                }
+            });
+
+            for (let regId in combats) {
+                let targetReg = regionsData.find(r => r.id === regId);
+                let atkDivs = combats[regId].attackers;
+                let defDivs = divisions.filter(d => d.regionId === targetReg.id && d.owner === targetReg.owner);
+                
+                let atkPower = atkDivs.reduce((sum, d) => sum + d.strength, 0);
+                let defPower = targetReg.garrison + defDivs.reduce((sum, d) => sum + d.strength, 0);
+                const moralAtk = (atkDivs[0] && targetReg.moralMod) ? targetReg.moralMod : 1.0;
+
+                AudioEngine.combat();
+
+                if (atkPower * moralAtk > defPower * 1.1) {
+                    const victorFaction = atkDivs[0].owner;
+                    if (atkDivs.some(d => d.owner === playerFacId)) {
+                        addLog(t.combatWin.replace('{name}', getCountryName(targetReg.id)), true);
+                        campaignStats.regionsConquered++;
+                    }
+                    campaignStats.casualtiesInflicted += defPower;
+
+                    targetReg.owner = victorFaction;
+                    targetReg.garrison = Math.max(2000, Math.floor(atkPower * 0.15));
+                    
+                    defDivs.forEach(d => {
+                        purgeDivision(d);
+                        d.strength = 0;
+                    });
+                    
+                    atkDivs.forEach(div => {
+                        div.strength = Math.max(1000, div.strength - Math.floor(defPower * 0.25));
+                        executeMove(div, targetReg);
+                    });
+                } else {
+                    if (atkDivs.some(d => d.owner === playerFacId)) {
+                        addLog(t.combatLoss.replace('{name}', getCountryName(targetReg.id)), true);
+                        campaignStats.casualtiesSuffered += Math.floor(atkPower * 0.5);
+                    }
+                    atkDivs.forEach(div => {
+                        div.strength = Math.max(0, Math.floor(div.strength * 0.5));
+                        if (div.orderLine) map.removeLayer(div.orderLine);
+                        div.targetRegionId = null; div.orderLine = null;
+                    });
+                    targetReg.garrison = Math.max(500, targetReg.garrison - Math.floor(atkPower * 0.2));
+                    defDivs.forEach(d => d.strength = Math.max(500, d.strength - Math.floor(atkPower * 0.1)));
+                }
+            }
+
+            divisions.forEach(d => {
+                if (d.strength < 1000) purgeDivision(d);
+            });
+            divisions = divisions.filter(d => d.strength >= 1000);
+
+            // Natural Garrison Recovery
+            regionsData.forEach(r => {
+                const isBesieged = divisions.some(d => d.targetRegionId === r.id && d.owner !== r.owner);
+                if (!isBesieged) {
+                    const cap = Math.floor(r.econ * 10);
+                    if (r.garrison < cap) {
+                        r.garrison = Math.min(cap, r.garrison + Math.max(100, Math.floor(cap * 0.05)));
+                    }
+                }
+            });
+
+            // Reactive AI
+            executeReactiveAI();
+
+            // Economy
+            recalculateFactionStats();
+            Object.values(factions).forEach(f => {
+                f.money += f.econ;
+                f.ap = 10;
+            });
+
+            checkWorldCrisis();
+
+            currentTurn++;
+            campaignStats.totalTurns = currentTurn;
+            checkEndgameConditions();
+
+            saveGame(true);
+
+            updateUI();
+            addLog(t.turnEndLog.replace('{turn}', currentTurn), true);
+        }
+
+        function executeMove(div, targetReg) {
+            let center = getRegionCenter(targetReg);
+            div.lat = center[0]; div.lng = center[1];
+            div.regionId = targetReg.id;
+            div.marker.setLatLng([center[0], center[1]]);
+            if (div.orderLine) map.removeLayer(div.orderLine);
+            div.targetRegionId = null; div.orderLine = null;
+            repositionRegionDivisions(targetReg.id);
+        }
+
+        // ==========================================
+        // 10. REACTIVE AI BRAIN
+        // ==========================================
+        function executeReactiveAI() {
+            Object.values(factions).forEach(f => {
+                if (f.id === playerFacId && !isSandboxMode) return;
+                
+                const ownedRegs = regionsData.filter(r => r.owner === f.id);
+                if (ownedRegs.length === 0) return;
+
+                const threatenedReg = ownedRegs.find(r => divisions.some(d => d.targetRegionId === r.id && d.owner !== f.id));
+                if (threatenedReg) {
+                    const idleDiv = divisions.find(d => d.owner === f.id && !d.targetRegionId && canMoveBetween(d.regionId, threatenedReg.id));
+                    if (idleDiv && idleDiv.regionId !== threatenedReg.id) {
+                        setDivisionOrder(idleDiv, threatenedReg.id);
+                    }
+                }
+
+                const myIdleDivs = divisions.filter(d => d.owner === f.id && !d.targetRegionId);
+                myIdleDivs.forEach(div => {
+                    const candidates = regionsData.filter(r => r.owner !== f.id && canMoveBetween(div.regionId, r.id));
+                    
+                    const warTarget = candidates.find(r => getStatus(f.id, r.owner) === 'war' && div.strength > (r.garrison * 1.1));
+                    if (warTarget) {
+                        setDivisionOrder(div, warTarget.id);
+                        return;
+                    }
+
+                    if (f.money > 350 && Math.random() < 0.12) {
+                        const weakNeighbor = candidates.find(r => getStatus(f.id, r.owner) !== 'alliance' && div.strength > (r.garrison * 1.3));
+                        if (weakNeighbor) {
+                            setStatus(f.id, weakNeighbor.owner, 'war');
+                            setDivisionOrder(div, weakNeighbor.id);
+                            if (weakNeighbor.owner === playerFacId) {
+                                AudioEngine.disaster();
+                                addLog('🚨 ' + getCountryName(f.id) + ' ОБЪЯВИЛ ВАМ ВОЙНУ!', true);
+                            }
+                        }
+                    }
+                });
+
+                if (f.money >= 150 && f.ap >= 3 && Math.random() < 0.45) {
+                    const borderReg = ownedRegs.find(r => {
+                        const count = divisions.filter(d => d.regionId === r.id).length;
+                        return count < 2;
+                    });
+                    if (borderReg) {
+                        f.money -= 150; f.ap -= 3;
+                        let center = getRegionCenter(borderReg);
+                        createDivision(f.id, borderReg.id, center[0], center[1], 15000);
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        // 11. ENDGAME CONDITIONS & CRISIS ENGINE
+        // ==========================================
+        function checkEndgameConditions() {
+            if (isSandboxMode) return;
+            const myRegs = regionsData.filter(r => r.owner === playerFacId);
+            const myDivs = divisions.filter(d => d.owner === playerFacId);
+
+            if (myRegs.length === 0 && myDivs.length === 0) {
+                AudioEngine.defeat();
+                showGameOverModal('defeat');
+                return;
+            }
+
+            const totalGlobalEcon = regionsData.reduce((s, r) => s + r.econ, 0);
+            const myEcon = factions[playerFacId] ? factions[playerFacId].econ : 0;
+            const regionShare = myRegs.length / regionsData.length;
+            const econShare = totalGlobalEcon > 0 ? (myEcon / totalGlobalEcon) : 0;
+
+            if (regionShare >= 0.65 || econShare >= 0.65) {
+                AudioEngine.victory();
+                showGameOverModal('victory_conquest');
+                return;
+            }
+
+            if (currentTurn >= 40) {
+                const majorPowers = uniqueFactions.filter(fid => {
+                    if (fid === playerFacId) return false;
+                    return regionsData.filter(r => r.owner === fid).length >= 2;
+                });
+                const peacefulPowers = majorPowers.filter(fid => getStatus(playerFacId, fid) !== 'war');
+                if (peacefulPowers.length >= 4) {
+                    AudioEngine.victory();
+                    showGameOverModal('victory_diplomacy');
+                    return;
+                }
+            }
+        }
+
+        function showGameOverModal(type) {
+            const modal = document.getElementById('game-over-modal');
+            const title = document.getElementById('modal-title');
+            const desc = document.getElementById('modal-desc');
+
+            document.getElementById('stat-turns').innerText = currentTurn;
+            document.getElementById('stat-regions').innerText = regionsData.filter(r => r.owner === playerFacId).length + ' / ' + regionsData.length;
+            
+            const totalGlobalEcon = regionsData.reduce((s, r) => s + r.econ, 0);
+            const myEcon = factions[playerFacId] ? factions[playerFacId].econ : 0;
+            document.getElementById('stat-gdp').innerText = Math.round((myEcon/totalGlobalEcon)*100) + '%';
+            document.getElementById('stat-casualties').innerText = campaignStats.casualtiesSuffered.toLocaleString();
+
+            if (type === 'victory_conquest') {
+                title.innerText = currentLang === 'ru' ? '🏆 АБСОЛЮТНАЯ ГЕГЕМОНИЯ!' : '🏆 TOTAL HEGEMONY!';
+                title.style.color = 'var(--gold)';
+                desc.innerText = currentLang === 'ru' 
+                    ? 'Ваша держава объединила большую часть планеты. Новый мировой порядок установлен.'
+                    : 'Your empire controls the majority of the known globe. A new world order is established.';
+            } else if (type === 'victory_diplomacy') {
+                title.innerText = currentLang === 'ru' ? '🕊️ ДИПЛОМАТИЧЕСКИЙ ТРИУМФ!' : '🕊️ DIPLOMATIC TRIUMPH!';
+                title.style.color = '#38bdf8';
+                desc.innerText = currentLang === 'ru'
+                    ? 'Вы сохранили глобальный баланс и не допустили всемирного уничтожения до 40-го хода.'
+                    : 'You preserved equilibrium and navigated world crises through Turn 40.';
+            } else {
+                title.innerText = currentLang === 'ru' ? '💀 КРАХ ГОСУДАРСТВА' : '💀 FACTION COLLAPSE';
+                title.style.color = 'var(--red)';
+                desc.innerText = currentLang === 'ru'
+                    ? 'Ваши земли завоеваны, а армии уничтожены. Ваше имя стерто из летописей.'
+                    : 'Your lands have been conquered and your armies scattered.';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function checkWorldCrisis() {
+            if (crisisTriggered || currentTurn < 25) return;
+            crisisTriggered = true;
+            AudioEngine.disaster();
+
+            const crisisTypes = ['coalition', 'solar_flare', 'insurgency'];
+            const chosen = crisisTypes[Math.floor(Math.random() * crisisTypes.length)];
+            const modal = document.getElementById('crisis-modal');
+            const title = document.getElementById('crisis-title');
+            const desc = document.getElementById('crisis-desc');
+
+            if (chosen === 'coalition') {
+                title.innerText = currentLang === 'ru' ? '🚨 ВЕЛИКАЯ ВОЕННАЯ КОАЛИЦИЯ' : '🚨 GRAND MILITARY COALITION';
+                desc.innerText = currentLang === 'ru'
+                    ? 'Мировые державы объединились в союз против лидера гонки! Крупнейшие армии мобилизованы.'
+                    : 'Rival empires have signed a global pact against the hegemony. Border tensions explode!';
+                const rivals = Object.values(factions).filter(f => f.id !== playerFacId).sort((a,b) => b.econ - a.econ).slice(0, 2);
+                rivals.forEach(r => setStatus(playerFacId, r.id, 'war'));
+            } else if (chosen === 'solar_flare') {
+                title.innerText = currentLang === 'ru' ? '⚡ ГЕОМАГНИТНЫЙ СУПЕРШТОРМ' : '⚡ GEOMAGNETIC SUPERSTORM';
+                desc.innerText = currentLang === 'ru'
+                    ? 'Солнечная вспышка вывела из строя энергосети. Казна всех держав потеряла 50% золота!'
+                    : 'Solar coronal ejection collapses orbital infrastructure. 50% treasury lost worldwide!';
+                Object.values(factions).forEach(f => f.money = Math.floor(f.money * 0.5));
+            } else {
+                title.innerText = currentLang === 'ru' ? '🔥 ВСЕМИРНОЕ ВОССТАНИЕ' : '🔥 WORLDWIDE INSURGENCY';
+                desc.innerText = currentLang === 'ru'
+                    ? 'Пограничные сепаратисты подняли бунт в незащищенных провинциях!'
+                    : 'Paramilitary insurgencies have seized lightly-defended border zones!';
+                regionsData.filter(r => r.garrison < 4000).slice(0, 4).forEach(r => {
+                    let center = getRegionCenter(r);
+                    createDivision(r.owner, r.id, center[0], center[1], 12000);
+                });
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        // ==========================================
+        // 12. GOD-TOOLS & SANDBOX CONTROLS
+        // ==========================================
+        function toggleSandboxMode() {
+            AudioEngine.click();
+            isSandboxMode = !isSandboxMode;
+            const btn = document.getElementById('btn-sandbox-toggle');
+            btn.classList.toggle('active', isSandboxMode);
+            btn.innerText = isSandboxMode ? i18n[currentLang].sandboxOn : i18n[currentLang].sandboxOff;
+            
+            document.getElementById('god-tools-panel').style.display = isSandboxMode ? 'flex' : 'none';
+            if (isSandboxMode) {
+                factions[playerFacId].ap = 999;
+                addLog("🛠️ Режим Песочницы активирован: сняты ограничения перемещения и ресурсов.");
+            } else {
+                clearGodTool();
+            }
+            updateUI();
+        }
+
+        function toggleGodDock() {
+            AudioEngine.click();
+            const dock = document.getElementById('god-tools-panel');
+            dock.style.display = (dock.style.display === 'none') ? 'flex' : 'none';
+        }
+
+        function selectGodTool(tool) {
+            AudioEngine.click();
+            activeGodTool = tool;
+            document.querySelectorAll('.god-btn').forEach(b => b.classList.remove('active'));
+            const activeBtn = document.getElementById('god-btn-' + tool);
+            if (activeBtn) activeBtn.classList.add('active');
+            updateGodIndicator();
+        }
+
+        function clearGodTool() {
+            activeGodTool = null;
+            document.querySelectorAll('.god-btn').forEach(b => b.classList.remove('active'));
+            updateGodIndicator();
+        }
+
+        function updateGodIndicator() {
+            const ind = document.getElementById('god-brush-indicator');
+            if (activeGodTool) {
+                ind.style.display = 'flex';
+                document.getElementById('txt-active-brush').innerText = i18n[currentLang].brushActive.replace('{tool}', activeGodTool.toUpperCase());
+            } else {
+                ind.style.display = 'none';
+            }
+        }
+
+        function applyGodTool(tool, regId) {
+            const reg = regionsData.find(r => r.id === regId);
+            if (!reg) return;
+
+            if (tool === 'terraform') {
+                showGodDialog('Терраформинг', 'Изменение экономики региона ' + getCountryName(reg.id), [
+                    { label: '🌿 +150 ВВП и +2M Населения', action: () => {
+                        reg.econ += 150; reg.pop += 2; recalculateFactionStats(); AudioEngine.bless(); updateUI();
+                    }},
+                    { label: '🏜️ -150 ВВП (Опустынивание)', action: () => {
+                        reg.econ = Math.max(50, reg.econ - 150); recalculateFactionStats(); AudioEngine.disaster(); updateUI();
+                    }}
+                ]);
+            } else if (tool === 'spawn') {
+                showGodDialog('Создание сил', 'Спавн контингента в ' + getCountryName(reg.id), [
+                    { label: '⚔️ Создать дивизию 20,000 бойцов', action: () => {
+                        let center = getRegionCenter(reg);
+                        createDivision(reg.owner, reg.id, center[0], center[1], 20000);
+                        AudioEngine.march(); updateUI();
+                    }},
+                    { label: '🛡️ Укрепить гарнизон (+10,000)', action: () => {
+                        reg.garrison += 10000; AudioEngine.march(); updateUI();
+                    }}
+                ]);
+            } else if (tool === 'disaster') {
+                showGodDialog('Вызов Катаклизма', 'Обрушить катастрофу на ' + getCountryName(reg.id), [
+                    { label: '☄️ Метеорит (Уничтожить все дивизии и обнулить гарнизон)', action: () => {
+                        AudioEngine.disaster();
+                        divisions.filter(d => d.regionId === reg.id).forEach(d => purgeDivision(d));
+                        divisions = divisions.filter(d => d.regionId !== reg.id);
+                        reg.garrison = 500;
+                        reg.econ = Math.max(30, Math.floor(reg.econ * 0.4));
+                        addLog('☄️ Метеоритный удар стер с лица земли военные силы в ' + getCountryName(reg.id) + '!', true);
+                        updateUI();
+                    }},
+                    { label: '🌋 Землетрясение (-50% гарнизона и разрушение ВВП)', action: () => {
+                        AudioEngine.disaster();
+                        reg.garrison = Math.floor(reg.garrison * 0.5);
+                        reg.econ = Math.floor(reg.econ * 0.7);
+                        addLog('🌋 Землетрясение разрушило инфраструктуру в ' + getCountryName(reg.id) + '!');
+                        updateUI();
+                    }},
+                    { label: '☣️ Эпидемия Чумы (-50% дивизий и населения)', action: () => {
+                        AudioEngine.disaster();
+                        reg.pop = Math.max(0.1, Math.round(reg.pop * 0.5 * 10)/10);
+                        divisions.filter(d => d.regionId === reg.id).forEach(d => d.strength = Math.floor(d.strength * 0.5));
+                        addLog('☣️ Вспышка эпидемии в ' + getCountryName(reg.id) + '!');
+                        updateUI();
+                    }}
+                ]);
+            } else if (tool === 'bless') {
+                showGodDialog('Благословение / Проклятие', 'Воздействие на мораль региона ' + getCountryName(reg.id), [
+                    { label: '✨ Божественное Благословение (+30% атаки, исцеление)', action: () => {
+                        AudioEngine.bless();
+                        reg.moralMod = 1.3;
+                        divisions.filter(d => d.regionId === reg.id).forEach(d => d.strength = 25000);
+                        addLog('✨ Божественное сияние озарило войска в ' + getCountryName(reg.id) + '!');
+                        updateUI();
+                    }},
+                    { label: '💀 Демоническое Проклятие (-30% атаки, упадок духа)', action: () => {
+                        AudioEngine.disaster();
+                        reg.moralMod = 0.7;
+                        addLog('💀 Проклятие посеяло панику в гарнизонах ' + getCountryName(reg.id) + '!');
+                        updateUI();
+                    }}
+                ]);
+            }
+        }
+
+        function showGodDialog(title, desc, actions) {
+            document.getElementById('god-dialog-title').innerText = title;
+            document.getElementById('god-dialog-desc').innerText = desc;
+            const container = document.getElementById('god-dialog-actions');
+            container.innerHTML = '';
+            
+            actions.forEach(a => {
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.innerText = a.label;
+                btn.onclick = () => {
+                    a.action();
+                    closeModal('god-dialog-modal');
+                };
+                container.appendChild(btn);
+            });
+            document.getElementById('god-dialog-modal').style.display = 'flex';
+        }
+
+        // ==========================================
+        // 13. FAST TRAVEL CAMERA ANCHORS
+        // ==========================================
+        const theaterCoords = {
+            europe: { center: [50, 15], zoom: 4 },
+            caucasus: { center: [42, 45], zoom: 6 },
+            asia: { center: [35, 105], zoom: 3 },
+            americas: { center: [20, -75], zoom: 3 },
+            africa: { center: [5, 25], zoom: 3 },
+            oceania: { center: [-30, 140], zoom: 4 }
+        };
+
+        function flyToTheater(name) {
+            AudioEngine.click();
+            const t = theaterCoords[name];
+            if (t) map.flyTo(t.center, t.zoom, { duration: 0.8 });
+        }
+
+        // ==========================================
+        // 14. SAVE / LOAD STATE (LOCALSTORAGE)
+        // ==========================================
+        function saveGame(isAuto = false) {
+            if (!playerFacId) return;
+            const state = {
+                turn: currentTurn,
+                playerFacId: playerFacId,
+                isSandboxMode: isSandboxMode,
+                crisisTriggered: crisisTriggered,
+                campaignStats: campaignStats,
+                factions: factions,
+                regions: regionsData.map(r => ({
+                    id: r.id, owner: r.owner, econ: r.econ, pop: r.pop,
+                    garrison: r.garrison, moralMod: r.moralMod || 1.0
+                })),
+                divisions: divisions.map(d => ({
+                    id: d.id, owner: d.owner, regionId: d.regionId,
+                    lat: d.lat, lng: d.lng, strength: d.strength,
+                    targetRegionId: d.targetRegionId
+                })),
+                statuses: statuses,
+                relations: relations
+            };
+            
+            localStorage.setItem('idealworld_save', JSON.stringify(state));
+            if (!isAuto) {
+                AudioEngine.playTone(700, 'sine', 0.15, 0.1);
+                addLog(i18n[currentLang].savedMsg);
+            }
+        }
+
+        function loadGame() {
+            const raw = localStorage.getItem('idealworld_save');
+            if (!raw) {
+                addLog(i18n[currentLang].noSaveMsg);
+                return;
+            }
+            AudioEngine.click();
+
+            const state = JSON.parse(raw);
+            currentTurn = state.turn;
+            playerFacId = state.playerFacId;
+            isSandboxMode = !!state.isSandboxMode;
+            crisisTriggered = !!state.crisisTriggered;
+            campaignStats = state.campaignStats || campaignStats;
+            factions = state.factions;
+            statuses = state.statuses || {};
+            relations = state.relations || {};
+
+            divisions.forEach(d => purgeDivision(d));
+            divisions = [];
+
+            state.regions.forEach(sr => {
+                const r = regionsData.find(item => item.id === sr.id);
+                if (r) {
+                    r.owner = sr.owner;
+                    r.econ = sr.econ;
+                    r.pop = sr.pop;
+                    r.garrison = sr.garrison;
+                    r.moralMod = sr.moralMod || 1.0;
+                    if (regionLayers[r.id] && factions[r.owner]) {
+                        regionLayers[r.id].setStyle({ fillColor: factions[r.owner].color });
+                    }
+                }
+            });
+
+            state.divisions.forEach(sd => {
+                const divObj = createDivision(sd.owner, sd.regionId, sd.lat, sd.lng, sd.strength);
+                divObj.id = sd.id;
+                divIdCounter = Math.max(divIdCounter, sd.id + 1);
+                if (sd.targetRegionId) {
+                    setDivisionOrder(divObj, sd.targetRegionId);
+                }
+            });
+
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('top-bar').style.display = 'flex';
+            document.getElementById('fast-travel-bar').style.display = 'flex';
+            document.getElementById('log-panel').style.display = 'block';
+
+            if (isSandboxMode) {
+                document.getElementById('btn-sandbox-toggle').classList.add('active');
+                document.getElementById('god-tools-panel').style.display = 'flex';
+            }
+
+            setupRegionTooltips();
+            updateUI();
+            addLog(i18n[currentLang].loadedMsg, true);
+        }
+
+        function restartGame() {
+            AudioEngine.click();
+            closeModal('game-over-modal');
+            divisions.forEach(d => purgeDivision(d));
+            divisions = [];
+            document.getElementById('top-bar').style.display = 'none';
+            document.getElementById('fast-travel-bar').style.display = 'none';
+            document.getElementById('log-panel').style.display = 'none';
+            document.getElementById('god-tools-panel').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'flex';
+            currentTurn = 1;
+            crisisTriggered = false;
+        }
+
+        function continueInSandbox() {
+            AudioEngine.click();
+            closeModal('game-over-modal');
+            if (!isSandboxMode) toggleSandboxMode();
+        }
+
+        function closeModal(id) {
+            AudioEngine.click();
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // ==========================================
+        // 15. UI REFRESH & HOTKEYS
+        // ==========================================
+        function updateUI() {
+            if (!playerFacId || !factions[playerFacId]) return;
+            const p = factions[playerFacId];
+            document.getElementById('player-faction').innerText = i18n[currentLang].factionLabel + ': ' + getCountryName(playerFacId);
+            document.getElementById('player-money').innerText = Math.floor(p.money).toLocaleString();
+            document.getElementById('player-pop').innerText = p.pop;
+            document.getElementById('player-ap').innerText = isSandboxMode ? '∞' : p.ap;
+            document.getElementById('turn-counter').innerText = currentTurn;
+
+            regionsData.forEach(r => {
+                if (regionLayers[r.id] && factions[r.owner]) {
+                    regionLayers[r.id].setStyle({ fillColor: factions[r.owner].color });
+                }
+            });
+
+            divisions.forEach(d => {
+                let isPlayer = d.owner === playerFacId;
+                if (d.marker) {
+                    d.marker.setIcon(L.divIcon({ 
+                        className: 'custom-div-icon', 
+                        html: '<div class="army-icon ' + (!isPlayer ? 'army-enemy' : '') + '">' + Math.floor(d.strength/1000) + 'k</div>', 
+                        iconSize: [26, 26], iconAnchor: [13, 13] 
+                    }));
+                }
+            });
+
+            const totalGlobalEcon = regionsData.reduce((sum, r) => sum + r.econ, 0);
+            if (totalGlobalEcon > 0) {
+                const share = Math.round((p.econ / totalGlobalEcon) * 100);
+                document.getElementById('world-hegemony').innerText = share + '%';
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (playerFacId) nextTurn();
+            } else if (e.code === 'Escape') {
+                closeSidePanels();
+                clearGodTool();
+            } else if (e.key === '1') {
+                selectGodTool('terraform');
+            } else if (e.key === '2') {
+                selectGodTool('spawn');
+            } else if (e.key === '3') {
+                selectGodTool('disaster');
+            } else if (e.key === '4') {
+                selectGodTool('bless');
+            } else if (e.key.toLowerCase() === 'm') {
+                toggleAudio();
+            }
+        });
+
+        // Initialize default view
+        setLanguage(currentLang);
+    </script>
+</body>
+</html>

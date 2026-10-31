@@ -1,0 +1,2213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Mega Evolution: Spore 3.0 (Definitive Edition)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      touch-action: manipulation;
+    }
+
+    :root {
+      --bg-dark: #030712;
+      --panel-bg: #0b1120;
+      --card-bg: #111c35;
+      --accent-blue: #38bdf8;
+      --accent-green: #4ade80;
+      --accent-purple: #c084fc;
+      --accent-gold: #f59e0b;
+      --border-color: #1e293b;
+      --border-highlight: #334155;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: #f1f5f9;
+      display: flex;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* Верхние статы */
+    .top-stats {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(14px);
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border-highlight);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: center;
+      z-index: 10;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+
+    .stat-badge { display: flex; flex-direction: column; gap: 2px; }
+    .stat-cells { color: var(--accent-blue); }
+    .stat-body { color: var(--accent-green); }
+    .stat-dna { color: var(--accent-purple); }
+    .stat-rate { color: var(--accent-gold); }
+
+    /* Десктопная разметка (2 колонки) */
+    .world-panel {
+      flex: 1.45;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+      position: relative;
+      border-right: 2px solid var(--border-color);
+      min-width: 0;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      min-height: 280px;
+      cursor: crosshair;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--border-highlight);
+      box-shadow: 0 0 35px rgba(0,0,0,0.85);
+      background: #020617;
+      margin: 10px 0;
+      touch-action: none;
+    }
+
+    #bioCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .era-badge {
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid var(--accent-blue);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .minimap-overlay {
+      position: absolute;
+      bottom: 12px;
+      right: 14px;
+      width: 90px;
+      height: 90px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid #475569;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      color: #94a3b8;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    .minimap-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--accent-blue);
+      border-radius: 50%;
+      margin-bottom: 4px;
+      box-shadow: 0 0 8px var(--accent-blue);
+    }
+
+    .controls-hint {
+      position: absolute;
+      bottom: 12px;
+      left: 14px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-highlight);
+      border-radius: 12px;
+      padding: 5px 12px;
+      font-size: 0.72rem;
+      color: #94a3b8;
+      pointer-events: none;
+    }
+
+    .action-controls {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .btn-main {
+      flex: 1;
+      padding: 12px 6px;
+      border-radius: 12px;
+      border: none;
+      font-size: 0.82rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: #fff;
+    }
+
+    .btn-main:active { transform: scale(0.97); }
+
+    .btn-feed {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+    }
+    .btn-body-grow {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+    }
+    .btn-dna {
+      background: linear-gradient(135deg, #7e22ce, #6b21a8);
+      box-shadow: 0 4px 14px rgba(126, 34, 206, 0.35);
+    }
+    .btn-main:disabled { background: #1e293b; color: #64748b; cursor: not-allowed; box-shadow: none; opacity: 0.65; }
+
+    /* Правая панель лаборатории */
+    .shop-panel {
+      flex: 1.15;
+      display: flex;
+      flex-direction: column;
+      background: var(--panel-bg);
+      overflow-y: auto;
+      padding: 16px 18px;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .shop-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #f8fafc;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-pill {
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #94a3b8;
+      padding: 4px 9px;
+      border-radius: 7px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-pill:hover { color: #fff; border-color: var(--accent-blue); background: #273549; }
+
+    .ascend-banner {
+      background: linear-gradient(135deg, #f59e0b, #b45309);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: #fff;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 0 24px rgba(245, 158, 11, 0.45);
+      animation: pulseGlow 1.8s infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      from { transform: scale(1); box-shadow: 0 0 16px rgba(245, 158, 11, 0.3); }
+      to { transform: scale(1.02); box-shadow: 0 0 26px rgba(245, 158, 11, 0.55); }
+    }
+
+    .btn-ascend {
+      background: #fff;
+      color: #78350f;
+      border: none;
+      padding: 9px;
+      font-weight: 800;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .btn-ascend:hover { transform: scale(1.02); }
+
+    .custom-builder-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-highlight);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .builder-section-title {
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .btn-choice {
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      color: #94a3b8;
+      padding: 6px 4px;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-choice:hover { border-color: var(--accent-blue); color: #fff; }
+    .btn-choice.active {
+      background: rgba(56, 189, 248, 0.22);
+      border-color: var(--accent-blue);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    }
+
+    .tabs-header {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 6px;
+    }
+
+    .tab-btn {
+      background: #1e293b;
+      border: none;
+      color: #94a3b8;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active { background: #0284c7; color: #fff; }
+
+    .upgrade-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .upgrade-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0a0f1d;
+      padding: 9px 12px;
+      border-radius: 9px;
+      border: 1px solid var(--border-color);
+      gap: 10px;
+      transition: border-color 0.2s;
+    }
+
+    .upgrade-item.active-level {
+      border-color: rgba(56, 189, 248, 0.35);
+      background: rgba(15, 23, 42, 0.6);
+    }
+
+    .upgrade-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .upgrade-header-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+
+    .upgrade-info h4 {
+      font-size: 0.8rem;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lvl-tag {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: var(--accent-blue);
+      font-size: 0.65rem;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .upgrade-info p {
+      font-size: 0.68rem;
+      color: #64748b;
+      line-height: 1.25;
+    }
+
+    .btn-buy {
+      background: var(--accent-blue);
+      color: #0f172a;
+      border: none;
+      padding: 7px 11px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 7px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .btn-buy:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); }
+    .btn-buy:disabled { background: #1e293b; color: #475569; cursor: not-allowed; }
+
+    .floating-text {
+      position: absolute;
+      font-weight: bold;
+      color: var(--accent-blue);
+      pointer-events: none;
+      animation: floatUp 0.75s ease-out forwards;
+      z-index: 100;
+      text-shadow: 0 0 6px rgba(0,0,0,0.8);
+    }
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-38px) scale(1.1); }
+    }
+
+    /* Модальные окна */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(2, 6, 23, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 16px;
+    }
+
+    .modal-box {
+      background: #0f172a;
+      border: 1px solid var(--border-highlight);
+      border-radius: 16px;
+      padding: 22px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+    .modal-header h3 { font-size: 1.05rem; color: #fff; }
+    .btn-close-modal {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      font-size: 0.82rem;
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .save-textarea {
+      width: 100%;
+      height: 90px;
+      background: #030712;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--accent-blue);
+      font-family: monospace;
+      font-size: 0.75rem;
+      padding: 8px;
+      resize: none;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .btn-modal {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-modal-primary { background: var(--accent-blue); color: #020617; }
+    .btn-modal-danger { background: #ef4444; color: #fff; }
+    .btn-modal-secondary { background: #334155; color: #fff; }
+
+    /* Победное окно Апекс-Суверена */
+    .victory-box {
+      border: 2px solid var(--accent-gold);
+      box-shadow: 0 0 50px rgba(245, 158, 11, 0.4);
+      text-align: center;
+      align-items: center;
+    }
+    .victory-badge {
+      font-size: 3rem;
+      margin-bottom: 4px;
+      animation: crownBounce 2s infinite ease-in-out;
+    }
+    @keyframes crownBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .stats-table {
+      width: 100%;
+      background: #060d1d;
+      border-radius: 10px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 0.75rem;
+      text-align: left;
+    }
+    .stats-table div { display: flex; flex-direction: column; }
+    .stats-table span.label { color: #64748b; font-size: 0.68rem; }
+    .stats-table span.val { color: var(--accent-blue); font-weight: 700; }
+
+    /* Нижний навбар (только для мобильных экранов) */
+    .mobile-nav {
+      display: none;
+      background: #0f172a;
+      border-top: 1px solid var(--border-highlight);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      z-index: 20;
+    }
+
+    .mobile-tab-btn {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      background: transparent;
+      border: none;
+      color: #64748b;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .mobile-tab-btn.active {
+      color: var(--accent-blue);
+      border-top: 2px solid var(--accent-blue);
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    /* Мобильная адаптация */
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .mobile-nav { display: flex; }
+      .world-panel { flex: 1; padding: 8px 10px; border-right: none; }
+      .shop-panel { display: none; flex: 1; padding: 10px 12px; }
+      .top-stats { font-size: 0.74rem; padding: 6px 8px; }
+      .canvas-container { margin: 6px 0; border-radius: 14px; }
+      .minimap-overlay { display: none; }
+      .controls-hint { font-size: 0.65rem; padding: 3px 8px; }
+      .btn-main { padding: 9px 4px; font-size: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Панель мира (Аквариум) -->
+  <div class="world-panel" id="worldPanel">
+    <div class="top-stats">
+      <div class="stat-badge stat-cells">
+        <span id="lbl-biomass">Биомасса</span>
+        <span id="cellsCount">1</span>
+      </div>
+      <div class="stat-badge stat-body">
+        <span id="lbl-cells">Клетки тела</span>
+        <span id="bodyCellsCount">1</span>
+      </div>
+      <div class="stat-badge stat-dna">
+        <span id="lbl-dna">ДНК</span>
+        <span id="dnaCount">0</span>
+      </div>
+      <div class="stat-badge stat-rate">
+        <span id="lbl-synthesis">Синтез</span>
+        <span id="passiveIncome">0/с</span>
+      </div>
+    </div>
+
+    <div class="canvas-container" id="canvasContainer">
+      <canvas id="bioCanvas"></canvas>
+      <div class="era-badge" id="eraBadge">
+        <span>🦠</span> <span id="eraBadgeText">Эра 1: Одноклеточный Прокариот</span>
+      </div>
+      <div class="controls-hint" id="txt-controls-hint">Курсор / [WASD] / Тач — Плавание и охота</div>
+      <div class="minimap-overlay">
+        <div class="minimap-dot" id="minimapDot"></div>
+        <span id="mapScaleText">Мир: 1200x900</span>
+      </div>
+    </div>
+
+    <div class="action-controls">
+      <button class="btn-main btn-feed" id="clickBtn">
+        <span id="btn-feed-title">Питание / Охота</span>
+        <small id="clickPowerText">+1 Биомасса</small>
+      </button>
+
+      <button class="btn-main btn-body-grow" id="growBodyBtn">
+        <span id="btn-grow-title">+1 Клетка Тела</span>
+        <small id="bodyCostText">Цена: 10 биом.</small>
+      </button>
+
+      <button class="btn-main btn-dna" id="synthDnaBtn" disabled>
+        <span id="btn-mutation-title">Мутация (+1 🧬)</span>
+        <small id="dnaCostText">Цена: 25 биом.</small>
+      </button>
+    </div>
+  </div>
+
+  <!-- Панель магазина / лаборатории -->
+  <div class="shop-panel" id="shopPanel">
+    <div class="shop-title">
+      <span id="txt-lab-title">Био-Лаборатория</span>
+      <div class="header-actions">
+        <button class="btn-pill" id="audioToggleBtn" title="Звук">🔊</button>
+        <button class="btn-pill" id="saveModalBtn" title="Сохранение">💾</button>
+        <button class="btn-pill" id="langToggleBtn">EN</button>
+        <button class="btn-pill" id="resetModalBtn" title="Сброс" style="color: #f87171;">🔄</button>
+      </div>
+    </div>
+
+    <div class="ascend-banner" id="ascendBanner">
+      <div style="font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
+        <span>⚡</span> <span id="txt-ascend-head">ВЕЛИКАЯ МЕГА-ЭВОЛЮЦИЯ!</span>
+      </div>
+      <p style="font-size: 0.74rem;" id="txt-ascend-desc">Существо превзошло лимит клеток и готово переродиться в Высшего Легендарного Титана с утроенной мощью!</p>
+      <button class="btn-ascend" id="btn-ascend-act" onclick="ascendCreature()">СОВЕРШИТЬ МЕГА-ЭВОЛЮЦИЮ</button>
+    </div>
+
+    <div class="custom-builder-card">
+      <div class="builder-section-title">
+        <span id="txt-arch-title">1. Анатомический Класс:</span>
+        <span id="activeArchLabel" style="color: var(--accent-blue); text-transform: none;"></span>
+      </div>
+      <div class="choice-grid" id="archChoiceGrid">
+        <button class="btn-choice active" data-type="insect" onclick="setArchetype('insect')">🐛 Хитиноид</button>
+        <button class="btn-choice" data-type="dragon" onclick="setArchetype('dragon')">🐉 Дракон</button>
+        <button class="btn-choice" data-type="beast" onclick="setArchetype('beast')">🐺 Зверь</button>
+        <button class="btn-choice" data-type="kraken" onclick="setArchetype('kraken')">🐙 Кракен</button>
+        <button class="btn-choice" data-type="griffin" onclick="setArchetype('griffin')">🦅 Птицеящер</button>
+        <button class="btn-choice" data-type="xenomorph" onclick="setArchetype('xenomorph')">👾 Ксеноморф</button>
+      </div>
+
+      <div class="builder-section-title" style="margin-top: 4px;">
+        <span id="txt-skin-title">2. Текстура Кожи / Покрова:</span>
+        <span id="activeSkinLabel" style="color: var(--accent-green); text-transform: none;"></span>
+      </div>
+      <div class="choice-grid" id="skinChoiceGrid">
+        <button class="btn-choice active" data-skin="smooth" onclick="setSkin('smooth')">Гладкая Кожа</button>
+        <button class="btn-choice" data-skin="chitin" onclick="setSkin('chitin')">Панцирь</button>
+        <button class="btn-choice" data-skin="scales" onclick="setSkin('scales')">Чешуя</button>
+        <button class="btn-choice" data-skin="fur" onclick="setSkin('fur')">Шерсть</button>
+        <button class="btn-choice" data-skin="crystal" onclick="setSkin('crystal')">Кристалл</button>
+        <button class="btn-choice" data-skin="bioglow" onclick="setSkin('bioglow')">Неон/Яд</button>
+      </div>
+    </div>
+
+    <div class="tabs-header">
+      <button class="tab-btn active" id="tab-btn-cells" onclick="switchTab('cells')">Метаболизм (Биомасса)</button>
+      <button class="tab-btn" id="tab-btn-dna" onclick="switchTab('dna')">Органы & Конечности (ДНК)</button>
+    </div>
+
+    <div id="tabCells" class="upgrade-list"></div>
+    <div id="tabDna" class="upgrade-list" style="display: none;"></div>
+  </div>
+
+  <!-- Нижний мобильный таб-бар -->
+  <div class="mobile-nav">
+    <button class="mobile-tab-btn active" id="mTabWorld" onclick="switchMobileView('world')">🎮 Аквариум</button>
+    <button class="mobile-tab-btn" id="mTabShop" onclick="switchMobileView('shop')">🧬 Мутации & ДНК</button>
+  </div>
+
+  <!-- Модальное окно: Сохранение / Экспорт / Импорт -->
+  <div class="modal-overlay" id="saveModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="txt-save-title">Управление сохранением</h3>
+        <button class="btn-close-modal" onclick="closeModal('saveModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="txt-save-info">Игра автоматически сохраняется в браузере каждые 5 секунд. Вы также можете экспортировать или импортировать строку сохранения ниже:</p>
+        <textarea class="save-textarea" id="saveTextarea" spellcheck="false" placeholder="Строка сохранения..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-modal btn-modal-primary" id="btnExportSave" onclick="exportSaveString()">Скопировать сейв</button>
+        <button class="btn-modal btn-modal-secondary" id="btnImportSave" onclick="importSaveString()">Загрузить сейв</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно: Сброс прогресса -->
+  <div class="modal-overlay" id="resetModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="txt-reset-title" style="color: #f87171;">Подтверждение сброса</h3>
+        <button class="btn-close-modal" onclick="closeModal('resetModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="txt-reset-desc">Вы уверены, что хотите сбросить весь эволюционный прогресс? Все биомассы, мутации, ранги Мега-Эволюции и статистика будут безвозвратно удалены.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-modal btn-modal-secondary" onclick="closeModal('resetModal')">Отмена</button>
+        <button class="btn-modal btn-modal-danger" id="btnConfirmReset" onclick="executeHardReset()">Да, удалить всё</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно: Победа Apex Sovereign (Мега-Ранг 5) -->
+  <div class="modal-overlay" id="victoryModal">
+    <div class="modal-box victory-box">
+      <div class="victory-badge">👑</div>
+      <h3 style="color: var(--accent-gold); font-size: 1.25rem;" id="txt-victory-head">ВЫСШИЙ СУВЕРЕН ОКЕАНА!</h3>
+      <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4;" id="txt-victory-desc">
+        Поздравляем! Ваше существо достигло 5-го Ранга Мега-Эволюции и стало Апекс-Сувереном первобытного мира. Вы завершили основную эволюционную цепочку!
+      </p>
+      <div class="stats-table">
+        <div>
+          <span class="label" id="lbl-stat-time">Время в игре:</span>
+          <span class="val" id="statTimeVal">00:00</span>
+        </div>
+        <div>
+          <span class="label" id="lbl-stat-ascends">Ранг эволюции:</span>
+          <span class="val" id="statAscendsVal">Ранг 5</span>
+        </div>
+        <div>
+          <span class="label" id="lbl-stat-biomass">Биомассы собрано:</span>
+          <span class="val" id="statBiomassVal">0</span>
+        </div>
+        <div>
+          <span class="label" id="lbl-stat-dna">ДНК мутировано:</span>
+          <span class="val" id="statDnaVal">0</span>
+        </div>
+        <div>
+          <span class="label" id="lbl-stat-food">Органики поглощено:</span>
+          <span class="val" id="statFoodVal">0</span>
+        </div>
+        <div>
+          <span class="label" id="lbl-stat-clicks">Ручных охот:</span>
+          <span class="val" id="statClicksVal">0</span>
+        </div>
+      </div>
+      <div class="modal-actions" style="width: 100%; justify-content: center; margin-top: 6px;">
+        <button class="btn-modal btn-modal-primary" onclick="closeModal('victoryModal')">Продолжить в бесконечном режиме</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- ПАКЕТ ЗВУКОВОГО СИНТЕЗА WEB AUDIO API (БЕЗ ВНЕШНИХ ФАЙЛОВ) ---
+    const Sound = {
+      ctx: null,
+      muted: localStorage.getItem('spore_muted') === '1',
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      },
+      toggleMute() {
+        this.muted = !this.muted;
+        localStorage.setItem('spore_muted', this.muted ? '1' : '0');
+        const btn = document.getElementById('audioToggleBtn');
+        if (btn) btn.textContent = this.muted ? '🔇' : '🔊';
+        return !this.muted;
+      },
+      playPop() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const t = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(380, t);
+          osc.frequency.exponentialRampToValueAtTime(110, t + 0.065);
+          gain.gain.setValueAtTime(0.18, t);
+          gain.gain.linearRampToValueAtTime(0.001, t + 0.065);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(t); osc.stop(t + 0.065);
+        } catch(e) {}
+      },
+      playEat() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const t = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(540, t);
+          osc.frequency.exponentialRampToValueAtTime(880, t + 0.08);
+          gain.gain.setValueAtTime(0.14, t);
+          gain.gain.linearRampToValueAtTime(0.001, t + 0.08);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(t); osc.stop(t + 0.08);
+        } catch(e) {}
+      },
+      playUpgrade() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const notes = [440, 554.37, 659.25, 880];
+          notes.forEach((freq, i) => {
+            const t = this.ctx.currentTime + i * 0.045;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, t);
+            gain.gain.setValueAtTime(0.12, t);
+            gain.gain.linearRampToValueAtTime(0.001, t + 0.12);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(t); osc.stop(t + 0.12);
+          });
+        } catch(e) {}
+      },
+      playDna() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const t = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(450, t);
+          osc.frequency.exponentialRampToValueAtTime(1100, t + 0.11);
+          gain.gain.setValueAtTime(0.16, t);
+          gain.gain.linearRampToValueAtTime(0.001, t + 0.11);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(t); osc.stop(t + 0.11);
+        } catch(e) {}
+      },
+      playAscend() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const baseT = this.ctx.currentTime;
+          const chord = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+          chord.forEach((freq, i) => {
+            const t = baseT + i * 0.08;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, t);
+            gain.gain.setValueAtTime(0.16, t);
+            gain.gain.linearRampToValueAtTime(0.001, t + 0.65);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(t); osc.stop(t + 0.65);
+          });
+        } catch(e) {}
+      }
+    };
+
+    document.getElementById('audioToggleBtn').textContent = Sound.muted ? '🔇' : '🔊';
+    document.getElementById('audioToggleBtn').addEventListener('click', () => {
+      Sound.toggleMute();
+    });
+
+    // --- ФОРМАТИРОВАНИЕ ЧИСЕЛ (ФАЗА 1) ---
+    function formatNumber(num) {
+      if (num === null || num === undefined || isNaN(num)) return '0';
+      if (num < 1000) return Math.floor(num).toLocaleString();
+      const suffixes = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+      const exp = Math.floor(Math.log10(Math.max(1, num)) / 3);
+      const idx = exp - 1;
+      if (idx < suffixes.length) {
+        const val = num / Math.pow(10, exp * 3);
+        const formatted = val >= 100 ? val.toFixed(0) : (val >= 10 ? val.toFixed(1) : val.toFixed(2));
+        return formatted + suffixes[idx];
+      }
+      return num.toExponential(2);
+    }
+
+    // --- СИСТЕМА ЛОКАЛИЗАЦИИ (I18N) ---
+    let currentLang = localStorage.getItem('spore_lang') || 'ru';
+
+    const i18n = {
+      ru: {
+        biomass: "Биомасса",
+        cells: "Клетки тела",
+        dna: "ДНК",
+        synthesis: "Синтез",
+        labTitle: "Био-Лаборатория",
+        controlsHint: "Курсор / [WASD] / Тач — Плавание и охота",
+        worldScale: "Мир: {w}x{h}",
+        feedTitle: "Питание / Охота",
+        feedSub: "+{val} биом.",
+        growTitle: "+1 Клетка Тела",
+        growCost: "Цена: {cost} биом.",
+        mutTitle: "Мутация (+1 🧬)",
+        mutCost: "Цена: {cost} биом.",
+        ascendHead: "ВЕЛИКАЯ МЕГА-ЭВОЛЮЦИЯ!",
+        ascendDesc: "Существо превзошло лимит клеток и готово переродиться в Высшего Легендарного Титана с мощным умножением всех характеристик!",
+        ascendBtn: "СОВЕРШИТЬ МЕГА-ЭВОЛЮЦИЮ",
+        archTitle: "1. Анатомический Класс:",
+        skinTitle: "2. Текстура Кожи / Покрова:",
+        tabCells: "Метаболизм (Биомасса)",
+        tabDna: "Органы & Конечности (ДНК)",
+        buyLvl: "Ур. {lvl} | {cost}",
+        mTabWorld: "🎮 Аквариум",
+        mTabShop: "🧬 Мутации & ДНК",
+        saveTitle: "Управление сохранением",
+        saveInfo: "Игра сохраняется каждые 5 сек. Вы можете экспортировать строку сохранения или вставить ранее сохраненный код:",
+        btnCopy: "Скопировать сейв",
+        btnImport: "Загрузить сейв",
+        copied: "Скопировано в буфер!",
+        importSuccess: "Сохранение успешно загружено!",
+        importFail: "Ошибка: неверная строка сохранения.",
+        resetTitle: "Подтверждение сброса",
+        resetDesc: "Вы уверены, что хотите сбросить весь эволюционный прогресс? Все биомассы, мутации, ранги Мега-Эволюции и статистика будут безвозвратно удалены.",
+        btnResetConfirm: "Да, удалить всё",
+        victoryHead: "ВЫСШИЙ СУВЕРЕН ОКЕАНА!",
+        victoryDesc: "Поздравляем! Ваше существо достигло 5-го Ранга Мега-Эволюции и стало Апекс-Сувереном первобытного мира. Вы завершили эволюционную цепочку!",
+        victoryBtn: "Продолжить в бесконечном режиме",
+        statTime: "Время в игре:",
+        statAscends: "Ранг эволюции:",
+        statBiomass: "Биомассы собрано:",
+        statDna: "ДНК мутировано:",
+        statFood: "Органики поглощено:",
+        statClicks: "Ручных охот:",
+        arch: {
+          insect: "🐛 Хитиноид",
+          dragon: "🐉 Дракон",
+          beast: "🐺 Зверь",
+          kraken: "🐙 Кракен",
+          griffin: "🦅 Птицеящер",
+          xenomorph: "👾 Ксеноморф"
+        },
+        skins: {
+          smooth: "Гладкая Кожа",
+          chitin: "Панцирь",
+          scales: "Чешуя",
+          fur: "Шерсть",
+          crystal: "Кристалл",
+          bioglow: "Неон/Яд"
+        },
+        eras: [
+          "⚡ Легендарный Титан [Мега-ранг {lvl}]",
+          "Эра 1: Одноклеточный Прокариот",
+          "Эра 2: Клеточная Колония",
+          "Эра 3: Примитивная Личинка",
+          "Эра 4: Членистоногое со Сплошной Кожей",
+          "Эра 5: Высший Кастомный Хищник",
+          "Эра 6: Пред-Эволюционная Фаза (Готов к перерождению!)"
+        ],
+        upgrades: {
+          mitochondria: { name: "Митохондрии", desc: "+{val} биом. за клик" },
+          cilia: { name: "Реснички-фильтраторы", desc: "Авто-сбор: +{val}/сек" },
+          chloroplast: { name: "Хлоропласты (Фотосинтез)", desc: "+{val} биом/сек" },
+          muscles: { name: "Мускульные волокна", desc: "+{val1}/сек, +{val2} клик" },
+          brain: { name: "Развитый Мозг", desc: "+{val1}/сек, +{val2} клик" },
+          eyes: { name: "Хищные глаза", desc: "+{val} к силе клика" },
+          antennae: { name: "Усики-локаторы / Рога", desc: "+{val}/сек авто-сбор" },
+          legs: { name: "Быстрые Лапы / Конечности", desc: "+{val}/сек авто-сбор" },
+          mandibles: { name: "Острые Клыки / Жвалы", desc: "+{val} к силе клика" },
+          tail: { name: "Хвостовой шип / Плавник", desc: "+{val}/сек авто-сбор" },
+          wings: { name: "Крылья / Птериготы", desc: "+{val1}/сек, +{val2} клик" },
+          bioluminescence: { name: "Биолюминесценция & Яд", desc: "+{val1}/сек, +{val2} клик" }
+        }
+      },
+      en: {
+        biomass: "Biomass",
+        cells: "Body Cells",
+        dna: "DNA",
+        synthesis: "Synthesis",
+        labTitle: "Bio-Laboratory",
+        controlsHint: "Cursor / [WASD] / Touch — Swim and hunt",
+        worldScale: "World: {w}x{h}",
+        feedTitle: "Feed / Hunt",
+        feedSub: "+{val} bio.",
+        growTitle: "+1 Body Cell",
+        growCost: "Cost: {cost} bio.",
+        mutTitle: "Mutation (+1 🧬)",
+        mutCost: "Cost: {cost} bio.",
+        ascendHead: "SUPREME MEGA-EVOLUTION!",
+        ascendDesc: "Creature has surpassed cell boundaries and is primed to reincarnate as an Apex Sovereign with massive scaling bonuses!",
+        ascendBtn: "EXECUTE MEGA-EVOLUTION",
+        archTitle: "1. Anatomical Class:",
+        skinTitle: "2. Skin Texture / Coat:",
+        tabCells: "Metabolism (Biomass)",
+        tabDna: "Organs & Limbs (DNA)",
+        buyLvl: "Lv. {lvl} | {cost}",
+        mTabWorld: "🎮 Aquarium",
+        mTabShop: "🧬 Mutations & DNA",
+        saveTitle: "Save Management",
+        saveInfo: "Game auto-saves every 5s. You can export or import your base64 save string below:",
+        btnCopy: "Copy Save String",
+        btnImport: "Load Save String",
+        copied: "Copied to clipboard!",
+        importSuccess: "Save loaded successfully!",
+        importFail: "Error: invalid save data.",
+        resetTitle: "Confirm Hard Reset",
+        resetDesc: "Are you sure you want to reset all evolution progress? All biomass, mutations, Mega-Ranks, and lifetime statistics will be permanently wiped.",
+        btnResetConfirm: "Yes, Delete Everything",
+        victoryHead: "APEX SOVEREIGN OF THE SEA!",
+        victoryDesc: "Congratulations! Your organism has reached Mega-Rank 5 and ascended to the Apex Sovereign tier. You have conquered primordial evolution!",
+        victoryBtn: "Continue in Endless Sandbox Mode",
+        statTime: "Playtime:",
+        statAscends: "Evolution Rank:",
+        statBiomass: "Biomass Synthesized:",
+        statDna: "DNA Mutated:",
+        statFood: "Pellets Absorbed:",
+        statClicks: "Manual Hunts:",
+        arch: {
+          insect: "🐛 Chitinoid",
+          dragon: "🐉 Dragon",
+          beast: "🐺 Beast",
+          kraken: "🐙 Kraken",
+          griffin: "🦅 Griffin",
+          xenomorph: "👾 Xenomorph"
+        },
+        skins: {
+          smooth: "Smooth Skin",
+          chitin: "Carapace",
+          scales: "Scales",
+          fur: "Fur",
+          crystal: "Crystal",
+          bioglow: "Neon/Toxin"
+        },
+        eras: [
+          "⚡ Legendary Titan [Mega-Rank {lvl}]",
+          "Era 1: Single-Celled Microbe",
+          "Era 2: Cellular Colony",
+          "Era 3: Primitive Larva",
+          "Era 4: Arthropod with Skin",
+          "Era 5: Apex Custom Predator",
+          "Era 6: Pre-Evolution Phase (Ready to Ascend!)"
+        ],
+        upgrades: {
+          mitochondria: { name: "Mitochondria", desc: "+{val} bio per click" },
+          cilia: { name: "Filter Cilia", desc: "Auto-harvest: +{val}/sec" },
+          chloroplast: { name: "Chloroplasts (Photosynthesis)", desc: "+{val} bio/sec" },
+          muscles: { name: "Muscle Fibers", desc: "+{val1}/sec, +{val2} click" },
+          brain: { name: "Developed Brain", desc: "+{val1}/sec, +{val2} click" },
+          eyes: { name: "Predator Eyes", desc: "+{val} to click power" },
+          antennae: { name: "Antennae / Horns", desc: "+{val}/sec auto-harvest" },
+          legs: { name: "Fast Limbs / Legs", desc: "+{val}/sec auto-harvest" },
+          mandibles: { name: "Razor Mandibles / Fangs", desc: "+{val} to click power" },
+          tail: { name: "Tail Spike / Fin", desc: "+{val}/sec auto-harvest" },
+          wings: { name: "Wings / Pterygotes", desc: "+{val1}/sec, +{val2} click" },
+          bioluminescence: { name: "Bioluminescence & Toxin", desc: "+{val1}/sec, +{val2} click" }
+        }
+      }
+    };
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('spore_lang', lang);
+      const t = i18n[lang];
+
+      document.getElementById('langToggleBtn').textContent = lang === 'ru' ? 'EN' : 'RU';
+      document.getElementById('lbl-biomass').textContent = t.biomass;
+      document.getElementById('lbl-cells').textContent = t.cells;
+      document.getElementById('lbl-dna').textContent = t.dna;
+      document.getElementById('lbl-synthesis').textContent = t.synthesis;
+      document.getElementById('txt-lab-title').textContent = t.labTitle;
+      document.getElementById('txt-controls-hint').textContent = t.controlsHint;
+
+      document.getElementById('btn-feed-title').textContent = t.feedTitle;
+      document.getElementById('btn-grow-title').textContent = t.growTitle;
+      document.getElementById('btn-mutation-title').textContent = t.mutTitle;
+
+      document.getElementById('txt-ascend-head').textContent = t.ascendHead;
+      document.getElementById('txt-ascend-desc').textContent = t.ascendDesc;
+      document.getElementById('btn-ascend-act').textContent = t.ascendBtn;
+
+      document.getElementById('txt-arch-title').textContent = t.archTitle;
+      document.getElementById('txt-skin-title').textContent = t.skinTitle;
+
+      document.getElementById('tab-btn-cells').textContent = t.tabCells;
+      document.getElementById('tab-btn-dna').textContent = t.tabDna;
+
+      document.getElementById('mTabWorld').textContent = t.mTabWorld;
+      document.getElementById('mTabShop').textContent = t.mTabShop;
+
+      document.getElementById('txt-save-title').textContent = t.saveTitle;
+      document.getElementById('txt-save-info').textContent = t.saveInfo;
+      document.getElementById('btnExportSave').textContent = t.btnCopy;
+      document.getElementById('btnImportSave').textContent = t.btnImport;
+
+      document.getElementById('txt-reset-title').textContent = t.resetTitle;
+      document.getElementById('txt-reset-desc').textContent = t.resetDesc;
+      document.getElementById('btnConfirmReset').textContent = t.btnResetConfirm;
+
+      document.getElementById('txt-victory-head').textContent = t.victoryHead;
+      document.getElementById('txt-victory-desc').textContent = t.victoryDesc;
+      document.getElementById('lbl-stat-time').textContent = t.statTime;
+      document.getElementById('lbl-stat-ascends').textContent = t.statAscends;
+      document.getElementById('lbl-stat-biomass').textContent = t.statBiomass;
+      document.getElementById('lbl-stat-dna').textContent = t.statDna;
+      document.getElementById('lbl-stat-food').textContent = t.statFood;
+      document.getElementById('lbl-stat-clicks').textContent = t.statClicks;
+
+      document.querySelectorAll('#archChoiceGrid .btn-choice').forEach(btn => {
+        btn.textContent = t.arch[btn.dataset.type];
+      });
+
+      document.querySelectorAll('#skinChoiceGrid .btn-choice').forEach(btn => {
+        btn.textContent = t.skins[btn.dataset.skin];
+      });
+
+      document.getElementById('activeArchLabel').textContent = t.arch[state.archetype];
+      document.getElementById('activeSkinLabel').textContent = t.skins[state.skin];
+
+      initShop();
+      updateUI();
+    }
+
+    function toggleLanguage() {
+      setLanguage(currentLang === 'ru' ? 'en' : 'ru');
+    }
+    document.getElementById('langToggleBtn').addEventListener('click', toggleLanguage);
+
+    // --- СОСТОЯНИЕ ИГРЫ И ЭВОЛЮЦИОННАЯ СТАТИСТИКА ---
+    const state = {
+      biomass: 1,
+      bodyCells: 1,
+      bodyCellCost: 10,
+      dna: 0,
+      dnaCost: 25,
+      clickPower: 1,
+      passiveBiomass: 0,
+      ascendLevel: 0,
+      archetype: 'insect',
+      skin: 'smooth',
+      worldWidth: 1200,
+      worldHeight: 900,
+      stats: {
+        startTime: Date.now(),
+        totalPlaytimeSec: 0,
+        totalBiomassEarned: 1,
+        totalDnaEarned: 0,
+        totalFoodEaten: 0,
+        totalClicks: 0,
+        apexCelebrated: false
+      }
+    };
+
+    // --- ДАННЫЕ МНОГОУРОВНЕВЫХ АПГРЕЙДОВ (ФАЗА 2: БЕСКОНЕЧНЫЙ ЦИКЛ) ---
+    const upgradesData = [
+      { id: 'mitochondria', tab: 'cells', baseCost: 12, costMult: 1.32, type: 'biomass', level: 0 },
+      { id: 'cilia', tab: 'cells', baseCost: 40, costMult: 1.34, type: 'biomass', level: 0 },
+      { id: 'chloroplast', tab: 'cells', baseCost: 150, costMult: 1.35, type: 'biomass', level: 0 },
+      { id: 'muscles', tab: 'cells', baseCost: 450, costMult: 1.36, type: 'biomass', level: 0 },
+      { id: 'brain', tab: 'cells', baseCost: 1800, costMult: 1.38, type: 'biomass', level: 0 },
+
+      { id: 'eyes', tab: 'dna', baseCost: 1, costMult: 1.25, type: 'dna', level: 0 },
+      { id: 'antennae', tab: 'dna', baseCost: 2, costMult: 1.26, type: 'dna', level: 0 },
+      { id: 'legs', tab: 'dna', baseCost: 5, costMult: 1.27, type: 'dna', level: 0 },
+      { id: 'mandibles', tab: 'dna', baseCost: 10, costMult: 1.28, type: 'dna', level: 0 },
+      { id: 'tail', tab: 'dna', baseCost: 15, costMult: 1.29, type: 'dna', level: 0 },
+      { id: 'wings', tab: 'dna', baseCost: 25, costMult: 1.30, type: 'dna', level: 0 },
+      { id: 'bioluminescence', tab: 'dna', baseCost: 40, costMult: 1.32, type: 'dna', level: 0 }
+    ];
+
+    function getUpgradeCost(upg) {
+      if (upg.type === 'biomass') {
+        return Math.floor(upg.baseCost * Math.pow(upg.costMult, upg.level));
+      } else {
+        return Math.max(upg.level + 1, Math.floor(upg.baseCost * Math.pow(upg.costMult, upg.level)));
+      }
+    }
+
+    function recalculateStats() {
+      const prestigeMult = Math.pow(2.2, state.ascendLevel);
+      let baseClick = 1 + (state.ascendLevel * 4);
+      let basePassive = 0;
+
+      upgradesData.forEach(u => {
+        if (u.level > 0) {
+          switch(u.id) {
+            case 'mitochondria': baseClick += u.level * 1; break;
+            case 'cilia': basePassive += u.level * 2; break;
+            case 'chloroplast': basePassive += u.level * 12; break;
+            case 'muscles': basePassive += u.level * 35; baseClick += u.level * 8; break;
+            case 'brain': basePassive += u.level * 150; baseClick += u.level * 30; break;
+            case 'eyes': baseClick += u.level * 12; break;
+            case 'antennae': basePassive += u.level * 24; break;
+            case 'legs': basePassive += u.level * 55; break;
+            case 'mandibles': baseClick += u.level * 85; break;
+            case 'tail': basePassive += u.level * 110; break;
+            case 'wings': basePassive += u.level * 280; baseClick += u.level * 120; break;
+            case 'bioluminescence': basePassive += u.level * 700; baseClick += u.level * 250; break;
+          }
+        }
+      });
+
+      state.clickPower = Math.max(1, Math.floor(baseClick * prestigeMult));
+      state.passiveBiomass = Math.floor(basePassive * prestigeMult);
+    }
+
+    function hasTrait(id) {
+      const upg = upgradesData.find(u => u.id === id);
+      return upg ? upg.level > 0 : false;
+    }
+
+    function getTraitLevel(id) {
+      const upg = upgradesData.find(u => u.id === id);
+      return upg ? upg.level : 0;
+    }
+
+    function updateWorldScale() {
+      state.worldWidth = 1200 + state.bodyCells * 120;
+      state.worldHeight = 900 + state.bodyCells * 90;
+      const t = i18n[currentLang];
+      document.getElementById('mapScaleText').textContent = t.worldScale.replace('{w}', state.worldWidth).replace('{h}', state.worldHeight);
+
+      const targetFoodCount = 28 + state.bodyCells * 3;
+      while (foodParticles.length < targetFoodCount) {
+        foodParticles.push({
+          x: Math.random() * state.worldWidth,
+          y: Math.random() * state.worldHeight,
+          r: 3 + Math.random() * 4,
+          vx: (Math.random() - 0.5) * 45,
+          vy: (Math.random() - 0.5) * 45
+        });
+      }
+    }
+
+    function getEraText() {
+      const c = state.bodyCells;
+      const eras = i18n[currentLang].eras;
+      if (state.ascendLevel > 0) return eras[0].replace('{lvl}', state.ascendLevel);
+      if (c === 1) return eras[1];
+      if (c <= 3) return eras[2];
+      if (c <= 7) return eras[3];
+      if (c <= 15) return eras[4];
+      if (c <= 29) return eras[5];
+      return eras[6];
+    }
+
+    window.switchMobileView = function(view) {
+      const isMobile = window.innerWidth <= 768;
+      if (!isMobile) return;
+      document.querySelectorAll('.mobile-tab-btn').forEach(b => b.classList.remove('active'));
+      if (view === 'world') {
+        document.getElementById('mTabWorld').classList.add('active');
+        document.getElementById('worldPanel').style.display = 'flex';
+        document.getElementById('shopPanel').style.display = 'none';
+        resizeCanvas();
+      } else {
+        document.getElementById('mTabShop').classList.add('active');
+        document.getElementById('worldPanel').style.display = 'none';
+        document.getElementById('shopPanel').style.display = 'flex';
+      }
+    };
+
+    window.setArchetype = function(type) {
+      state.archetype = type;
+      document.querySelectorAll('#archChoiceGrid .btn-choice').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+      document.getElementById('activeArchLabel').textContent = i18n[currentLang].arch[type];
+      Sound.playPop();
+    };
+
+    window.setSkin = function(skin) {
+      state.skin = skin;
+      document.querySelectorAll('#skinChoiceGrid .btn-choice').forEach(b => b.classList.toggle('active', b.dataset.skin === skin));
+      document.getElementById('activeSkinLabel').textContent = i18n[currentLang].skins[skin];
+      Sound.playPop();
+    };
+
+    window.switchTab = function(tab) {
+      document.getElementById('tab-btn-cells').classList.toggle('active', tab === 'cells');
+      document.getElementById('tab-btn-dna').classList.toggle('active', tab === 'dna');
+      document.getElementById('tabCells').style.display = tab === 'cells' ? 'flex' : 'none';
+      document.getElementById('tabDna').style.display = tab === 'dna' ? 'flex' : 'none';
+    };
+
+    function initShop() {
+      const cellContainer = document.getElementById('tabCells');
+      const dnaContainer = document.getElementById('tabDna');
+      cellContainer.innerHTML = '';
+      dnaContainer.innerHTML = '';
+      const t = i18n[currentLang];
+
+      upgradesData.forEach(upg => {
+        const item = document.createElement('div');
+        item.className = `upgrade-item ${upg.level > 0 ? 'active-level' : ''}`;
+        item.id = `upg-${upg.id}`;
+        const uInfo = t.upgrades[upg.id];
+        const cost = getUpgradeCost(upg);
+        const icon = upg.type === 'biomass' ? '🦠' : '🧬';
+
+        // Формирование динамического описания
+        let descText = uInfo.desc;
+        const pMult = Math.pow(2.2, state.ascendLevel);
+        if (upg.id === 'mitochondria') descText = descText.replace('{val}', formatNumber(Math.floor(1 * pMult)));
+        else if (upg.id === 'cilia') descText = descText.replace('{val}', formatNumber(Math.floor(2 * pMult)));
+        else if (upg.id === 'chloroplast') descText = descText.replace('{val}', formatNumber(Math.floor(12 * pMult)));
+        else if (upg.id === 'muscles') descText = descText.replace('{val1}', formatNumber(Math.floor(35 * pMult))).replace('{val2}', formatNumber(Math.floor(8 * pMult)));
+        else if (upg.id === 'brain') descText = descText.replace('{val1}', formatNumber(Math.floor(150 * pMult))).replace('{val2}', formatNumber(Math.floor(30 * pMult)));
+        else if (upg.id === 'eyes') descText = descText.replace('{val}', formatNumber(Math.floor(12 * pMult)));
+        else if (upg.id === 'antennae') descText = descText.replace('{val}', formatNumber(Math.floor(24 * pMult)));
+        else if (upg.id === 'legs') descText = descText.replace('{val}', formatNumber(Math.floor(55 * pMult)));
+        else if (upg.id === 'mandibles') descText = descText.replace('{val}', formatNumber(Math.floor(85 * pMult)));
+        else if (upg.id === 'tail') descText = descText.replace('{val}', formatNumber(Math.floor(110 * pMult)));
+        else if (upg.id === 'wings') descText = descText.replace('{val1}', formatNumber(Math.floor(280 * pMult))).replace('{val2}', formatNumber(Math.floor(120 * pMult)));
+        else if (upg.id === 'bioluminescence') descText = descText.replace('{val1}', formatNumber(Math.floor(700 * pMult))).replace('{val2}', formatNumber(Math.floor(250 * pMult)));
+
+        item.innerHTML = `
+          <div class="upgrade-info">
+            <div class="upgrade-header-line">
+              <h4>${uInfo.name}</h4>
+              <span class="lvl-tag" id="lvl-${upg.id}">Lv. ${upg.level}</span>
+            </div>
+            <p>${descText}</p>
+          </div>
+          <button class="btn-buy" id="btn-${upg.id}" onclick="buyUpgrade('${upg.id}')">
+            ${formatNumber(cost)} ${icon}
+          </button>
+        `;
+
+        if (upg.tab === 'cells') cellContainer.appendChild(item);
+        else dnaContainer.appendChild(item);
+      });
+    }
+
+    window.buyUpgrade = function(id) {
+      const upg = upgradesData.find(u => u.id === id);
+      if (!upg) return;
+      const cost = getUpgradeCost(upg);
+
+      if (upg.type === 'biomass' && state.biomass >= cost) {
+        state.biomass -= cost;
+        upg.level += 1;
+        recalculateStats();
+        Sound.playUpgrade();
+        updateUpgradeElement(upg);
+        updateUI();
+      } else if (upg.type === 'dna' && state.dna >= cost) {
+        state.dna -= cost;
+        upg.level += 1;
+        recalculateStats();
+        Sound.playUpgrade();
+        updateUpgradeElement(upg);
+        updateUI();
+      }
+    };
+
+    function updateUpgradeElement(upg) {
+      const item = document.getElementById(`upg-${upg.id}`);
+      const btn = document.getElementById(`btn-${upg.id}`);
+      const lvlTag = document.getElementById(`lvl-${upg.id}`);
+      if (item) item.classList.toggle('active-level', upg.level > 0);
+      if (lvlTag) lvlTag.textContent = `Lv. ${upg.level}`;
+      if (btn) {
+        const cost = getUpgradeCost(upg);
+        const icon = upg.type === 'biomass' ? '🦠' : '🧬';
+        btn.textContent = `${formatNumber(cost)} ${icon}`;
+      }
+    }
+
+    window.ascendCreature = function() {
+      state.ascendLevel += 1;
+      state.bodyCells = 4;
+      state.bodyCellCost = 15;
+      const bonusDna = 15 + state.ascendLevel * 10;
+      state.dna += bonusDna;
+      state.stats.totalDnaEarned += bonusDna;
+
+      recalculateStats();
+      spine.length = 4;
+      updateWorldScale();
+      playerCreature.pulse = 2.4;
+      Sound.playAscend();
+      updateUI();
+      initShop();
+
+      // Проверка победного состояния (Ранг 5)
+      if (state.ascendLevel >= 5 && !state.stats.apexCelebrated) {
+        state.stats.apexCelebrated = true;
+        showVictoryModal();
+      }
+
+      if (window.innerWidth <= 768) switchMobileView('world');
+    };
+
+    document.getElementById('clickBtn').addEventListener('click', (e) => {
+      feedCreature(e.clientX, e.clientY);
+    });
+
+    function feedCreature(x, y) {
+      state.biomass += state.clickPower;
+      state.stats.totalBiomassEarned += state.clickPower;
+      state.stats.totalClicks += 1;
+      playerCreature.pulse = 1.25;
+      Sound.playPop();
+      createFloatText(x || (window.innerWidth / 3), y || (window.innerHeight / 2), `+${formatNumber(state.clickPower)}`);
+      updateUI();
+    }
+
+    document.getElementById('growBodyBtn').addEventListener('click', () => {
+      if (state.biomass >= state.bodyCellCost) {
+        state.biomass -= state.bodyCellCost;
+        state.bodyCellCost = Math.floor(state.bodyCellCost * 1.45);
+        state.bodyCells += 1;
+        initSpineSegments();
+        updateWorldScale();
+        playerCreature.pulse = 1.35;
+        Sound.playPop();
+        updateUI();
+      }
+    });
+
+    document.getElementById('synthDnaBtn').addEventListener('click', () => {
+      if (state.biomass >= state.dnaCost) {
+        state.biomass -= state.dnaCost;
+        state.dna += 1;
+        state.stats.totalDnaEarned += 1;
+        state.dnaCost = Math.floor(state.dnaCost * 1.38);
+        Sound.playDna();
+        updateUI();
+      }
+    });
+
+    function createFloatText(x, y, text) {
+      const el = document.createElement('div');
+      el.className = 'floating-text';
+      el.textContent = text;
+      el.style.left = `${x - 15}px`;
+      el.style.top = `${y - 25}px`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 750);
+    }
+
+    function updateUI() {
+      const t = i18n[currentLang];
+      document.getElementById('cellsCount').textContent = formatNumber(state.biomass);
+      document.getElementById('bodyCellsCount').textContent = state.bodyCells;
+      document.getElementById('dnaCount').textContent = formatNumber(state.dna);
+      document.getElementById('passiveIncome').textContent = `+${formatNumber(state.passiveBiomass)}/с`;
+      document.getElementById('clickPowerText').textContent = t.feedSub.replace('{val}', formatNumber(state.clickPower));
+      
+      document.getElementById('bodyCostText').textContent = t.growCost.replace('{cost}', formatNumber(state.bodyCellCost));
+      document.getElementById('dnaCostText').textContent = t.mutCost.replace('{cost}', formatNumber(state.dnaCost));
+      document.getElementById('eraBadgeText').textContent = getEraText();
+
+      document.getElementById('growBodyBtn').disabled = state.biomass < state.bodyCellCost;
+      document.getElementById('synthDnaBtn').disabled = state.biomass < state.dnaCost;
+
+      const ascendBanner = document.getElementById('ascendBanner');
+      ascendBanner.style.display = state.bodyCells >= 30 ? 'flex' : 'none';
+
+      upgradesData.forEach(upg => {
+        const btn = document.getElementById(`btn-${upg.id}`);
+        if (btn) {
+          const cost = getUpgradeCost(upg);
+          btn.disabled = upg.type === 'biomass' ? state.biomass < cost : state.dna < cost;
+        }
+      });
+    }
+
+    // --- МОДАЛЬНЫЕ ОКНА И УПРАВЛЕНИЕ СЕЙВАМИ (ФАЗА 1) ---
+    const SAVE_KEY = 'mega_evolution_spore_save_v3';
+
+    function saveGame() {
+      try {
+        const saveData = {
+          version: 3.0,
+          timestamp: Date.now(),
+          state: {
+            biomass: state.biomass,
+            bodyCells: state.bodyCells,
+            bodyCellCost: state.bodyCellCost,
+            dna: state.dna,
+            dnaCost: state.dnaCost,
+            ascendLevel: state.ascendLevel,
+            archetype: state.archetype,
+            skin: state.skin,
+            stats: state.stats
+          },
+          upgrades: upgradesData.map(u => ({ id: u.id, level: u.level })),
+          lang: currentLang,
+          muted: Sound.muted
+        };
+        localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+      } catch (e) {
+        console.error('Save failed:', e);
+      }
+    }
+
+    function loadGame() {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return false;
+      try {
+        const data = JSON.parse(raw);
+        if (!data || !data.state) return false;
+        Object.assign(state, data.state);
+        if (data.state.stats) Object.assign(state.stats, data.state.stats);
+
+        if (data.upgrades && Array.isArray(data.upgrades)) {
+          data.upgrades.forEach(su => {
+            const upg = upgradesData.find(u => u.id === su.id);
+            if (upg) upg.level = su.level || 0;
+          });
+        }
+        recalculateStats();
+        return true;
+      } catch (e) {
+        console.error('Load failed:', e);
+        return false;
+      }
+    }
+
+    function executeHardReset() {
+      localStorage.removeItem(SAVE_KEY);
+      location.reload();
+    }
+
+    window.openModal = function(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.style.display = 'flex';
+      if (id === 'saveModal') {
+        const raw = localStorage.getItem(SAVE_KEY);
+        const encoded = raw ? btoa(unescape(encodeURIComponent(raw))) : '';
+        document.getElementById('saveTextarea').value = encoded;
+      }
+    };
+
+    window.closeModal = function(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.style.display = 'none';
+    };
+
+    window.exportSaveString = function() {
+      saveGame();
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return;
+      const encoded = btoa(unescape(encodeURIComponent(raw)));
+      const textarea = document.getElementById('saveTextarea');
+      textarea.value = encoded;
+      textarea.select();
+      navigator.clipboard.writeText(encoded).then(() => {
+        alert(i18n[currentLang].copied);
+      }).catch(() => {
+        alert(i18n[currentLang].copied);
+      });
+    };
+
+    window.importSaveString = function() {
+      const val = document.getElementById('saveTextarea').value.trim();
+      if (!val) return;
+      try {
+        const decoded = decodeURIComponent(escape(atob(val)));
+        const data = JSON.parse(decoded);
+        if (!data.state) throw new Error();
+        localStorage.setItem(SAVE_KEY, decoded);
+        loadGame();
+        setLanguage(currentLang);
+        initSpineSegments();
+        updateWorldScale();
+        closeModal('saveModal');
+        alert(i18n[currentLang].importSuccess);
+      } catch (e) {
+        alert(i18n[currentLang].importFail);
+      }
+    };
+
+    document.getElementById('saveModalBtn').addEventListener('click', () => openModal('saveModal'));
+    document.getElementById('resetModalBtn').addEventListener('click', () => openModal('resetModal'));
+
+    function showVictoryModal() {
+      const t = i18n[currentLang];
+      const sec = Math.floor(state.stats.totalPlaytimeSec);
+      const mins = Math.floor(sec / 60);
+      const remainingSec = sec % 60;
+      document.getElementById('statTimeVal').textContent = `${mins}m ${remainingSec}s`;
+      document.getElementById('statAscendsVal').textContent = `Rank ${state.ascendLevel}`;
+      document.getElementById('statBiomassVal').textContent = formatNumber(state.stats.totalBiomassEarned);
+      document.getElementById('statDnaVal').textContent = formatNumber(state.stats.totalDnaEarned);
+      document.getElementById('statFoodVal').textContent = formatNumber(state.stats.totalFoodEaten);
+      document.getElementById('statClicksVal').textContent = formatNumber(state.stats.totalClicks);
+      openModal('victoryModal');
+      Sound.playAscend();
+    }
+
+    // Авто-сохранение каждые 5 секунд и при выходе
+    setInterval(saveGame, 5000);
+    window.addEventListener('beforeunload', saveGame);
+
+    // --- CANVAS И ДЕЛЬТА-ТАЙМ РЕНДЕР (ФАЗА 1, 2, 3) ---
+    const canvas = document.getElementById('bioCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      const container = document.getElementById('canvasContainer');
+      if (container) {
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+      }
+    }
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      if (window.innerWidth > 768) {
+        document.getElementById('worldPanel').style.display = 'flex';
+        document.getElementById('shopPanel').style.display = 'flex';
+      }
+    });
+
+    const foodParticles = [];
+    const burstParticles = [];
+
+    function spawnFoodBurst(x, y, color) {
+      for (let i = 0; i < 7; i++) {
+        const angle = (Math.PI * 2 / 7) * i + Math.random() * 0.5;
+        const speed = 45 + Math.random() * 95;
+        burstParticles.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 0.35 + Math.random() * 0.25,
+          maxLife: 0.6,
+          color: color || '#38bdf8',
+          r: 2 + Math.random() * 2.5
+        });
+      }
+    }
+
+    const spine = [];
+    const segmentLength = 14;
+
+    function initSpineSegments() {
+      const count = Math.max(1, state.bodyCells);
+      while (spine.length < count) {
+        const last = spine[spine.length - 1] || { x: 600, y: 450, angle: 0 };
+        spine.push({ x: last.x - segmentLength, y: last.y, angle: 0 });
+      }
+      if (spine.length > count) {
+        spine.length = count;
+      }
+    }
+
+    const playerCreature = {
+      worldX: 600,
+      worldY: 450,
+      targetWorldX: 600,
+      targetWorldY: 450,
+      angle: 0,
+      pulse: 1,
+      speed: 260 // пикселей в секунду
+    };
+
+    const camera = { x: 600, y: 450 };
+
+    // Управление мышью
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const screenX = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const screenY = (e.clientY - rect.top) * (canvas.height / rect.height);
+      playerCreature.targetWorldX = camera.x + (screenX - canvas.width / 2);
+      playerCreature.targetWorldY = camera.y + (screenY - canvas.height / 2);
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      feedCreature(e.clientX, e.clientY);
+    });
+
+    // Управление тачем
+    function handleTouchMove(e) {
+      e.preventDefault();
+      const touch = e.touches[0] || e.changedTouches[0];
+      const rect = canvas.getBoundingClientRect();
+      const screenX = (touch.clientX - rect.left) * (canvas.width / rect.width);
+      const screenY = (touch.clientY - rect.top) * (canvas.height / rect.height);
+      playerCreature.targetWorldX = camera.x + (screenX - canvas.width / 2);
+      playerCreature.targetWorldY = camera.y + (screenY - canvas.height / 2);
+    }
+
+    canvas.addEventListener('touchstart', (e) => {
+      handleTouchMove(e);
+      const touch = e.touches[0];
+      feedCreature(touch.clientX, touch.clientY);
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    const keys = {};
+    window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+    window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+    let lastFrameTime = performance.now();
+
+    function render(currentTime) {
+      // Расчет нормализованного dt (ограничен 0.1с для защиты от лагов)
+      const dt = Math.min((currentTime - lastFrameTime) / 1000, 0.1);
+      lastFrameTime = currentTime;
+
+      // Обновление статистики времени игры
+      state.stats.totalPlaytimeSec += dt;
+
+      // Пассивный доход биомассы в секунду
+      if (state.passiveBiomass > 0) {
+        const income = state.passiveBiomass * dt;
+        state.biomass += income;
+        state.stats.totalBiomassEarned += income;
+        updateUI();
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const t = currentTime * 0.002;
+
+      // Управление клавиатурой
+      const keyMove = playerCreature.speed * 1.5 * dt;
+      if (keys['w'] || keys['arrowup']) playerCreature.targetWorldY -= keyMove;
+      if (keys['s'] || keys['arrowdown']) playerCreature.targetWorldY += keyMove;
+      if (keys['a'] || keys['arrowleft']) playerCreature.targetWorldX -= keyMove;
+      if (keys['d'] || keys['arrowright']) playerCreature.targetWorldX += keyMove;
+
+      playerCreature.targetWorldX = Math.max(40, Math.min(state.worldWidth - 40, playerCreature.targetWorldX));
+      playerCreature.targetWorldY = Math.max(40, Math.min(state.worldHeight - 40, playerCreature.targetWorldY));
+
+      const dx = playerCreature.targetWorldX - playerCreature.worldX;
+      const dy = playerCreature.targetWorldY - playerCreature.worldY;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist > 3) {
+        playerCreature.angle = Math.atan2(dy, dx);
+        const step = Math.min(dist * 5.5 * dt, playerCreature.speed * dt);
+        playerCreature.worldX += Math.cos(playerCreature.angle) * step;
+        playerCreature.worldY += Math.sin(playerCreature.angle) * step;
+      }
+      playerCreature.pulse += (1 - playerCreature.pulse) * (5 * dt);
+
+      // Плавное следование камеры
+      camera.x += (playerCreature.worldX - camera.x) * (5.5 * dt);
+      camera.y += (playerCreature.worldY - camera.y) * (5.5 * dt);
+
+      // Обновление миникарты
+      const miniDot = document.getElementById('minimapDot');
+      if (miniDot) {
+        const miniX = (playerCreature.worldX / state.worldWidth) * 72;
+        const miniY = (playerCreature.worldY / state.worldHeight) * 72;
+        miniDot.style.transform = `translate(${miniX - 36}px, ${miniY - 36}px)`;
+      }
+
+      ctx.save();
+      ctx.translate(canvas.width / 2 - camera.x, canvas.height / 2 - camera.y);
+
+      // Фоновая сетка мира
+      ctx.strokeStyle = 'rgba(30, 41, 59, 0.4)';
+      ctx.lineWidth = 1;
+      const gridSize = 100;
+      for (let x = 0; x <= state.worldWidth; x += gridSize) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, state.worldHeight); ctx.stroke();
+      }
+      for (let y = 0; y <= state.worldHeight; y += gridSize) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(state.worldWidth, y); ctx.stroke();
+      }
+
+      // Границы мира
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(0, 0, state.worldWidth, state.worldHeight);
+
+      // Частицы пищи (Охота и Поглощение)
+      foodParticles.forEach((f) => {
+        f.x += f.vx * dt;
+        f.y += f.vy * dt;
+        if (f.x < 20 || f.x > state.worldWidth - 20) f.vx *= -1;
+        if (f.y < 20 || f.y > state.worldHeight - 20) f.vy *= -1;
+
+        const foodDist = Math.hypot(playerCreature.worldX - f.x, playerCreature.worldY - f.y);
+        if (foodDist < 26) {
+          spawnFoodBurst(f.x, f.y, '#38bdf8');
+          f.x = Math.random() * state.worldWidth;
+          f.y = Math.random() * state.worldHeight;
+          const gain = state.clickPower * 0.5;
+          state.biomass += gain;
+          state.stats.totalBiomassEarned += gain;
+          state.stats.totalFoodEaten += 1;
+          playerCreature.pulse = 1.25;
+          Sound.playEat();
+          updateUI();
+        }
+
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.8)';
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Частицы взрыва поглощения (ФАЗА 3)
+      for (let i = burstParticles.length - 1; i >= 0; i--) {
+        const bp = burstParticles[i];
+        bp.x += bp.vx * dt;
+        bp.y += bp.vy * dt;
+        bp.life -= dt;
+        if (bp.life <= 0) {
+          burstParticles.splice(i, 1);
+        } else {
+          const alpha = Math.max(0, bp.life / bp.maxLife);
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = bp.color;
+          ctx.beginPath();
+          ctx.arc(bp.x, bp.y, bp.r * alpha, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      // Инверсная кинематика позвоночника (Spine IK)
+      spine[0] = { x: playerCreature.worldX, y: playerCreature.worldY, angle: playerCreature.angle };
+      for (let i = 1; i < spine.length; i++) {
+        const prev = spine[i - 1];
+        const cur = spine[i];
+        const segDx = cur.x - prev.x;
+        const segDy = cur.y - prev.y;
+        const segAngle = Math.atan2(segDy, segDx);
+        cur.angle = segAngle;
+        cur.x = prev.x + Math.cos(segAngle) * segmentLength;
+        cur.y = prev.y + Math.sin(segAngle) * segmentLength;
+      }
+
+      // Цветовые палитры архетипов
+      let skinColor = '#0ea5e9';
+      let skinStroke = '#38bdf8';
+      let eyeColor = '#ffffff';
+
+      const archColors = {
+        insect: { fill: '#d97706', stroke: '#fbbf24', eye: '#ef4444' },
+        dragon: { fill: '#16a34a', stroke: '#4ade80', eye: '#facc15' },
+        beast: { fill: '#92400e', stroke: '#f59e0b', eye: '#38bdf8' },
+        kraken: { fill: '#7c3aed', stroke: '#c084fc', eye: '#a855f7' },
+        griffin: { fill: '#dc2626', stroke: '#f87171', eye: '#ffffff' },
+        xenomorph: { fill: '#059669', stroke: '#34d399', eye: '#a855f7' }
+      };
+
+      if (archColors[state.archetype]) {
+        skinColor = archColors[state.archetype].fill;
+        skinStroke = archColors[state.archetype].stroke;
+        eyeColor = archColors[state.archetype].eye;
+      }
+
+      if (hasTrait('chloroplast')) {
+        skinColor = '#15803d';
+        skinStroke = '#86efac';
+      }
+
+      const numCells = state.bodyCells;
+
+      // Отрисовка тела
+      if (numCells < 4) {
+        // Одноклеточная / микроколониальная фаза
+        spine.forEach((seg, idx) => {
+          const r = (24 - idx * 4) * playerCreature.pulse;
+          ctx.save();
+          ctx.translate(seg.x, seg.y);
+          ctx.beginPath();
+          ctx.arc(0, 0, Math.max(10, r), 0, Math.PI * 2);
+          ctx.fillStyle = skinColor + 'bb';
+          ctx.strokeStyle = skinStroke;
+          ctx.lineWidth = 3;
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(-2, -2, r * 0.35, 0, Math.PI * 2);
+          ctx.fillStyle = '#0f172a';
+          ctx.fill();
+          ctx.restore();
+        });
+      } else {
+        // Развитая органическая форма с контуром тела
+        const leftPoints = [];
+        const rightPoints = [];
+
+        for (let i = 0; i < spine.length; i++) {
+          const seg = spine[i];
+          let radius = 18;
+          if (i === 0) radius = 23;
+          else if (i < spine.length * 0.4) radius = 25;
+          else radius = Math.max(6, 25 * (1 - (i / spine.length)));
+
+          radius *= playerCreature.pulse;
+
+          const normalAngle = seg.angle + Math.PI / 2;
+          leftPoints.push({
+            x: seg.x + Math.cos(normalAngle) * radius,
+            y: seg.y + Math.sin(normalAngle) * radius
+          });
+          rightPoints.push({
+            x: seg.x - Math.cos(normalAngle) * radius,
+            y: seg.y - Math.sin(normalAngle) * radius
+          });
+        }
+
+        // 1. АРХЕТИП: КРАКЕН — ЩУПАЛЬЦА СЗАДИ (ФАЗА 3)
+        if (state.archetype === 'kraken' && spine.length >= 3) {
+          const tailBase = spine[spine.length - 1];
+          ctx.strokeStyle = skinStroke;
+          ctx.lineWidth = 3.5;
+          ctx.fillStyle = skinColor;
+
+          for (let k = 0; k < 4; k++) {
+            const spread = (k - 1.5) * 0.45;
+            const wave = Math.sin(t * 7 + k * 1.5) * 16;
+            ctx.beginPath();
+            ctx.moveTo(tailBase.x, tailBase.y);
+            const cx1 = tailBase.x - Math.cos(tailBase.angle + spread) * 28 + wave;
+            const cy1 = tailBase.y - Math.sin(tailBase.angle + spread) * 28;
+            const cx2 = tailBase.x - Math.cos(tailBase.angle + spread) * 58 - wave;
+            const cy2 = tailBase.y - Math.sin(tailBase.angle + spread) * 58;
+            ctx.quadraticCurveTo(cx1, cy1, cx2, cy2);
+            ctx.stroke();
+
+            // Присоски
+            ctx.fillStyle = '#d8b4fe';
+            ctx.beginPath();
+            ctx.arc(cx1, cy1, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // 2. АРХЕТИП: КСЕНОМОРФ — ДОРСАЛЬНЫЕ ДЫХАТЕЛЬНЫЕ ТРУБКИ (ФАЗА 3)
+        if (state.archetype === 'xenomorph' && spine.length >= 4) {
+          ctx.strokeStyle = skinStroke;
+          ctx.lineWidth = 3.5;
+          [1, 2].forEach((segIdx) => {
+            const seg = spine[segIdx];
+            const norm = seg.angle + Math.PI / 2;
+            [-1, 1].forEach((dir) => {
+              ctx.beginPath();
+              ctx.moveTo(seg.x, seg.y);
+              const px = seg.x + Math.cos(norm) * 22 * dir - Math.cos(seg.angle) * 18;
+              const py = seg.y + Math.sin(norm) * 22 * dir - Math.sin(seg.angle) * 18;
+              ctx.lineTo(px, py);
+              ctx.stroke();
+            });
+          });
+        }
+
+        // Лапы и конечности (upgrade "legs" или анатомия Зверя/Хитиноида)
+        if ((hasTrait('legs') || state.archetype === 'insect' || state.archetype === 'beast') && spine.length >= 3) {
+          ctx.strokeStyle = skinStroke;
+          ctx.lineWidth = state.skin === 'chitin' ? 4.5 : 3;
+
+          for (let i = 2; i < spine.length - 1; i += 2) {
+            const seg = spine[i];
+            const legWalk = Math.sin(t * 8 + i) * 15;
+            const norm = seg.angle + Math.PI / 2;
+
+            ctx.beginPath();
+            ctx.moveTo(seg.x, seg.y);
+            const lx1 = seg.x + Math.cos(norm) * 26 + legWalk;
+            const ly1 = seg.y + Math.sin(norm) * 26;
+            ctx.lineTo(lx1, ly1);
+            ctx.lineTo(lx1 + Math.cos(norm) * 16, ly1 + Math.sin(norm) * 16);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(seg.x, seg.y);
+            const rx1 = seg.x - Math.cos(norm) * 26 - legWalk;
+            const ry1 = seg.y - Math.sin(norm) * 26;
+            ctx.lineTo(rx1, ry1);
+            ctx.lineTo(rx1 - Math.cos(norm) * 16, ry1 - Math.sin(norm) * 16);
+            ctx.stroke();
+          }
+        }
+
+        // Отрисовка контура тела
+        ctx.beginPath();
+        const head = spine[0];
+        const headNose = {
+          x: head.x + Math.cos(head.angle) * 25,
+          y: head.y + Math.sin(head.angle) * 25
+        };
+        ctx.moveTo(headNose.x, headNose.y);
+
+        for (let i = 0; i < leftPoints.length; i++) ctx.lineTo(leftPoints[i].x, leftPoints[i].y);
+        const tail = spine[spine.length - 1];
+        ctx.lineTo(tail.x, tail.y);
+        for (let i = rightPoints.length - 1; i >= 0; i--) ctx.lineTo(rightPoints[i].x, rightPoints[i].y);
+        ctx.closePath();
+
+        ctx.fillStyle = skinColor;
+        ctx.fill();
+
+        ctx.strokeStyle = skinStroke;
+        ctx.lineWidth = state.skin === 'chitin' ? 4.5 : (state.skin === 'scales' ? 3.5 : 2.5);
+        if (state.skin === 'fur') ctx.setLineDash([5, 3]);
+        else ctx.setLineDash([]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Текстура кожи: Панцирь и Чешуя (сегментные полосы)
+        if (state.skin === 'chitin' || state.skin === 'scales' || state.archetype === 'insect') {
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+          ctx.lineWidth = 2.5;
+          for (let i = 1; i < leftPoints.length; i += 2) {
+            ctx.beginPath();
+            ctx.moveTo(leftPoints[i].x, leftPoints[i].y);
+            ctx.lineTo(rightPoints[i].x, rightPoints[i].y);
+            ctx.stroke();
+          }
+        }
+
+        // Текстура кожи: Кристалл (геометрические грани)
+        if (state.skin === 'crystal') {
+          ctx.strokeStyle = '#e0f2fe';
+          ctx.lineWidth = 1.5;
+          for (let i = 0; i < leftPoints.length - 1; i += 2) {
+            ctx.beginPath();
+            ctx.moveTo(leftPoints[i].x, leftPoints[i].y);
+            ctx.lineTo(spine[i].x, spine[i].y);
+            ctx.lineTo(rightPoints[i].x, rightPoints[i].y);
+            ctx.stroke();
+          }
+        }
+
+        // ДРАКОН: ДОРСАЛЬНЫЕ ШИПЫ (ФАЗА 3)
+        if (state.archetype === 'dragon') {
+          ctx.fillStyle = '#fbbf24';
+          ctx.strokeStyle = '#d97706';
+          ctx.lineWidth = 2;
+          for (let i = 1; i < spine.length - 1; i += 2) {
+            const seg = spine[i];
+            const spikeH = 12 * playerCreature.pulse;
+            const norm = seg.angle + Math.PI / 2;
+            ctx.beginPath();
+            ctx.moveTo(seg.x - Math.cos(seg.angle) * 6, seg.y - Math.sin(seg.angle) * 6);
+            ctx.lineTo(seg.x - Math.cos(norm) * spikeH, seg.y - Math.sin(norm) * spikeH);
+            ctx.lineTo(seg.x + Math.cos(seg.angle) * 6, seg.y + Math.sin(seg.angle) * 6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+          }
+        }
+
+        // Свечение яда и биолюминесценция
+        if (hasTrait('bioluminescence') || state.skin === 'bioglow') {
+          ctx.strokeStyle = '#d8b4fe';
+          ctx.lineWidth = 6;
+          ctx.shadowColor = '#c084fc';
+          ctx.shadowBlur = 18;
+          ctx.beginPath();
+          for (let i = 0; i < spine.length; i++) {
+            if (i === 0) ctx.moveTo(spine[i].x, spine[i].y);
+            else ctx.lineTo(spine[i].x, spine[i].y);
+          }
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      // Голова и лицевые элементы архетипов (ФАЗА 3)
+      const headSeg = spine[0];
+      ctx.save();
+      ctx.translate(headSeg.x, headSeg.y);
+      ctx.rotate(headSeg.angle);
+
+      // 1. АРХЕТИП: ДРАКОН — РОГА
+      if (state.archetype === 'dragon') {
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(0, -12); ctx.quadraticCurveTo(-15, -26, -24, -32);
+        ctx.moveTo(0, 12); ctx.quadraticCurveTo(-15, 26, -24, 32);
+        ctx.stroke();
+      }
+
+      // 2. АРХЕТИП: КСЕНОМОРФ — ВЫТЯНУТЫЙ ТРУБЧАТЫЙ ЧЕРЕП
+      if (state.archetype === 'xenomorph') {
+        ctx.fillStyle = '#064e3b';
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.ellipse(-18, 0, 24, 11, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+      }
+
+      // 3. АРХЕТИП: ГРИФФИН — КЛЮВ
+      if (state.archetype === 'griffin') {
+        ctx.fillStyle = '#f59e0b';
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(18, -6);
+        ctx.lineTo(34, 0);
+        ctx.lineTo(18, 6);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+      }
+
+      // Глаза существа
+      if (hasTrait('eyes') || numCells >= 2) {
+        ctx.fillStyle = eyeColor;
+        ctx.beginPath();
+        ctx.arc(8, -10, 5.5, 0, Math.PI * 2);
+        ctx.arc(8, 10, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(10, -10, 2.8, 0, Math.PI * 2);
+        ctx.arc(10, 10, 2.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Усики-локаторы / Рога
+      if (hasTrait('antennae') || state.archetype === 'insect') {
+        ctx.strokeStyle = skinStroke;
+        ctx.lineWidth = 2.5;
+        const antWiggle = Math.sin(t * 6) * 6;
+        ctx.beginPath();
+        ctx.moveTo(12, -6); ctx.quadraticCurveTo(24, -22 + antWiggle, 36, -26);
+        ctx.moveTo(12, 6); ctx.quadraticCurveTo(24, 22 - antWiggle, 36, 26);
+        ctx.stroke();
+
+        // Булавовидные кончики усиков
+        ctx.fillStyle = skinStroke;
+        ctx.beginPath();
+        ctx.arc(36, -26, 3, 0, Math.PI * 2);
+        ctx.arc(36, 26, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Острые жвалы / клыки
+      if (hasTrait('mandibles') || state.archetype === 'insect' || state.archetype === 'xenomorph') {
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 3;
+        const bite = Math.sin(t * 7) * 5;
+        ctx.beginPath();
+        ctx.moveTo(14, -8); ctx.lineTo(26, -14 + bite);
+        ctx.moveTo(14, 8); ctx.lineTo(26, 14 - bite);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+
+      // Крылья (Птериготы / Крылья гриффина и дракона)
+      if ((hasTrait('wings') || state.archetype === 'griffin' || state.archetype === 'dragon') && spine.length >= 2) {
+        const wingSeg = spine[1];
+        const wingFlap = Math.sin(t * 11) * 0.42;
+        ctx.save();
+        ctx.translate(wingSeg.x, wingSeg.y);
+        ctx.rotate(wingSeg.angle);
+        ctx.fillStyle = state.archetype === 'griffin' ? 'rgba(248, 113, 113, 0.45)' : 'rgba(56, 189, 248, 0.45)';
+        ctx.strokeStyle = skinStroke;
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        ctx.ellipse(0, -34, 15, 36, wingFlap, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(0, 34, 15, 36, -wingFlap, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+      }
+
+      // Хвостовой шип / Плавник
+      if (hasTrait('tail') && spine.length >= 2) {
+        const tailSeg = spine[spine.length - 1];
+        ctx.save();
+        ctx.translate(tailSeg.x, tailSeg.y);
+        ctx.rotate(tailSeg.angle);
+        ctx.fillStyle = state.archetype === 'xenomorph' ? '#34d399' : '#ef4444';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-22, -11);
+        ctx.lineTo(-30, 0);
+        ctx.lineTo(-22, 11);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      ctx.restore();
+      requestAnimationFrame(render);
+    }
+
+    // --- СТАРТ И ИНИЦИАЛИЗАЦИЯ ИГРЫ ---
+    loadGame();
+    initSpineSegments();
+    updateWorldScale();
+    resizeCanvas();
+    setLanguage(currentLang);
+    recalculateStats();
+    updateUI();
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>
