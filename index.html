@@ -2884,7 +2884,7 @@
             <svg viewBox="0 0 24 24"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/></svg>
           </div>
           <div class="brand-text">
-            <span class="brand-title">KNICE STUDIOS <span class="client-badge">v2.4 Core</span></span>
+            <span class="brand-title">KNICE STUDIOS</span>
           </div>
         </div>
 
@@ -3936,14 +3936,14 @@
         accentColor: '#f1c40f',
         accentRgb: '241, 196, 15',
         bgGradient: 'radial-gradient(ellipse at 80% 25%, rgba(241, 196, 15, 0.25) 0%, rgba(217, 119, 6, 0.15) 50%, #030712 85%)',
-        badge: 'v2.4 FINAL MASTER',
+        badge: 'FINAL MASTER',
         desc: 'Historical 4X strategy on an authentic hexagonal world map. Imperial overextension, secession mechanics, cultural tier evolution, and research systems.',
         synopsis: 'Forge a glorious ancient civilization on a sprawling hexagonal globe. Manage logistical overextension, balance internal civil faction loyalty, formulate intricate diplomatic treaties, research bronze smithing, and steer cities through catastrophic secession crises.',
         tags: ['4X Strategy', 'Hex Map', 'Diplomacy', 'Tech Tree', 'Bronze Age'],
         requiresLandscape: true,
         techInfo: {
           engine: 'Hexagonal Planetary Math Matrix',
-          releaseState: 'Final Master v2.4',
+          releaseState: 'Final Master',
           developer: 'Knice Antiquity Labs',
           input: 'Full Point & Click'
         },
@@ -3984,10 +3984,9 @@
           <text x="214" y="28" fill="#f1c40f" font-size="9.5" font-weight="bold">BRONZE AGE 4X</text>
         </svg>`,
         defaultUrl: 'ancient-4x/index.html',
-        defaultTitle: 'Fracture of Empires (v2.4 Final Master)',
+        defaultTitle: 'Fracture of Empires (Final Master)',
         versions: [
-          { url: 'ancient-4x/index.html', label: 'v2.4 (The Great Finish — Complete 6-Tier Master Build)', category: 'latest', badge: 'Active Master' },
-          { url: './splinter/index.html', label: 'v1.0.4 (Bronze Age Master Build)', category: 'archive', badge: 'Legacy' }
+          { url: 'ancient-4x/index.html', label: 'Final Master (The Great Finish — Complete 6-Tier Build)', category: 'latest', badge: 'Active Master' }
         ]
       },
       {
@@ -4430,10 +4429,11 @@
         if (!launcherState.games['ancient4x'].selectedVersionUrl || 
             launcherState.games['ancient4x'].selectedVersionUrl === 'splinter/index.html' || 
             launcherState.games['ancient4x'].selectedVersionUrl === './splinter/index.html' || 
+            launcherState.games['ancient4x'].selectedVersionUrl === 'ancient4x_final.html' || 
             launcherState.games['ancient4x'].selectedVersionUrl === 'index.html' ||
-            launcherState.games['ancient4x'].selectedVersionUrl === 'ancient4x_final.html') {
+            launcherState.games['ancient4x'].selectedVersionUrl !== 'ancient-4x/index.html') {
           launcherState.games['ancient4x'].selectedVersionUrl = 'ancient-4x/index.html';
-          launcherState.games['ancient4x'].selectedVersionLabel = 'v2.4 (The Great Finish — Complete 6-Tier Master Build)';
+          launcherState.games['ancient4x'].selectedVersionLabel = 'Final Master (The Great Finish — Complete 6-Tier Build)';
         }
       }
       if (launcherState.games['frontline']) {
@@ -5767,7 +5767,7 @@
 
     function launchAncient4X() {
       switchGame('ancient4x');
-      selectVersion('ancient-4x/index.html', 'Fracture of Empires (v2.4 Final Master)');
+      selectVersion('ancient-4x/index.html', 'Fracture of Empires (Final Master)');
       launchActiveGame();
     }
 
