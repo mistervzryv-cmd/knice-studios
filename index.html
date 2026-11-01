@@ -1549,6 +1549,10 @@
       bottom: 0;
       left: 0;
       right: 0;
+      width: 100vw;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
       height: var(--mobile-sticky-bar-height);
       background: rgba(7, 10, 18, 0.96);
       border-top: 1px solid var(--border-medium);
@@ -1557,12 +1561,15 @@
       padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
       z-index: 55;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.8);
     }
 
     .mobile-btn-ver-sheet {
-      flex: 1;
+      flex: 1 1 0;
+      min-width: 0;
+      max-width: 50%;
+      overflow: hidden;
       height: 50px;
       background: rgba(15, 23, 42, 0.85);
       border: 1px solid var(--border-medium);
@@ -1585,18 +1592,28 @@
       color: #94a3b8;
       text-transform: uppercase;
       font-weight: 700;
+      display: block;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .m-ver-main {
       font-size: 0.82rem;
       font-weight: 800;
       color: var(--accent-color);
+      display: block;
+      width: 100%;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .mobile-btn-launch-monolith {
-      flex: 1.4;
+      flex: 1 1 0;
+      min-width: 120px;
+      flex-shrink: 0;
+      white-space: nowrap;
       height: 50px;
       background: linear-gradient(135deg, var(--accent-color), rgba(var(--accent-rgb), 0.85));
       color: #030712;
@@ -2328,6 +2345,12 @@
       }
       #mobileStickyActionBar {
         display: flex;
+        width: 100vw;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+        align-items: center;
+        gap: 8px;
       }
 
       /* In-Game Overlay on Mobile */
