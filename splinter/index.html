@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Раскол Древних Империй — 4X Прототип</title>
-  <script type="module" crossorigin src="assets/index-gT6wcVvf.js"></script>
-  <link rel="stylesheet" crossorigin href="assets/index-D8vxuxQ2.css">
+  <script type="module" crossorigin src="./assets/index-DIjx-CCD.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-D8vxuxQ2.css">
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -735,13 +735,14 @@
 
   <!-- Modal 8: Victory & Game Over Modal -->
   <div id="victory-modal" class="modal-overlay hidden">
-    <div class="modal-card" style="width: 580px; max-width: 95vw; border-color:#f1c40f; box-shadow:0 0 50px rgba(241,196,15,0.45);">
-      <div style="font-size:3.5rem; margin-bottom:8px;">🏆</div>
+    <div id="victory-card" class="modal-card" style="width: 580px; max-width: 95vw; border-color:#f1c40f; box-shadow:0 0 50px rgba(241,196,15,0.45);">
+      <div id="victory-icon" style="font-size:3.5rem; margin-bottom:8px;">🏆</div>
       <h1 id="victory-title" style="color:#f1c40f; font-size:1.8rem; margin:0 0 10px;">ВЕЛИКАЯ ПОБЕДА!</h1>
       <div id="victory-desc" class="modal-desc" style="font-size:1rem; line-height:1.6; margin-bottom:20px; text-align:center;"></div>
-      <div class="modal-actions" style="justify-content:center; gap:14px;">
-        <button id="btn-victory-continue" class="modal-btn primary">Продолжить игру</button>
-        <button id="btn-victory-restart" class="modal-btn secondary">Новая игра</button>
+      <div class="modal-actions" style="justify-content:center; gap:14px; flex-wrap:wrap;">
+        <button id="btn-victory-continue" class="modal-btn primary" data-i18n="btnVictoryContinue">Еще один ход</button>
+        <button id="btn-victory-menu" class="modal-btn secondary" data-i18n="btnVictoryMenu">В главное меню</button>
+        <button id="btn-victory-restart" class="modal-btn secondary" data-i18n="btnVictoryRestart">Новая игра</button>
       </div>
     </div>
   </div>
@@ -818,6 +819,21 @@
         <div style="display: flex; gap: 12px; align-items: center;">
           <button id="btn-settings-lang-ru" class="modal-btn secondary lang-choice-btn" data-lang="ru">🇷🇺 Русский</button>
           <button id="btn-settings-lang-en" class="modal-btn secondary lang-choice-btn" data-lang="en">🇬🇧 English</button>
+        </div>
+      </div>
+
+      <div class="settings-section" style="margin-bottom: 20px; text-align: left; background: rgba(0,0,0,0.35); padding: 16px; border-radius: 8px; border: 1px solid #30363d;">
+        <h4 style="color: #f1c40f; margin: 0 0 10px; font-size: 1rem;" data-i18n="audioSettingsLabel">Звук и Аудиоэффекты:</h4>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <label for="audio-volume-slider" style="color: #c9d1d9; font-size: 0.9rem;" data-i18n="audioVolumeLabel">Громкость звука:</label>
+            <span id="audio-volume-val" style="color: #58a6ff; font-weight: bold; font-size: 0.9rem;">70%</span>
+          </div>
+          <input type="range" id="audio-volume-slider" min="0" max="100" value="70" style="width: 100%; accent-color: #58a6ff; cursor: pointer;">
+          <div style="display: flex; gap: 10px; margin-top: 4px;">
+            <button id="btn-audio-mute" class="modal-btn secondary" style="flex: 1;" data-i18n="btnAudioMute">🔊 Звук: Вкл</button>
+            <button id="btn-audio-test" class="modal-btn secondary" style="flex: 1;" data-i18n="btnAudioTest">🎵 Проверить звук</button>
+          </div>
         </div>
       </div>
 
