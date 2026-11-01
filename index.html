@@ -3983,10 +3983,10 @@
           <rect x="205" y="14" width="105" height="20" rx="4" fill="rgba(241,196,15,0.2)"/>
           <text x="214" y="28" fill="#f1c40f" font-size="9.5" font-weight="bold">BRONZE AGE 4X</text>
         </svg>`,
-        defaultUrl: 'ancient-4x/index.html',
+        defaultUrl: 'splinter/index.html',
         defaultTitle: 'Fracture of Empires (Final Master)',
         versions: [
-          { url: 'ancient-4x/index.html', label: 'Final Master (The Great Finish — Complete 6-Tier Build)', category: 'latest', badge: 'Active Master' }
+          { url: 'splinter/index.html', label: 'Final Master (The Great Finish — Complete 6-Tier Build)', category: 'latest', badge: 'Active Master' }
         ]
       },
       {
@@ -4427,12 +4427,12 @@
       }
       if (launcherState.games['ancient4x']) {
         if (!launcherState.games['ancient4x'].selectedVersionUrl || 
-            launcherState.games['ancient4x'].selectedVersionUrl === 'splinter/index.html' || 
-            launcherState.games['ancient4x'].selectedVersionUrl === './splinter/index.html' || 
+            launcherState.games['ancient4x'].selectedVersionUrl === 'ancient-4x/index.html' || 
             launcherState.games['ancient4x'].selectedVersionUrl === 'ancient4x_final.html' || 
+            launcherState.games['ancient4x'].selectedVersionUrl === './splinter/index.html' || 
             launcherState.games['ancient4x'].selectedVersionUrl === 'index.html' ||
-            launcherState.games['ancient4x'].selectedVersionUrl !== 'ancient-4x/index.html') {
-          launcherState.games['ancient4x'].selectedVersionUrl = 'ancient-4x/index.html';
+            launcherState.games['ancient4x'].selectedVersionUrl !== 'splinter/index.html') {
+          launcherState.games['ancient4x'].selectedVersionUrl = 'splinter/index.html';
           launcherState.games['ancient4x'].selectedVersionLabel = 'Final Master (The Great Finish — Complete 6-Tier Build)';
         }
       }
@@ -5767,7 +5767,7 @@
 
     function launchAncient4X() {
       switchGame('ancient4x');
-      selectVersion('ancient-4x/index.html', 'Fracture of Empires (Final Master)');
+      selectVersion('splinter/index.html', 'Fracture of Empires (Final Master)');
       launchActiveGame();
     }
 
